@@ -8,7 +8,7 @@
 # 
 #     https://github.com/ReproNim/neurodocker
 
-FROM debian:stretch
+FROM debian:buster
 
 USER root
 
@@ -17,9 +17,8 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
-#RUN printf "deb http://ftp.us.debian.org/debian/ stretch main contrib non-free/ndeb-src http://ftp.us.debian.org/debian/ stretch main contrib non-free" >etc/apt/sources.list
+RUN printf "deb http://deb.debian.org/debian buster main contrib non-free\ndeb-src http://deb.debian.org/debian buster main contrib non-free\ndeb http://security.debian.org/debian-security buster/updates main contrib\ndeb-src http://security.debian.org/debian-security buster/updates main contrib">/etc/sources.list
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
-    && apt-get clean \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            apt-utils \
