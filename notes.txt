@@ -15,34 +15,19 @@ Packages needed: libapt-inst, libapt-pkg, libbz, libcurl3,
 !pip3 install git+https://github.com/enthought/mayavi.git
 free surfer, fsl, mrtrix 
 
-import time
-import itertools
+
 import meshio
 import nibabel as nib
-import numpy as np
 import scipy
 import sklearn.neighbors as skn
 import vtk
 from scipy import sparse
 from scipy.sparse import csgraph
 from tvtk.api import tvtk, write_data
-import librosa
-import math
-import plotly.graph_objects as go
-import random
-import ast
-from statistics import stdev
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from sklearn.metrics import mean_squared_error
 import pandas as pd
-import os
 import nilearn
 from nilearn import image
-import nibabel as nib
-import sys 
 
-RUN printf "deb http://archive.debian.org/debian/ jessie main\ndeb-src http://archive.debian.org/debian/ jessie main\ndeb http://security.debian.org jessie/updates main\ndeb-src http://security.debian.org jessie/updates main" > /etc/apt/sources.list
-
-deb http://ftp.us.debian.org/debian/ stretch main contrib non-free
-deb-src http://ftp.us.debian.org/debian/ stretch main contrib non-free
