@@ -29,6 +29,8 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
 	   python3-pip \
 	   git \
 	   gcc \
+	   vim \
+	   nano \
 	   xvfb \
 	   x11-utils \
 	   libx11-dev \
@@ -46,7 +48,9 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
-
+RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
+USER neuro
+WORKDIR /home/neuro
 ENTRYPOINT ["/neurodocker/startup.sh"]
 
 ENV CONDA_DIR="/opt/miniconda-latest" \
@@ -66,30 +70,47 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda install -y -q --name neuro \
            "python=3.6" \
 	   "pytest" \
-           "jupyter" \
-           "jupyterlab" \
            "pandas" \
            "scipy" \
            "matplotlib" \
     && sync && conda clean -y --all && sync \
     && bash -c "source activate neuro" \
-    && pip install boto \
-    && pip install h5py \
-    && pip install nose \
-    && pip install sklearn \
-    && pip install scipy \
-    && pip install pillow \
-    && pip install xvfbwrapper \
-    && pip install meshio  \
-    && pip install nibabel \
-    && pip install vtk \
-    && pip install numpy \
+    && pip3 install boto \
+    && pip3 install h5py \
+    && pip3 install nose \
+    && pip3 install sklearn \
+    && pip3 install scipy \
+    && pip3 install pillow \
+    && pip3 install xvfbwrapper \
+    && pip3 install meshio  \
+    && pip3 install nibabel \
+    && pip3 install vtk \
+    && pip3 install numpy \
+    && pip3 install jupyterlab \
+    && pip3 install notebook \
     && rm -rf ~/.cache/pip* \
     && sync
 
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           vim \
-           nano \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN bash -c 'source activate neuro'
+
+USER root
+
+RUN mkdir /data && chmod 777 /data && chmod a+s /data
+
+RUN mkdir /output && chmod 777 /output && chmod a+s /output
+
+USER neuro 
+
+RUN bash -c 'source activate neuro'
+
+COPY [".", "/home/neuro/connectome_harmonic_core"]
+
+USER root
+
+RUN chown -R neuro /home/neuro/connectome_harmonic_core
+
+RUN rm -rf /opt/conda/pkgs/*
+
+USER neuro 
+
+WORKDIR /home/neuro/connectome_harmonic_core
