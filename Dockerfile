@@ -17,7 +17,6 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
-#RUN printf "deb http://deb.debian.org/debian buster main contrib non-free\ndeb-src http://deb.debian.org/debian buster main contrib non-free\ndeb http://security.debian.org/debian-security buster/updates main contrib\ndeb-src http://security.debian.org/debian-security buster/updates main contrib">/etc/sources.list
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -94,42 +93,3 @@ RUN apt-get update -qq \
            nano \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-RUN echo '{ \
-    \n  "pkg_manager": "apt", \
-    \n  "instructions": [ \
-    \n    [ \
-    \n      "base", \
-    \n      "debian:stretch" \
-    \n    ], \
-    \n    [ \
-    \n      "miniconda", \
-    \n      { \
-    \n        "create_env": "neuro", \
-    \n        "conda_install": [ \
-    \n          "python=3.6", \
-    \n          "pandas", \
-    \n          "jupyter", \
-    \n          "jupyterlab", \
-    \n        ], \
-    \n        "pip_install": [ \
-    \n          "meshio", \
-    \n          "nibable", \
-    \n          "vtk", \
-    \n          "scipy", \
-    \n          "sklearn", \
-    \n          "nilearn", \
-    \n          "git+https://github.com/enthought/mayavi.git" \
-    \n        ] \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "install", \
-    \n      [ \
-    \n        "git", \
-    \n        "vim", \
-    \n        "nano" \
-    \n      ] \
-    \n    ], \
-    \n    [ \
-    \n}' > /neurodocker/neurodocker_specs.json
