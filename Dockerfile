@@ -31,6 +31,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
 	   gcc \
 	   vim \
 	   nano \
+	   ssh-client \
 	   xvfb \
 	   x11-utils \
 	   ssh \
@@ -104,21 +105,18 @@ USER neuro
 
 RUN bash -c 'source activate neuro'
 
-COPY [".", "/home/neuro/connectome_harmonic_core"]
+RUN mkdir /home/neuro/.ssh/
+RUN touch /home/neuro/.ssh/id_rsa
+RUN chmod 600 /home/neuro/.ssh/id_rsa
+RUN touch /home/neuro/.ssh/known_hosts
+RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
+
 
 USER root
 
-RUN chown -R neuro /home/neuro/connectome_harmonic_core
 
 RUN rm -rf /opt/conda/pkgs/*
 
 USER neuro 
 
-
-RUN mkdir /neuro/.ssh/
-RUN touch /neuro/.ssh/id_rsa
-RUN chmod 600 /neuro/.ssh/id_rsa
-RUN touch /neuro/.ssh/known_hosts
-RUN ssh-keyscan github.com >> /neuro/.ssh/known_hosts
-
-WORKDIR /home/neuro/connectome_harmonic_core
+WORKDIR /home/neuro
