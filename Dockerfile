@@ -33,6 +33,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
 	   nano \
 	   xvfb \
 	   x11-utils \
+	   ssh \
 	   libx11-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -119,7 +120,5 @@ RUN touch /neuro/.ssh/id_rsa
 RUN chmod 600 /neuro/.ssh/id_rsa
 RUN touch /neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /neuro/.ssh/known_hosts
-
-COPY package*.json ./
 
 WORKDIR /home/neuro/connectome_harmonic_core
