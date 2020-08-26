@@ -101,19 +101,23 @@ RUN mkdir /data && chmod 777 /data && chmod a+s /data
 
 RUN mkdir /output && chmod 777 /output && chmod a+s /output
 
+RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
+
 USER neuro 
 
 RUN bash -c 'source activate neuro'
 
+ARG SSH_KEY
+ENV SSH_KEY=$SSH_KEY
 RUN mkdir /home/neuro/.ssh/
-RUN touch /home/neuro/.ssh/id_rsa
+RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_rsa
 RUN chmod 600 /home/neuro/.ssh/id_rsa
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
 
+CMD git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
 
 USER root
-
 
 RUN rm -rf /opt/conda/pkgs/*
 
