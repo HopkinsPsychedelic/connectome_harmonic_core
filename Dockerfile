@@ -7,7 +7,7 @@
 # pull request on our GitHub repository:
 # 
 #     https://github.com/ReproNim/neurodocker
-hi
+
 FROM debian:buster
 
 USER root
