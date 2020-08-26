@@ -1,5 +1,5 @@
 Generating neurodocker file command:
-
+Brian test
 docker run --rm repronim/neurodocker:0.7.0 generate docker --base=debian:stretch --pkg-manager=apt \
   --miniconda create_env=neuro \
               conda_install='python=3.6 time itertools numpy librosa math random ast statistics ast pandas os jupyter jupyterlab jupyter_contrib_nbextensions' \
