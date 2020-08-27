@@ -20,7 +20,7 @@ parser.add_argument('-v','--savevis',help='save evecs to surface, if used, give 
 args = parser.parse_args()
 surfpath=args.surface
 if surfpath.endswith('.vtk'):
-    sc,si=inout.read_vtk_surface_both_hem(surfpath % 'L',surfpath % 'R')
+    sc,si=inout.read_vtk_surface_both_hem(surfpath % 'lh',surfpath % 'rh')
 else:
     sc,si=inout.read_gifti_surface_both_hem(surfpath % 'lh', surfpath % 'rh')
 
