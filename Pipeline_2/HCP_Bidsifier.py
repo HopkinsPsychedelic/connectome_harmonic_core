@@ -73,8 +73,23 @@ for sub in os.listdir(bids_root):
             for i in ['T1w','T2w']:
                 if i in img:
                     os.rename(f'{anat}/{img}',f'{anat}/{sub}_{i}.nii.gz')
-                    
-
+ 
+bids_root = '/data2/HCP_Raw/raw_data'                   
+for sub in os.listdir(bids_root):
+    dwi = f'{bids_root}/{sub}/dwi'
+    if 'sub' in sub:
+        for img in os.listdir(dwi):
+            for ftype in ['nii.gz','.bval','.bvec']:
+                if ftype in img:
+                    for dire in ['95','96','97']:
+                        if dire in img:
+                            for acq in ['RL','LR']:
+                                if acq in img:
+                                    os.rename(f'{dwi}/{img}', f'{dwi}/{sub}_acq-{acq}_dir-{dire}_dwi.{ftype}')
+                
+                        
+                
+                
 
 
 
