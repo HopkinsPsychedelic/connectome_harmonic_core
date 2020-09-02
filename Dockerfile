@@ -36,6 +36,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
 	   x11-utils \
 	   ssh \
 	   libx11-dev \
+	   paraview \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -69,27 +70,8 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
     && conda create -y -q --name neuro \
-    && conda install -y -q --name neuro \
-           "python=3.6" \
-	   "pytest" \
-           "pandas" \
-           "scipy" \
-           "matplotlib" \
+    && conda install -y -q --name neuro vtk matplotlib mayavi boto h5py nose sklearn scipy pillow xvfbwrapper meshio bibabel numpy jupyterlab notebook \
     && sync && conda clean -y --all && sync \
-    && bash -c "source activate neuro" \
-    && pip3 install boto \
-    && pip3 install h5py \
-    && pip3 install nose \
-    && pip3 install sklearn \
-    && pip3 install scipy \
-    && pip3 install pillow \
-    && pip3 install xvfbwrapper \
-    && pip3 install meshio  \
-    && pip3 install nibabel \
-    && pip3 install vtk \
-    && pip3 install numpy \
-    && pip3 install jupyterlab \
-    && pip3 install notebook \
     && rm -rf ~/.cache/pip* \
     && sync
 
