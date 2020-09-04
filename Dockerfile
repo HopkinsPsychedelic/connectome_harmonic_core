@@ -7,13 +7,9 @@
 # pull request on our GitHub repository:
 # 
 #     https://github.com/ReproNim/neurodocker
-
 FROM debian:buster
-
 USER root
-
 ARG DEBIAN_FRONTEND="noninteractive"
-
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
@@ -26,17 +22,16 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            curl \
            locales \
            unzip \
-	   python3-pip \
-	   git \
-	   gcc \
-	   vim \
-	   nano \
-	   ssh-client \
-	   xvfb \
-	   x11-utils \
-	   ssh \
-	   libx11-dev \
-	   paraview \
+           python3-pip \
+           git \
+           gcc \
+           vim \
+           nano \
+           ssh-client \
+           xvfb \
+           x11-utils \
+           ssh \
+           libx11-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -69,13 +64,33 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set auto_update_conda false \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
-    && conda create -y -q --name neuro \
-    && conda install -y -q --name neuro vtk matplotlib mayavi boto h5py nose sklearn scipy pillow xvfbwrapper meshio bibabel numpy jupyterlab notebook \
-    && sync && conda clean -y --all && sync \
+    && conda install -y -q scikit-learn scipy meshio nibabel vtk mayavi pyvista numpy jupyterlab matplotlib notebook \
     && rm -rf ~/.cache/pip* \
     && sync
 
-RUN bash -c 'source activate neuro'
+
+USER root
+
+RUN mkdir /data && chmod 777 /data && chmod a+s /data
+
+RUN mkdir /output && chmod 777 /output && chmod a+s /output
+
+RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
+USER neuro 
+    && echo "Downloading Miniconda installer ..." \
+    && conda_installer="/tmp/miniconda.sh" \
+    && curl -fsSL --retry 5 -o "$conda_installer" https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && bash "$conda_installer" -b -p /opt/miniconda-latest \
+    && rm -f "$conda_installer" \
+    && conda update -yq -nbase conda \
+    && conda config --system --prepend channels conda-forge \
+    && conda config --system --set auto_update_conda false \
+    && conda config --system --set show_channel_urls true \
+    && sync && conda clean -y --all && sync \
+    && conda install -y -q scikit-learn scipy meshio nibabel vtk mayavi pyvista numpy jupyterlab matplotlib notebook \
+    && rm -rf ~/.cache/pip* \
+    && sync
+
 
 USER root
 
@@ -86,8 +101,6 @@ RUN mkdir /output && chmod 777 /output && chmod a+s /output
 RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
 
 USER neuro 
-
-RUN bash -c 'source activate neuro'
 
 ARG SSH_KEY
 ENV SSH_KEY=$SSH_KEY
@@ -104,5 +117,4 @@ USER root
 RUN rm -rf /opt/conda/pkgs/*
 
 USER neuro 
-
 WORKDIR /home/neuro
