@@ -1,3 +1,7 @@
+Configurable analysis options before computing harmonics:
+60 nearest neighbors?
+
+
 Configurable analysis options after computing harmonics:
 
 Calculate power and energy of harmonics from fMRI
