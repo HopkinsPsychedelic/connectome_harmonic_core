@@ -157,3 +157,16 @@ def read_gifti_feature_both_hem(lfname,rfname):
     R=nib.load(rfname)
     featurevec=gifti_to_scalar(L,R)
     return featurevec
+
+def generate_mask_from_parc(lhparc,rhparc):
+    parc=read_vtk_feature_both_hem(lhparc,rhparc).astype('int32')
+    inds1=np.where(parc==1639705)[0]
+    #inds3=np.where(parc==1639704)[0]
+    inds2=np.where(parc==3294840)[0]
+    #inds4=np.where(parc==3294839)[0]
+    mask=np.zeros(len(parc))
+    mask[inds1]=1
+    mask[inds2]=1
+    #mask[inds3]=1
+    #mask[inds4]=1
+    return mask
