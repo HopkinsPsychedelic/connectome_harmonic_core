@@ -6,22 +6,29 @@ Created on Tue Aug 25 17:19:49 2020
 @author: bwinsto2
 
 very lazy code to bidsify HCP unprocessed data - pls don't judge
+acq messed up and BOLD -- don't use without fixing those things
+
+make it create BIDS folders 
+add sessions for test and retest
+
 """
 
+#unzip and put into sub/func
 from zipfile import ZipFile
 import os, shutil
 source_root = '/data2/HCP_Raw/source_data'
 for sub in os.listdir(source_root):
-    func = f'/data2/HCP_Raw/raw_data/sub-{sub}/func'
-    for zipdir in os.listdir(f'{source_root}/{str(sub)}'):
-        if 'md5' not in zipdir:
-            for dtype in ['tfMRI_WM','rfMRI_REST2','rfMRI_REST1']:
-                if dtype in zipdir:              
-                    with ZipFile(f'{source_root}/{sub}/{sub}_3T_{dtype}_unproc.zip', 'r') as zipObj:
-                        zipObj.extractall(func)
-                        for direction in ['LR', 'RL']:
-                            shutil.copy(f'{func}/{sub}/unprocessed/3T/{dtype}_{direction}/{sub}_3T_{dtype}_{direction}.nii.gz',f'/data2/HCP_Raw/raw_data/sub-{sub}/func')
-                    shutil.rmtree(f'/data2/HCP_Raw/raw_data/sub-{sub}/func/{sub}')
+    for ses in os.listdir(f'{source_root/{sub}')
+        func = f'/data2/HCP_Raw/raw_data/sub-{sub}/func'
+        for zipdir in os.listdir(f'{source_root}/{str(sub)}'):
+            if 'md5' not in zipdir:
+                for dtype in ['tfMRI_WM','rfMRI_REST2','rfMRI_REST1']:
+                    if dtype in zipdir:              
+                        with ZipFile(f'{source_root}/{sub}/{sub}_3T_{dtype}_unproc.zip', 'r') as zipObj:
+                            zipObj.extractall(func)
+                            for direction in ['LR', 'RL']:
+                                shutil.copy(f'{func}/{sub}/unprocessed/3T/{dtype}_{direction}/{sub}_3T_{dtype}_{direction}.nii.gz',f'/data2/HCP_Raw/raw_data/sub-{sub}/func')
+                        shutil.rmtree(f'/data2/HCP_Raw/raw_data/sub-{sub}/func/{sub}')
 
 
 for sub in os.listdir(source_root):
@@ -54,17 +61,17 @@ for sub in os.listdir(bids_root):
     if 'sub' in sub:
         for img in os.listdir(func):
             if 'REST1_LR' in img:
-               os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_run-1_acq_LR.nii.gz')
+               os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_acq-LR_run-1_bold.nii.gz')
             if 'REST1_RL' in img:
-                os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_run-1_acq_RL.nii.gz')
+                os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_acq-RL_run-1_bold.nii.gz')
             if 'REST2_LR' in img:
-                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_run-2_acq_LR.nii.gz')
+                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_acq-LR_run-2)_bold.nii.gz')
             if 'REST2_RL' in img:
-                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_run-2_acq_RL.nii.gz')
+                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-rest_acq-RL_run-2_bold.nii.gz')
             if 'WM_LR' in img:
-                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-WM_acq_LR.nii.gz')
+                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-WM_acq-LR_bold.nii.gz')
             if 'WM_RL' in img:
-                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-WM_acq_RL.nii.gz')
+                 os.rename(f'{func}/{img}', f'{func}/{sub}_task-WM_acq-RL_bold.nii.gz')
                     
 for sub in os.listdir(bids_root):
     anat = f'{bids_root}/{sub}/anat'
@@ -79,7 +86,7 @@ for sub in os.listdir(bids_root):
     dwi = f'{bids_root}/{sub}/dwi'
     if 'sub' in sub:
         for img in os.listdir(dwi):
-            for ftype in ['nii.gz','.bval','.bvec']:
+            for ftype in ['nii.gz','bval','bvec']:
                 if ftype in img:
                     for dire in ['95','96','97']:
                         if dire in img:
