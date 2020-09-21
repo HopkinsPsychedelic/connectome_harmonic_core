@@ -64,10 +64,10 @@ elif args.data_type == 'BIDS':
                             user_info[f'{sub}_info'][ses]['streamlines'].append(file)
         else: #if sub has just one session
             #streamlines file location
-            user_info[f'{sub}_info'][ses]['streamlines'] = [] 
+            user_info[f'{sub}_info']['streamlines'] = [] 
             for file in os.listdir(f'{args.input_dir}/sub-{sub}/dwi'):
                 if 'tck' in file:
-                    user_info[f'{sub}_info'][ses]['streamlines'].append(file)
+                    user_info[f'{sub}_info']['streamlines'].append(file)
             
 
 
