@@ -7,9 +7,13 @@
 # pull request on our GitHub repository:
 # 
 #     https://github.com/ReproNim/neurodocker
+
 FROM debian:buster
+
 USER root
+
 ARG DEBIAN_FRONTEND="noninteractive"
+
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
@@ -20,10 +24,10 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            bzip2 \
            ca-certificates \
            curl \
-           locales \
+           locales \           
            unzip \
-           python3-pip \
            git \
+           python3-pip \
            gcc \
            vim \
            nano \
@@ -61,36 +65,15 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && rm -f "$conda_installer" \
     && conda update -yq -nbase conda \
     && conda config --system --prepend channels conda-forge \
-    && conda config --system --set auto_update_conda false \
+    && conda config --system --set auto_update_conda false \    
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
-    && conda install -y -q scikit-learn scipy meshio nibabel vtk mayavi pyvista numpy jupyterlab matplotlib notebook \
-    && rm -rf ~/.cache/pip* \
-    && sync
-
-
-USER root
-
-RUN mkdir /data && chmod 777 /data && chmod a+s /data
-
-RUN mkdir /output && chmod 777 /output && chmod a+s /output
-
-RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
-USER neuro 
-    && echo "Downloading Miniconda installer ..." \
-    && conda_installer="/tmp/miniconda.sh" \
-    && curl -fsSL --retry 5 -o "$conda_installer" https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && bash "$conda_installer" -b -p /opt/miniconda-latest \
-    && rm -f "$conda_installer" \
-    && conda update -yq -nbase conda \
-    && conda config --system --prepend channels conda-forge \
-    && conda config --system --set auto_update_conda false \
-    && conda config --system --set show_channel_urls true \
+    && conda install -yq scikit-learn scipy meshio nibabel \ 
+    && conda install -c mrtrix3 mrtrix3 \
     && sync && conda clean -y --all && sync \
-    && conda install -y -q scikit-learn scipy meshio nibabel vtk mayavi pyvista numpy jupyterlab matplotlib notebook \
+    && pip3 install vtk \
     && rm -rf ~/.cache/pip* \
     && sync
-
 
 USER root
 
@@ -117,4 +100,5 @@ USER root
 RUN rm -rf /opt/conda/pkgs/*
 
 USER neuro 
+
 WORKDIR /home/neuro
