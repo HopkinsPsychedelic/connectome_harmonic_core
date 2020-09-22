@@ -13,7 +13,7 @@ for reference
 import argparse
 import os
 from glob import glob
-
+import subprocess
 #user inputs cl arguments separated by spaces
 parser = argparse.ArgumentParser(description='CHAP entrypoint script')
 parser.add_argument('input_dir', type = str, help = 'qsirecon or HCP input directory')
@@ -68,8 +68,8 @@ elif args.data_type == 'BIDS':
             for file in os.listdir(f'{args.input_dir}/sub-{sub}/dwi'):
                 if 'tck' in file:
                     user_info[f'{sub}_info']['streamlines'].append(file)
-            
-
+	subprocess.check_call("./mrtrix_qsi_pipeline.sh %s" %(user_info[f'{sub}_info']['streamlines']), shell=True)            
+	
 
 
 
