@@ -50,9 +50,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
-RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
-USER neuro
-WORKDIR /home/neuro
+
 ENTRYPOINT ["/neurodocker/startup.sh"]
 
 ENV FREESURFER_HOME="/opt/freesurfer-6.0.0" \
@@ -87,6 +85,10 @@ RUN apt-get update -qq \
     && sed -i '$isource "/opt/freesurfer-6.0.0/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
 COPY ["license.txt", "/opt/freesurfer-6.0.0"]
+
+RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
+USER neuro
+WORKDIR /home/neuro
 
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
