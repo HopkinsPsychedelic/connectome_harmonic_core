@@ -15,7 +15,7 @@ import os
 from glob import glob
 import subprocess
 import numpy as np
-#import input_output as inout
+import input_output as inout
 import matrix_methods as mm
 import argparse
 import decomp as dcp
@@ -51,7 +51,7 @@ for sub in subs:
     #surface files locations
     for hem in ['rh','lh']:
             user_info[f'{sub}_info'][f'{hem}_surf'] = []
-            user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}_sub-{sub}/surf/{hem}.white')
+            user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}/sub-{sub}/surf/{hem}.white')
     #streamlines file locations
     user_info[f'{sub}_info']['streamlines'] = []
     if 'ses' in os.listdir(f'{args.input_dir}/sub-{sub}')[0]: #if multiple sessions
@@ -62,7 +62,7 @@ for sub in subs:
                     if 'tck' in file:
                         user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
     else: #if sub has just one session
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/ses')
+        #os.mkdir(f'{args.output_dir}/chap/sub-{sub}/ses')
         for file in os.listdir(f'{args.input_dir}/sub-{sub}/ses-test/dwi'):
             if 'tck' in file:
                 user_info[f'{sub}_info']['streamlines'].append(['ses', file])
@@ -74,8 +74,8 @@ for sub in subs:
         os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints')
         subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.input_dir}/sub-{sub}/{ses}-test/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints'), shell=True)
 	#construct surface coordinates, surface endpoints
-        lh_surf_path =  user_info[f'{sub}_info']['lh_surf']
-        rh_surf_path = user_info[f'{sub}_info']['rh_surf']
+        lh_surf_path =  user_info[f'{sub}_info']['lh_surf'][0]
+        rh_surf_path = user_info[f'{sub}_info']['rh_surf'][0]
         if lh_surf_path.endswith('.vtk'):
             sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
         else:
