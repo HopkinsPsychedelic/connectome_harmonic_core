@@ -81,7 +81,7 @@ elif args.data_type == 'BIDS':
 	#convert streamlines to .vtk using mrtrix
         tck_name = user_info[f'{sub}_info']['streamlines'].split('/')[-1][:-5]
         subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s" %(f'{args.input_dir}/sub-{sub}/dwi', tck_name), shell=True)            
-        streamline_path = "/home/neuro/output/endpoints/" + tck_name + ".tck"
+        streamline_path = f'/home/neuro/output/endpoints/{tck_name}.tck'
 	#construct surface coordinates, surface endpoints
         lh_surf_path =  user_info[f'{sub}_info']['lh_surf']
         rh_surf_path = user_info[f'{sub}_info']['rh_surf']
