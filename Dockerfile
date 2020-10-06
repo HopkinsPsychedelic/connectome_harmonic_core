@@ -138,4 +138,4 @@ USER neuro
 
 WORKDIR /home/neuro
 
-ENTRYPOINT ["python","/home/neuro/repo/entrypoint_test.py"]
+ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
