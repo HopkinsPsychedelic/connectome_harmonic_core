@@ -137,3 +137,5 @@ RUN rm -rf /opt/conda/pkgs/*
 USER neuro 
 
 WORKDIR /home/neuro
+
+ENTRYPOINT ["python","/home/neuro/repo/entrypoint_test.py"]
