@@ -13,6 +13,7 @@ for reference
 import argparse
 import os
 from glob import glob
+import numpy as np
 import subprocess
 import numpy as np
 import input_output as inout
@@ -20,17 +21,22 @@ import matrix_methods as mm
 import argparse
 import decomp as dcp
 import utility_functions as uts
+import compute_spectra as cs
 #user inputs cl arguments separated by spaces
 parser = argparse.ArgumentParser(description='CHAP entrypoint script')
 parser.add_argument('qsi_dir', type = str, help = 'qsirecon input directory')
 parser.add_argument('surf_dir', type = str, help = 'please input BIDS-organized Freesurfer output dir here')
 parser.add_argument('output_dir', type = str, help = 'Output directory')
 parser.add_argument('analysis_level', type = str, help = 'participant or group')
-parser.add_argument('--participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
-parser.add_argument('-f', '--fprep_dir', type = str, help = 'please input BIDS-organized fMRIprep output dir here. Functional images should be in T1 (native) space')
-parser.add_argument('-t', '--tasks', type = str, help = 'fMRI tasks to be included in harmonic decomposition. Multiple tasks can be specified with a space separated list')
-parser.add_argument('-p','--parc',help= "path to parcellation file as vtk with %s for hem")
-parser.add_argument('-n', '--number', help= 'number of evecs to compute')
+parser.add_argument('participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
+parser.add_argument('-f', 'fprep_dir', type = str, help = 'please input BIDS-organized fMRIprep output dir here. Functional images should be in T1 (native) space')
+parser.add_argument('-t', 'tasks', type = str, help = 'fMRI tasks to be included in harmonic decomposition. Multiple tasks can be specified with a space separated list')
+parser.add_argument('-p','parc',help= "path to parcellation file as vtk with %s for hem")
+parser.add_argument('-n', 'number', help= 'number of evecs to compute')
+parser.add_argument('-ps', 'power_spectra', help="option to include or exclude power spectra generation")
+parser.add_argument('-es', 'energy_spectra', help="option to include or exclude energy spectra generation")
+parser.add_argument('-rs', 'reconstruction_spectrum', help="option to include or exclude reconstruction spectrum generation")
+
 args = parser.parse_args() 
 
 #set empty dict and list
@@ -78,11 +84,11 @@ for sub in subs:
                             if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
                                 user_info[f'{sub}_info']['func'].append(file) #functional file locations
     for ses, file in user_info[f'{sub}_info']['streamlines']:
-    #convert streamlines to .vtk using mrtrix
+        #convert streamlines to .vtk using mrtrix
         tck_name = file.split('/')[-1][:-4]
         os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints')
         subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}-test/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints'), shell=True)
-	#construct surface coordinates, surface endpoints
+        #construct surface coordinates, surface endpoints
         lh_surf_path =  user_info[f'{sub}_info']['lh_surf'][0]
         rh_surf_path = user_info[f'{sub}_info']['rh_surf'][0]
         if lh_surf_path.endswith('.vtk'):
@@ -99,6 +105,31 @@ for sub in subs:
         os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis')
         np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecsvals/',[vals,vecs])
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/',sc,si,vecs)
+        #Compute spectra as specified
+        #TODO: add correct filepaths once volume-to-surface mapping is complete
+        full_path_lh = "placeholder_lh.gii"
+        full_path_rh = "placeholder_rh.gii"
+        timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
+        if(args.power_spectra):
+           os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra')
+           mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
+           dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
+           normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
+           np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', mean_power_spectrum)
+           np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', dynamic_power_spectrum)
+           np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', normalized_power_spectrum)
+        if(args.energy_spectra):
+           os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/energyspectra')
+           dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
+           normalized_energy_spectrum = cs.normalized_energy_spectrum(timeseries, vecs)
+           np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', mean_energy_spectrum)
+           np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', dynamic_energy_spectrum)
+        if(args.reconstruction_spectra):
+            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra')
+            recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
+            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra', dynamic_reconstruction_spectrum)
+
+        
 
 
 

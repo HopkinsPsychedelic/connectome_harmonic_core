@@ -8,7 +8,6 @@ Created on Thu May 28 18:39:04 2020
 
 import sklearn.neighbors as skn
 import time
-import matplotlib.pyplot as plt
 import numpy as np
 import os 
 from scipy import sparse
@@ -25,15 +24,6 @@ def neighbors(searchedset,queryset,num):
     end=time.time()
     print('neighbors time=',(end-start))
     return indices,distances
-
-def histogram(data,yRange,numbins=1000):
-    plt.hist(data, bins=numbins)
-    plt.ylabel('number')
-    plt.xlabel('values')
-    #plt.xlim(0,xRange)
-    plt.ylim(0,yRange)
-    plt.show()
-    return
 
 def unmask_medial_wall(masked_feature,medial_wall_mask):
     unmasked_feature=np.zeros(len(medial_wall_mask))
