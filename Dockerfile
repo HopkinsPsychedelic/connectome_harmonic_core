@@ -128,7 +128,7 @@ RUN chmod 600 /home/neuro/.ssh/id_rsa
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
 
-CMD git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
+RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
 
 USER root
 
