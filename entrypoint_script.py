@@ -72,12 +72,12 @@ for sub in subs:
                     for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
                         for hem in ['L','R']:
                             if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
-                                user_info[f'{sub}_info']['func'].append(file) #functional file locations               
+                                user_info[f'{sub}_info']['func'].append([ses, file]) #functional file locations               
     else: #if sub has just one session
         #os.mkdir(f'{args.output_dir}/chap/sub-{sub}/ses')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
-                user_info[f'{sub}_info']['streamlines'].append(['ses', file])
+                user_info[f'{sub}_info']['streamlines'].append([file])
         if args.fprep_dir:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
                         for hem in ['L','R']:
