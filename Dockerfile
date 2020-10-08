@@ -84,7 +84,7 @@ RUN apt-get update -qq \
          --exclude='freesurfer/trctrain' \
     && sed -i '$isource "/opt/freesurfer-6.0.0/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
-COPY ["license.txt", "/opt/freesurfer-6.0.0"]
+#COPY ["license.txt", "/opt/freesurfer-6.0.0"]
 
 RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
 USER neuro
