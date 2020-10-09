@@ -83,7 +83,12 @@ for sub in subs:
                         for hem in ['L','R']:
                             if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
                                 user_info[f'{sub}_info']['func'].append(file) #functional file locations
-  #NEED TO MAKE ALL OF BELOW WORK FOR PEOPLE WITH JUST ONE SESSION (I.E. NO SES FOLDER)                         
+  #NEED TO MAKE ALL OF BELOW WORK FOR PEOPLE WITH JUST ONE SESSION (I.E. NO SES FOLDER)  
+    multises = any('ses' in x for x in user_info[f'{sub}_info']['streamlines']) #check whether multiple sessions, set output var
+    if multises:
+        output = f'{args.output_dir}/chap/sub-{sub}/{ses}'
+    else:
+        output = f'{args.output_dir}/chap/sub-{sub}'
     for ses, file in user_info[f'{sub}_info']['streamlines']:
         #convert streamlines to .vtk using mrtrix
         tck_name = file.split('/')[-1][:-4]
@@ -144,6 +149,10 @@ run config
 
 
 
+hi = ['ricardo', 'winston', 'ses-fasrrre']
+
+multises = any('ses' in x for x in hi)
+print(multises)
 
 
 
