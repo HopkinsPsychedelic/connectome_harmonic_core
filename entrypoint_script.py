@@ -8,6 +8,7 @@ Created on Tue Sep 15 11:56:47 2020
 see https://github.com/BIDS-Apps/example/blob/master/run.py 
 https://docs.python.org/3/library/argparse.html
 for reference
+test
 """
 
 import argparse
