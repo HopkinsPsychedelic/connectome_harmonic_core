@@ -23,7 +23,7 @@ import decomp as dcp
 import utility_functions as uts
 import compute_spectra as cs
 #user inputs cl arguments separated by spaces
-parser = argparse.ArgumentParser(description='CHAP entrypoint script')
+parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('qsi_dir', type = str, help = 'qsirecon input directory')
 parser.add_argument('surf_dir', type = str, help = 'please input BIDS-organized Freesurfer output dir here')
 parser.add_argument('output_dir', type = str, help = 'Output directory')
