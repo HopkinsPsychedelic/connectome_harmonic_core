@@ -18,11 +18,10 @@ import numpy as np
 import subprocess
 import numpy as np
 import input_output as inout
-import matrix_methods as mm
 import argparse
 import decomp as dcp
 import utility_functions as uts
-import compute_spectra as cs
+import construct_harmonics as cs
 #user inputs cl arguments separated by spaces
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('qsi_dir', type = str, help = 'qsirecon input directory')
@@ -34,8 +33,7 @@ parser.add_argument('--fprep_dir', type = str, help = 'please input BIDS-organiz
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
 parser.add_argument('--number', type = str, help = 'number of evecs to compute')
 
-args = parser.parse_args() 
-
+args = parser.parse_args()     
 #set empty dict and list
 user_info = {}
 subs = []
@@ -85,88 +83,10 @@ for sub in subs:
     if multises:
         for ses, file in user_info[f'{sub}_info']['streamlines']:
             #convert streamlines to .vtk using mrtrix
-            tck_name = file.split('/')[-1][:-4]
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints')
-            subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}-test/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints'), shell=True)
-            #construct surface coordinates, surface endpoints
-            lh_surf_path =  user_info[f'{sub}_info']['lh_surf'][0]
-            rh_surf_path = user_info[f'{sub}_info']['rh_surf'][0]
-            if lh_surf_path.endswith('.vtk'):
-                sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
-            else:
-                sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
-            streamline_path = f'{args.output_dir}/chap/sub-{sub}/{ses}/endpoints/{tck_name}.vtk'
-            ec=inout.read_streamline_endpoints(streamline_path)
-            surf_mat=mm.construct_surface_matrix(sc,si)
-            ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
-            struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=45)
-            vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecsvals')
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis')
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecsvals/',[vals,vecs])
-            inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/',sc,si,vecs)
-            #Compute spectra as specified
-            #TODO: add correct filepaths once volume-to-surface mapping is complete
-            full_path_lh = "placeholder_lh.gii"
-            full_path_rh = "placeholder_rh.gii"
-            timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra')
-            mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
-            dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
-            normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', mean_power_spectrum)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', dynamic_power_spectrum)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', normalized_power_spectrum)
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/energyspectra')
-            dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
-            normalized_energy_spectrum = cs.normalized_energy_spectrum(timeseries, vecs)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', mean_energy_spectrum)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra', dynamic_energy_spectrum)
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra')
-            recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra', dynamic_reconstruction_spectrum)       
+            cs.construct_harmonics_calculate_spectra(args.output_dir, file, ses+'/')      
     else: 
         file =  user_info[f'{sub}_info']['streamlines'][0]
-        tck_name = file.split('/')[-1][:-4]
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/endpoints')
-        subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/endpoints'), shell=True)
-        #construct surface coordinates, surface endpoints
-        lh_surf_path =  user_info[f'{sub}_info']['lh_surf'][0]
-        rh_surf_path = user_info[f'{sub}_info']['rh_surf'][0]
-        if lh_surf_path.endswith('.vtk'):
-            sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
-        else:
-            sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
-        streamline_path = f'{args.output_dir}/chap/sub-{sub}/endpoints/{tck_name}.vtk'
-        ec=inout.read_streamline_endpoints(streamline_path)
-        surf_mat=mm.construct_surface_matrix(sc,si)
-        ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
-        struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=45)
-        vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/vecsvals')
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/vis')
-        np.save(f'{args.output_dir}/chap/sub-{sub}/vecsvals/',[vals,vecs])
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/vis/',sc,si,vecs)
-        #Compute spectra as specified
-        #TODO: add correct filepaths once volume-to-surface mapping is complete
-        full_path_lh = "placeholder_lh.gii"
-        full_path_rh = "placeholder_rh.gii"
-        timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/powerspectra')
-        mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
-        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
-        normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/powerspectra', mean_power_spectrum)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/powerspectra', dynamic_power_spectrum)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/powerspectra', normalized_power_spectrum)
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/energyspectra')
-        dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
-        normalized_energy_spectrum = cs.normalized_energy_spectrum(timeseries, vecs)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/powerspectra', mean_energy_spectrum)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/powerspectra', dynamic_energy_spectrum)
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/reconspectra')
-        recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/reconspectra', dynamic_reconstruction_spectrum)
+        cs.construct_harmonics_calculate_spectra(args.output_dir, file)
         
 
 

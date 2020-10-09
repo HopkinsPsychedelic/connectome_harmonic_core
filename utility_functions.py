@@ -12,7 +12,6 @@ import numpy as np
 import os 
 from scipy import sparse
 
-
 def neighbors(searchedset,queryset,num):
     '''
     computes num nearest neighbors of queryset in searchedset and returns numpy arrays size (len(queryset),num) 
@@ -72,6 +71,7 @@ def load_all_files_in_directory_sparse(directory,extension='.npz',return_sum=Tru
     return sum_mat
 
 
+        
     
             
     
