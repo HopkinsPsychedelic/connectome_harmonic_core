@@ -32,9 +32,9 @@ mri_convert ${subsurfdir}/rh.sulc ${subsurfdir}/rh.sulc.gii
 mri_convert ${refdir}/lh.sulc ${refdir}/lh.sulc.gii
 mri_convert ${refdir}/rh.sulc ${refdir}/rh.sulc.gii
 
-msm --inmesh=${subsurfdir}/lh.sphere.gii --refmesh=${refdir}/lh.sphere.gii --indata=${subsurfdir}/lh.sulc.gii --refdata=${refdir}/lh.sulc.gii -o ${subsurfdir}/lh.MSM.sphere.reg.surf.gii
+msm --inmesh=${subsurfdir}/lh.sphere.gii --refmesh=${refdir}/lh.sphere.gii --indata=${subsurfdir}/lh.curv.gii --refdata=${refdir}/lh.curv.gii -o ${subsurfdir}/lh.MSM.sphere.reg.surf.gii
 
-msm --inmesh=${subsurfdir}/rh.sphere.gii --refmesh=${refdir}/rh.sphere.gii --indata=${subsurfdir}/rh.sulc.gii --refdata=${refdir}/rh.sulc.gii -o ${subsurfdir}/rh.MSM.sphere.reg.surf.gii
+msm --inmesh=${subsurfdir}/rh.sphere.gii --refmesh=${refdir}/rh.sphere.gii --indata=${subsurfdir}/rh.curv.gii --refdata=${refdir}/rh.curv.gii -o ${subsurfdir}/rh.MSM.sphere.reg.surf.gii
 
 mris_convert ${subsurfdir}/lh.MSM.sphere.reg.surf.gii ${subsurfdir}/lh.MSM.sphere.reg.surf.vtk
 mris_convert ${subsurfdir}/rh.MSM.sphere.reg.surf.gii ${subsurfdir}/rh.MSM.sphere.reg.surf.vtk
