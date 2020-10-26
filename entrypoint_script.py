@@ -69,7 +69,6 @@ for sub in subs:
                             if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
                                 user_info[f'{sub}_info']['func'].append([ses, file]) #functional file locations               
     else: #if sub has just one session
-        #os.mkdir(f'{args.output_dir}/chap/sub-{sub}/ses')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
                 user_info[f'{sub}_info']['streamlines'].append([file])
@@ -77,15 +76,14 @@ for sub in subs:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
                         for hem in ['L','R']:
                             if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
-                                user_info[f'{sub}_info']['func'].append(file) #functional file locations
-  #NEED TO MAKE ALL OF BELOW WORK FOR PEOPLE WITH JUST ONE SESSION (I.E. NO SES FOLDER)  
+                                user_info[f'{sub}_info']['func'].append(file) #functional file locations  
     multises = any('ses' in x for x in user_info[f'{sub}_info']['streamlines']) #check whether multiple sessions, set output var
     if multises:
         for ses, file in user_info[f'{sub}_info']['streamlines']:
             #convert streamlines to .vtk using mrtrix
             cs.construct_harmonics_calculate_spectra(args.output_dir, file, ses+'/')      
     else: 
-        file =  user_info[f'{sub}_info']['streamlines'][0]
+        file = user_info[f'{sub}_info']['streamlines'][0]
         cs.construct_harmonics_calculate_spectra(args.output_dir, file)
         
 
