@@ -22,9 +22,12 @@ def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
     streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints/{tck_name}.vtk'
     ec=inout.read_streamline_endpoints(streamline_path)
+    print('Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si)
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
+    print('Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=45)
+    print('Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals')
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vis')

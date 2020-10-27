@@ -33,7 +33,7 @@ parser.add_argument('--fprep_dir', type = str, help = 'please input BIDS-organiz
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
 parser.add_argument('--number', type = str, help = 'number of evecs to compute')
 
-args = parser.parse_args()     
+args = parser.parse_args()  
 #set empty dict and list
 user_info = {}
 subs = []
@@ -41,6 +41,7 @@ if not os.path.exists(f'{args.output_dir}/chap'):
     os.mkdir(f'{args.output_dir}/chap') #create output directory
 
 #populate dicts with tck output files of reconstruction for each session, and {hem}.white
+print('Locating files...')
 if args.participant_label: #user input subjects
     subs = args.participant_label.split(" ")
 else: #for all subjects
@@ -57,6 +58,7 @@ for sub in subs:
     if args.fprep_dir:
         user_info[f'{sub}_info']['func'] = [] #functional file locations
     if 'ses' in os.listdir(f'{args.qsi_dir}/sub-{sub}')[0]: #if multiple sessions
+        print('Detected multiple sessions')
         for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
             if 'ses' in ses:
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
@@ -69,6 +71,7 @@ for sub in subs:
                             if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
                                 user_info[f'{sub}_info']['func'].append([ses, file]) #functional file locations               
     else: #if sub has just one session
+        print('Detected only one session')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
                 user_info[f'{sub}_info']['streamlines'].append([file])
