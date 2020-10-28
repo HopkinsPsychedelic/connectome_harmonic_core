@@ -17,6 +17,10 @@ mris_convert ${subsurfdir}/lh.white ${subsurfdir}/lh.white.vtk
 
 mris_convert ${subsurfdir}/rh.white ${subsurfdir}/rh.white.vtk
 
+mris_convert ${subsurfdir}/lh.pial ${subsurfdir}/lh.pial.vtk
+
+mris_convert ${subsurfdir}/rh.pial ${subsurfdir}/rh.pial.vtk
+
 mris_convert ${subsurfdir}/lh.sphere.reg ${subsurfdir}/lh.sphere.reg.vtk
 
 mris_convert ${subsurfdir}/rh.sphere.reg ${subsurfdir}/rh.sphere.reg.vtk
@@ -34,3 +38,7 @@ mris_convert ${subsurfdir}/rh.sphere.reg ${subsurfdir}/rh.sphere.reg.vtk
 ./ShapeInterpolation ${subsurfdir}/lh.midthickness.vtk ${subsurfdir}/lh.mapping.vtk ${subsurfdir}/lh.midthickness.corresponded.vtk
 
 ./ShapeInterpolation ${subsurfdir}/rh.midthickness.vtk ${subsurfdir}/rh.mapping.vtk ${subsurfdir}/rh.midthickness.corresponded.vtk
+
+./ShapeInterpolation ${subsurfdir}/lh.pial.vtk ${subsurfdir}/lh.mapping.vtk ${subsurfdir}/lh.pial.corresponded.vtk
+
+./ShapeInterpolation ${subsurfdir}/rh.pial.vtk ${subsurfdir}/rh.mapping.vtk ${subsurfdir}/rh.pial.corresponded.vtk
