@@ -8,6 +8,7 @@ Created on Fri Oct  9 16:01:27 2020
 import numpy as np
 import matrix_methods as mm
 import compute_spectra as cs
+from scipy import sparse
 
 def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
     tck_name = file.split('/')[-1][:-4]
@@ -27,6 +28,7 @@ def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=45)
+    sparse.save_npz('path',struc_conn_mat')      
     print('Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals')
