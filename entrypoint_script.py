@@ -41,29 +41,29 @@ if not os.path.exists(f'{args.output_dir}/chap'):
     os.mkdir(f'{args.output_dir}/chap') #create output directory
 
 #populate dicts with tck output files of reconstruction for each session, and {hem}.white
-print('Locating files...')
+print('Loading subjects...')
 if args.participant_label: #user input subjects
     subs = args.participant_label.split(" ")
 else: #for all subjects
     subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]               
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]   
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
     os.mkdir(f'{args.output_dir}/chap/sub-{sub}') #create output subject folder
-    #surface files locations
-    for hem in ['rh','lh']:
-            user_info[f'{sub}_info'][f'{hem}_surf'] = []
-            user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}/sub-{sub}/surf/{hem}.white') 
+    print('Reconstructing surfaces for {sub}...')
+    os.system(f'bash surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script
     user_info[f'{sub}_info']['streamlines'] = [] #streamlines file locations
     if args.fprep_dir:
         user_info[f'{sub}_info']['func'] = [] #functional file locations
     if 'ses' in os.listdir(f'{args.qsi_dir}/sub-{sub}')[0]: #if multiple sessions
-        print('Detected multiple sessions')
+        print('Detected multiple sessions for {sub}')
         for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
             if 'ses' in ses:
+                print('Locating files for {ses}...')
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
                 for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'):
                     if 'tck' in file:
+                        print('Located streamlines')
                         user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
                 if args.fprep_dir:
                     for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
@@ -74,11 +74,12 @@ for sub in subs:
         print('Detected only one session')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
+                print('Located streamlines')
                 user_info[f'{sub}_info']['streamlines'].append([file])
         if args.fprep_dir:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
                         for hem in ['L','R']:
-                            if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
+                            if f'space-fsnative_hemi-{hem}_bold.func.gii' in file: #CHANGE THIS
                                 user_info[f'{sub}_info']['func'].append(file) #functional file locations  
     multises = any('ses' in x for x in user_info[f'{sub}_info']['streamlines']) #check whether multiple sessions, set output var
     if multises:
@@ -98,6 +99,10 @@ for sub in subs:
 run config
 /Users/bwinston/Documents/fMRI/BIDS/test/qsirecon /Users/bwinston/Documents/fMRI/BIDS/test/freesurfer /Users/bwinston/Documents/fMRI/BIDS/test/output/ participant
 
+
+for hem in ['rh','lh']:
+            user_info[f'{sub}_info'][f'{hem}_surf'] = []
+            user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}/sub-{sub}/surf/{hem}.white') 
 '''
 
 

@@ -15,8 +15,8 @@ def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints')
     subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses+'endpoints'), shell=True)
     #construct surface coordinates, surface endpoints
-    lh_surf_path =  user_info[f'{sub}_info']['lh_surf'][0]
-    rh_surf_path = user_info[f'{sub}_info']['rh_surf'][0]
+    lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
+    rh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
     if lh_surf_path.endswith('.vtk'):
         sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
     else:
@@ -28,7 +28,8 @@ def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=45)
-    sparse.save_npz('path',struc_conn_mat')      
+    print('Saving structural connectivity matrix to ')
+    sparse.save_npz('path',struc_conn_mat)      
     print('Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals')
