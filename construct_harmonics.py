@@ -38,21 +38,22 @@ def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
     inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/'+ses+'vis/',sc,si,vecs)
     #Compute spectra as specified
     #TODO: add correct filepaths once volume-to-surface mapping is complete
-    full_path_lh = "placeholder_lh.gii"
-    full_path_rh = "placeholder_rh.gii"
-    timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
-    os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra')
-    mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
-    dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
-    normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', mean_power_spectrum)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', dynamic_power_spectrum)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'owerspectra', normalized_power_spectrum)
-    os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'energyspectra')
-    dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
-    normalized_energy_spectrum = cs.normalized_energy_spectrum(timeseries, vecs)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', mean_energy_spectrum)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', dynamic_energy_spectrum)
-    os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra')
-    recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra', dynamic_reconstruction_spectrum)
+    if args.fprep_dir:
+        full_path_lh = "placeholder_lh.gii"
+        full_path_rh = "placeholder_rh.gii"
+        timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
+        os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra')
+        mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
+        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
+        normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
+        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', mean_power_spectrum)
+        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', dynamic_power_spectrum)
+        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'owerspectra', normalized_power_spectrum)
+        os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'energyspectra')
+        dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
+        normalized_energy_spectrum = cs.normalized_energy_spectrum(timeseries, vecs)
+        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', mean_energy_spectrum)
+        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', dynamic_energy_spectrum)
+        os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra')
+        recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
+        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra', dynamic_reconstruction_spectrum)
