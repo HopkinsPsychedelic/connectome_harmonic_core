@@ -27,7 +27,7 @@ def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
     surf_mat=mm.construct_surface_matrix(sc,si)
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('Constructing structural connectivity matrix...')
-    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=45)
+    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=20)
     print('Saving structural connectivity matrix to ')
     sparse.save_npz('path',struc_conn_mat)      
     print('Computing harmonics...')
