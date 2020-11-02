@@ -3,18 +3,23 @@
 """
 Created on Fri Oct  9 16:01:27 2020
 
-@author: quintinfrerichs
+used in CHAP entrypoint_script
 """
+import decomp as dcp
+import input_output as inout
+import subprocess
 import numpy as np
 import os
 import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
 
-def construct_harmonics_calculate_spectra(sub, output_dir, file, ses=""):
+def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
+    print(args.qsi_dir)
     tck_name = file.split('/')[-1][:-4]
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints')
     subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses+'endpoints'), shell=True)
+    #os.system(f'bash /home/neuro/repo/mrtrix_qsi_pipeline.sh )
     #construct surface coordinates, surface endpoints
     lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
     rh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
