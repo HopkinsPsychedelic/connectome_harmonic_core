@@ -50,16 +50,16 @@ else: #for all subjects
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
     os.mkdir(f'{args.output_dir}/chap/sub-{sub}') #create output subject folder
-    print('Reconstructing surfaces for {sub}...')
-    os.system(f'bash surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script
+    print(f'Reconstructing surfaces for {sub}...')
+    os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script
     user_info[f'{sub}_info']['streamlines'] = [] #streamlines file locations
     if args.fprep_dir:
         user_info[f'{sub}_info']['func'] = [] #functional file locations
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
-        print('Detected multiple sessions for {sub}')
+        print(f'Detected multiple sessions for {sub}')
         for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
             if 'ses' in ses:
-                print('Locating files for {ses}...')
+                print(f'Locating files for {ses}...')
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
                 for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'):
                     if 'tck' in file:
