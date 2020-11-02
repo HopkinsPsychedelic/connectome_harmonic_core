@@ -18,7 +18,7 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     print(args.qsi_dir)
     tck_name = file.split('/')[-1][:-4]
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints')
-    subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses+'endpoints'), shell=True)
+    subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses+'endpoints'), shell=True)
     #os.system(f'bash /home/neuro/repo/mrtrix_qsi_pipeline.sh )
     #construct surface coordinates, surface endpoints
     lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
