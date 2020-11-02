@@ -55,7 +55,7 @@ for sub in subs:
     user_info[f'{sub}_info']['streamlines'] = [] #streamlines file locations
     if args.fprep_dir:
         user_info[f'{sub}_info']['func'] = [] #functional file locations
-    if 'ses' in os.listdir(f'{args.qsi_dir}/sub-{sub}')[0]: #if multiple sessions
+    if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
         print('Detected multiple sessions for {sub}')
         for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
             if 'ses' in ses:
@@ -104,7 +104,6 @@ for hem in ['rh','lh']:
             user_info[f'{sub}_info'][f'{hem}_surf'] = []
             user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}/sub-{sub}/surf/{hem}.white') 
 '''
-
 
 
 
