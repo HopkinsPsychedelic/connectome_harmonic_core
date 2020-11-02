@@ -11,7 +11,7 @@ import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
 
-def construct_harmonics_calculate_spectra(output_dir, file, ses=""):
+def construct_harmonics_calculate_spectra(sub, output_dir, file, ses=""):
     tck_name = file.split('/')[-1][:-4]
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints')
     subprocess.check_call("./mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses+'endpoints'), shell=True)
