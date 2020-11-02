@@ -6,6 +6,7 @@ Created on Fri Oct  9 16:01:27 2020
 @author: quintinfrerichs
 """
 import numpy as np
+import os
 import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
