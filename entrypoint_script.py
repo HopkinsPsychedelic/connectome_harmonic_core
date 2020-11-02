@@ -36,8 +36,8 @@ parser.add_argument('--parc', type = str, help = "path to parcellation file as v
 parser.add_argument('--number', type = str, help = 'number of evecs to compute')
 
 args = parser.parse_args() 
-#place Freesurfer license file
-shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0')
+#place Freesurfer license file in freesurfer home
+shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
 #set empty dict and list
 user_info = {}
 subs = []
