@@ -118,6 +118,8 @@ RUN mkdir /output && chmod 777 /output && chmod a+s /output
 
 RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
 
+RUN chmod 777 /opt/freesurfer-6.0.0
+
 USER neuro 
 
 #https://github.com/moby/moby/issues/22832
