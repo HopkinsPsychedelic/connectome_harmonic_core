@@ -42,16 +42,3 @@ mris_convert ${subsurfdir}/rh.sphere.reg ${subsurfdir}/rh.sphere.reg.vtk
 /home/neuro/repo/ShapeInterpolation ${subsurfdir}/lh.pial.vtk ${subsurfdir}/lh.mapping.vtk ${subsurfdir}/lh.pial.corresponded.vtk
 
 /home/neuro/repo/ShapeInterpolation ${subsurfdir}/rh.pial.vtk ${subsurfdir}/rh.mapping.vtk ${subsurfdir}/rh.pial.corresponded.vtk
-
-
-mris_convert ${subsurfdir}/lh.midthickness.corresponded.vtk ${subsurfdir}/lh.midthickness.corresponded.gii
-
-mris_convert ${subsurfdir}/rh.midthickness.corresponded.vtk ${subsurfdir}/rh.midthickness.corresponded.gii
-
-mris_convert ${subsurfdir}/lh.white.corresponded.vtk ${subsurfdir}/lh.white.corresponded.gii
-
-mris_convert ${subsurfdir}/rh.white.corresponded.vtk ${subsurfdir}/rh.white.corresponded.gii
-
-mris_convert ${subsurfdir}/lh.pial.corresponded.vtk ${subsurfdir}/lh.pial.corresponded.gii
-
-mris_convert ${subsurfdir}/rh.pial.corresponded.vtk ${subsurfdir}/rh.pial.corresponded.gii
