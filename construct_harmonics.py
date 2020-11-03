@@ -32,20 +32,20 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
         print('[CHAP] saved sc and si')
     streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+f'{tck_name}_endpoints.vtk'
     ec=inout.read_streamline_endpoints(streamline_path)
-    print('[CHAP] saved ec')
-    print('Constructing surface matrix...')
+    print('[CHAP] Saved ec')
+    print('[CHAP] Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si)
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
-    print('Constructing structural connectivity matrix...')
+    print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=20)
-    print('Saving structural connectivity matrix to sub or ses folder CHANGE')
+    print('[CHAP] Saving structural connectivity matrix to sub or ses folder CHANGE')
     sparse.save_npz(f'{output_dir}/chap/sub-{sub}/'+ses,struc_conn_mat)      
-    print('Computing harmonics...')
+    print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals')
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vis')
     np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals/',[vals,vecs])
-    inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/'+ses+'vis/',sc,si,vecs)
+    inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/'+ses+'vis/harmonics.vtk',sc,si,vecs)
     #Compute spectra as specified
     #TODO: add correct filepaths once volume-to-surface mapping is complete
     if args.fprep_dir:
