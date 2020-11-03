@@ -18,6 +18,7 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     print(args.qsi_dir)
     tck_name = file.split('/')[-1][:-4]
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints')
+    print('[CHAP] Running MRtrix commands...')
     subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses+'endpoints'), shell=True)
     #os.system(f'bash /home/neuro/repo/mrtrix_qsi_pipeline.sh )
     #construct surface coordinates, surface endpoints
@@ -27,15 +28,15 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
         sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
     else:
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
-    streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+'endpoints/{tck_name}.vtk'
+    streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+f'endpoints/{tck_name}.vtk'
     ec=inout.read_streamline_endpoints(streamline_path)
     print('Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si)
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=20)
-    print('Saving structural connectivity matrix to ')
-    sparse.save_npz('path',struc_conn_mat)      
+    print('Saving structural connectivity matrix to sub or ses folder CHANGE')
+    sparse.save_npz(f'{output_dir}/chap/sub-{sub}/'+ses,struc_conn_mat)      
     print('Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals')
