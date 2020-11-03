@@ -26,9 +26,10 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     rh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
     if lh_surf_path.endswith('.vtk'):
         sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
+        print('[CHAP] save sc and si')
     else:
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
-    streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+f'endpoints/{tck_name}.vtk'
+    streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+f'{tck_name}_endpoints.vtk'
     ec=inout.read_streamline_endpoints(streamline_path)
     print('Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si)
