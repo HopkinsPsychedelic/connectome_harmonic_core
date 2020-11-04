@@ -91,7 +91,7 @@ for sub in subs:
     if multises:
         for ses, file in user_info[f'{sub}_info']['streamlines']:
             #convert streamlines to .vtk using mrtrix
-            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, ses+'/')      
+            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, multises, ses)      
     else: 
         file = user_info[f'{sub}_info']['streamlines'][0]
         cs.construct_harmonics_calculate_spectra(sub, args.output_dir, file)
