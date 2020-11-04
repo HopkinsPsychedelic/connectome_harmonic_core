@@ -42,9 +42,9 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     sparse.save_npz(f'{output_dir}/chap/sub-{sub}/'+ses,struc_conn_mat)      
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
-    os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals')
     os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vis')
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'vecsvals/',[vals,vecs])
+    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'vals',vals)
+    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'vecs',vecs)
     inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/'+ses+'vis/harmonics.vtk',sc,si,vecs)
     #Compute spectra as specified
     #TODO: add correct filepaths once volume-to-surface mapping is complete
