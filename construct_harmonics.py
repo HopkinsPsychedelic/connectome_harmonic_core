@@ -20,7 +20,7 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses), shell=True)
     for file in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}'):
         if '_endpoints.tck' in file:
-            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}')
+            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
     print('[CHAP] Finished MRtrix commands')
     #construct surface coordinates, surface endpoints
     lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
@@ -31,22 +31,22 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     else:
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
         print('[CHAP] saved sc and si')
-    streamline_path = f'{output_dir}/chap/sub-{sub}/'+ses+f'{tck_name}_endpoints.vtk'
+    streamline_path = f'{output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'
     ec=inout.read_streamline_endpoints(streamline_path)
     print('[CHAP] Saved ec')
     print('[CHAP] Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si)
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('[CHAP] Constructing structural connectivity matrix...')
-    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc,ec,tol=3,NNnum=20)
+    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum=20)
     print('[CHAP] Saving structural connectivity matrix to sub or ses folder CHANGE')
-    sparse.save_npz(f'{output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat',struc_conn_mat)      
+    sparse.save_npz(f'{output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)      
     print('[CHAP] Computing harmonics...')
-    vals,vecs=dcp.lapDecomp(struc_conn_mat,args.number)
-    os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'vis')
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'vals',vals)
-    np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'vecs',vecs)
-    inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/'+ses+'vis/{sub}_{ses}_harmonics.vtk',sc,si,vecs)
+    vals,vecs=dcp.lapDecomp(struc_conn_mat, args.number)
+    os.mkdir(f'{output_dir}/chap/sub-{sub}/{ses}/vis')
+    np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vals',vals)
+    np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vecs',vecs)
+    inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/{sub}_{ses}_harmonics.vtk',sc,si,vecs)
     #Compute spectra as specified
     #TODO: add correct filepaths once volume-to-surface mapping is complete
     if args.fprep_dir:
