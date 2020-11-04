@@ -20,7 +20,7 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, ses=""):
     subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/'+ses+'dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'+ses), shell=True)
     for file in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}'):
         if '_endpoints.tck' in file:
-            os.remove(file)
+            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}')
     print('[CHAP] Finished MRtrix commands')
     #construct surface coordinates, surface endpoints
     lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
