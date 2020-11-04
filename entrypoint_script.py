@@ -32,13 +32,17 @@ parser.add_argument('fs_license_file', type = str, help = 'Path to Freesurfer li
 parser.add_argument('--participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
 parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space')
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
-parser.add_argument('--number', type = str, help = 'Number of evecs to compute. Default is 100')
+parser.add_argument('--evecs', type = int, help = 'Number of evecs to compute. Default is 100')
+parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
 #read evecs number, set default to 100
-if not args.number:
-    args.number = 100
+if not args.evecs:
+    args.evecs = 100
+#read nnum number, set default to 20
+if not args.nnum:
+    args.nnum = 20
 #set empty dict and list
 user_info = {}
 subs = []
