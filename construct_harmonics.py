@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Oct  9 16:01:27 2020
-
 used in CHAP entrypoint_script
 """
 import decomp as dcp
@@ -27,10 +26,10 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, multises,
     rh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
     if lh_surf_path.endswith('.vtk'):
         sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
-        print('[CHAP] saved sc and si')
+        print('[CHAP] Saved sc and si')
     else:
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
-        print('[CHAP] saved sc and si')
+        print('[CHAP] Saved sc and si')
     streamline_path = f'{output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'
     ec=inout.read_streamline_endpoints(streamline_path)
     print('[CHAP] Saved ec')
@@ -39,17 +38,18 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, multises,
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum=20)
-    print('[CHAP] Saving structural connectivity matrix to sub or ses folder CHANGE')
-    sparse.save_npz(f'{output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)      
+    sparse.save_npz(f'{output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)    
+    print('[CHAP] Saved structural connectivity matrix')
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat, args.number)
     os.mkdir(f'{output_dir}/chap/sub-{sub}/{ses}/vis')
     np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vals',vals)
     np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vecs',vecs)
     if multises:
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/{sub}_{ses}_harmonics.vtk',sc,si,vecs)
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs)
     else:
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/{sub}_harmonics.vtk',sc,si,vecs)
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
+    print('[CHAP] Saved harmonics')
     #Compute spectra as specified
     #TODO: add correct filepaths once volume-to-surface mapping is complete
     if args.fprep_dir:

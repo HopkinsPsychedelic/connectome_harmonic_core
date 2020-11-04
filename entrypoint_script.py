@@ -33,20 +33,20 @@ parser.add_argument('--participant_label', type = str, help = 'Participant label
 parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space')
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
 parser.add_argument('--number', type = str, help = 'Number of evecs to compute. Default is 100')
-
 args = parser.parse_args() 
-#place Freesurfer license file in freesurfer home
+#place Freesurfer license file in freesurfer home dir
 shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
-#read evecs number
+#read evecs number, set default to 100
 if not args.number:
     args.number = 100
 #set empty dict and list
 user_info = {}
 subs = []
-if not os.path.exists(f'{args.output_dir}/chap'):
-    os.mkdir(f'{args.output_dir}/chap') #create output directory
+#create output directory
+if not os.path.exists(f'{args.output_dir}/chap'): 
+    os.mkdir(f'{args.output_dir}/chap') 
 
-#populate dicts with tck output files of reconstruction for each session, and {hem}.white
+#populate dicts with tck output files (reconstruction) for each session, reconstruct surfaces
 print('[CHAP] Loading subjects...')
 if args.participant_label: #user input subjects
     subs = args.participant_label.split(" ")
@@ -55,13 +55,15 @@ else: #for all subjects
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]   
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
-    os.mkdir(f'{args.output_dir}/chap/sub-{sub}') #create output subject folder
+    user_info[f'{sub}_info']['streamlines'] = [] #streamlines file locations
     print(f'[CHAP] Reconstructing surfaces for {sub}...')
     os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script
-    user_info[f'{sub}_info']['streamlines'] = [] #streamlines file locations
+    if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}'): #create output subject folder
+        os.mkdir(f'{args.output_dir}/chap/sub-{sub}') 
     if args.fprep_dir:
         user_info[f'{sub}_info']['func'] = [] #functional file locations
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
+        multises = True
         print(f'[CHAP] Detected multiple sessions for {sub}')
         for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
             if 'ses' in ses:
@@ -69,25 +71,30 @@ for sub in subs:
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
                 for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'):
                     if 'tck' in file:
-                        print('[CHAP] Located streamlines')
                         user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
+                        print('[CHAP] Located streamlines')
                 if args.fprep_dir:
                     for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
-                        for hem in ['L','R']:
-                            if f'space-fsnative_hemi-{hem}_bold.func.gii' in file:
-                                user_info[f'{sub}_info']['func'].append([ses, file]) #functional file locations               
+                        if f'PLACEHOLDER_FOR_FUNC_FILE' in file:
+                            user_info[f'{sub}_info']['func'].append([ses, file]) #functional file locations
+        for ses, file in user_info[f'{sub}_info']['streamlines']:
+            #convert streamlines to .vtk using mrtrix
+            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, multises, ses)
     else: #if sub has just one session
         print('[CHAP] Detected only one session')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
-                print('Located streamlines')
                 user_info[f'{sub}_info']['streamlines'].append([file])
+                print('Located streamlines')
         if args.fprep_dir:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
-                        for hem in ['L','R']:
-                            if f'space-fsnative_hemi-{hem}_bold.func.gii' in file: #CHANGE THIS
-                                user_info[f'{sub}_info']['func'].append(file) #functional file locations  
-    multises = any('ses' in x[0] for x in user_info[f'{sub}_info']['streamlines']) #check whether multiple sessions, set output var
+                if f'PLACEHOLDER_FOR_FUNC_FILE' in file: 
+                    user_info[f'{sub}_info']['func'].append(file) #functional file locations  
+        cs.construct_harmonics_calculate_spectra(sub, args.output_dir, file = user_info[f'{sub}_info']['streamlines'][0])
+        
+    '''
+    file = user_info[f'{sub}_info']['streamlines'][0]
+    multises = any('ses' in x[0] for x in user_info[f'{sub}_info']['streamlines']) #check whether multiple sessions
     if multises:
         for ses, file in user_info[f'{sub}_info']['streamlines']:
             #convert streamlines to .vtk using mrtrix
@@ -95,7 +102,7 @@ for sub in subs:
     else: 
         file = user_info[f'{sub}_info']['streamlines'][0]
         cs.construct_harmonics_calculate_spectra(sub, args.output_dir, file)
-        
+ '''       
 
 
 
