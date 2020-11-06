@@ -36,7 +36,7 @@ parser.add_argument('--evecs', type = int, help = 'Number of evecs to compute. D
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
-#shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
+shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
 #read evecs number, set default to 100
 if not args.evecs:
     args.evecs = 100
