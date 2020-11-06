@@ -81,7 +81,7 @@ for sub in subs:
                     print(f'[CHAP] Detected functional images for {sub}')
                     for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
                         if f'space-T1w_desc-preproc_bold.nii.gz' in file:
-                            user_info[f'{sub}_info']['func'].append([file])                                    
+                            user_info[f'{sub}_info']['func'].append(file)                                    
         for ses, file in user_info[f'{sub}_info']['streamlines']:
             cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, user_info, multises, ses)
     else: #if sub has just one session

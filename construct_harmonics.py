@@ -57,10 +57,8 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, user_info
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
     if args.fprep_dir: #if functional images are specified
-        print(user_info[f'{sub}_info']['func'])
         os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
         for vol in user_info[f'{sub}_info']['func']:
-            print(vol)
             full_path_lh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_lh.gii'
             full_path_rh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_rh.gii'
             task = inout.get_task(vol) #get taskname
