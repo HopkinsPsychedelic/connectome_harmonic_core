@@ -36,7 +36,7 @@ parser.add_argument('--evecs', type = int, help = 'Number of evecs to compute. D
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
-shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
+#shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
 #read evecs number, set default to 100
 if not args.evecs:
     args.evecs = 100
@@ -78,12 +78,12 @@ for sub in subs:
                         user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
                         print('[CHAP] Located streamlines')
                 if args.fprep_dir:
+                    print(f'[CHAP] Detected functional images for {sub}')
                     for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
-                        if f'PLACEHOLDER_FOR_FUNC_FILE' in file:
-                            user_info[f'{sub}_info']['func'].append([ses, file]) #functional file locations
+                        if f'space-T1w_desc-preproc_bold.nii.gz' in file:
+                            user_info[f'{sub}_info']['func'].append([file])                                    
         for ses, file in user_info[f'{sub}_info']['streamlines']:
-            #convert streamlines to .vtk using mrtrix
-            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, multises, ses)
+            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, user_info, multises, ses)
     else: #if sub has just one session
         print('[CHAP] Detected only one session')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
@@ -92,34 +92,39 @@ for sub in subs:
                 print('Located streamlines')
         if args.fprep_dir:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
-                if f'PLACEHOLDER_FOR_FUNC_FILE' in file: 
+                if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
                     user_info[f'{sub}_info']['func'].append(file) #functional file locations  
         cs.construct_harmonics_calculate_spectra(sub, args.output_dir, file = user_info[f'{sub}_info']['streamlines'][0])
-        
-    '''
-    file = user_info[f'{sub}_info']['streamlines'][0]
-    multises = any('ses' in x[0] for x in user_info[f'{sub}_info']['streamlines']) #check whether multiple sessions
-    if multises:
-        for ses, file in user_info[f'{sub}_info']['streamlines']:
-            #convert streamlines to .vtk using mrtrix
-            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, multises, ses)      
-    else: 
-        file = user_info[f'{sub}_info']['streamlines'][0]
-        cs.construct_harmonics_calculate_spectra(sub, args.output_dir, file)
- '''       
+    
 
 
-
-
-
+    
+  
 '''
 run config
-/Users/bwinston/Documents/fMRI/BIDS/test/qsirecon /Users/bwinston/Documents/fMRI/BIDS/test/freesurfer /Users/bwinston/Documents/fMRI/BIDS/test/output/ participant
+/Users/bwinston/Documents/fMRI/BIDS/test/qsirecon /Users/bwinston/Documents/fMRI/BIDS/test/freesurfer /Users/bwinston/Documents/fMRI/BIDS/test/output/ participant blah --fprep_dir /Users/bwinston/Documents/fMRI/BIDS/test/fmriprep --participant_label 105923
 
 
 for hem in ['rh','lh']:
             user_info[f'{sub}_info'][f'{hem}_surf'] = []
             user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}/sub-{sub}/surf/{hem}.white') 
+            
+            
+funclist ,img_list = [], []
+                    for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
+                        if f'space-T1w_desc-preproc_bold.nii.gz' in file:
+                            funclist.append(file)
+                    for img in funclist:
+                        taskstart = img.find('task') + 5
+                        img_list.append(img[taskstart:])
+                    for fname in img_list:
+                        tasklist.append(fname.split('_')[0])
+                    tasklist = list(dict.fromkeys(tasklist)) #delete duplicate tasknames
+                    for task in tasklist:
+                        user_info[f'{sub}_info']['func'][task] = [] #list for each task
+                        for img in funclist:
+                            if task in img:
+                                user_info[f'{sub}_info']['func'][task].append(img)   
 '''
 
 

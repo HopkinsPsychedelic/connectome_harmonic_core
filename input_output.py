@@ -170,3 +170,33 @@ def generate_mask_from_parc(lhparc,rhparc):
     #mask[inds3]=1
     #mask[inds4]=1
     return mask
+
+def get_run(fname):
+    runstart = fname.find('run') + 4
+    x = fname[runstart:]
+    run = x.split('_')[0]
+    return str(run)
+
+def get_acq(fname):
+    acqstart = fname.find('acq') + 4
+    x = fname[acqstart:]
+    acq = x.split('_')[0]
+    return acq
+
+def get_task(fname):
+    taskstart = fname.find('task') + 5
+    x = fname[taskstart:]
+    task = x.split('_')[0]
+    return task
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

@@ -18,7 +18,7 @@ import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
 
-def construct_harmonics_calculate_spectra(args, sub, output_dir, file, multises, ses=""):
+def construct_harmonics_calculate_spectra(args, sub, output_dir, file, user_info, multises, ses=""):
     tck_name = file.split('/')[-1][:-4]
     print('[CHAP] Saving streamline endpoints and converting to vtk...')
     subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
@@ -52,14 +52,43 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, multises,
     np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vecs',vecs)
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) 
+        print('[CHAP] Saved harmonics for {sub} {ses}')
     else:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
-    print('[CHAP] Saved harmonics for {ses}')
-    #Compute spectra as specified
-    #TODO: add correct filepaths once volume-to-surface mapping is complete
-    if args.fprep_dir:
-        full_path_lh = "placeholder_lh.gii"
-        full_path_rh = "placeholder_rh.gii"
+        print('[CHAP] Saved harmonics for {sub}')
+    if args.fprep_dir: #if functional images are specified
+        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
+        for vol in user_info[f'{sub}_info']['func']:
+            full_path_lh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_lh.gii'
+            full_path_rh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_rh.gii'
+            task = inout.get_task(vol) #get taskname
+            full_path_lh = full_path_lh[:-6] + f'task-{task}_' + full_path_lh[-6:]
+            full_path_rh = full_path_rh[:-6] + f'task-{task}_' + full_path_rh[-6:]
+            if 'acq' in vol:
+                acq = inout.get_acq(vol)
+                full_path_lh = full_path_lh[:-6] + f'acq-{acq}_' + full_path_lh[-6:]
+                full_path_rh = full_path_rh[:-6] + f'acq-{acq}_' + full_path_rh[-6:]
+            if 'run' in vol:
+                run = inout.get_run(vol)
+                full_path_lh = full_path_lh[:-6] + f'run-{run}_' + full_path_lh[-6:]
+                full_path_rh = full_path_rh[:-6] + f'run-{run}_' + full_path_rh[-6:]
+            print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan(s)') 
+            os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
+                
+          
+                
+                
+ 
+
+   
+
+            
+            
+   
+
+
+'''
+       
         timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
         os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
@@ -76,3 +105,38 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, multises,
         os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra')
         recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
         np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra', dynamic_reconstruction_spectrum)
+'''
+
+'''
+                for run in runs:
+                    full_path_lh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_run-{run}_lh.gii'
+                    full_path_rh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_run-{run}_rh.gii'
+                    print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan, run {run}')
+                    os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf FUNCVOLPATH {full_path_lh} {full_path_rh}')
+        else:
+            for task in tasklist:
+               full_path_lh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_lh.gii'
+               full_path_rh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_rh.gii'
+               print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan')
+               os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf FUNCVOLPATH {full_path_lh} {full_path_rh}')                  
+
+runlist, img_list = [], []      
+hi = ['sub-111312_ses-test_task-rest_acq-LR_run-1_space-T1w_desc-preproc_bold.nii.gz', 'sub-111312_ses-test_task-rest_acq-LR_run-2_space-T1w_desc-aparcaseg_dseg.nii.gz', 'sub-111312_ses-test_task-WM_acq-LR_space-T1w_desc-aseg_dseg.nii.gz']
+for img in hi:
+    if 'run' in img:
+        runstart = img.find('run') + 4
+        img_list.append(img[runstart:])       
+for fname in img_list:
+    runlist.append(fname.split('_')[0])
+runlist = list(dict.fromkeys(runlist))
+print(runlist)
+for task in tasklist:
+            if any('run' in x for x in user_info[f'{sub}_info']['func'][task]):
+                runlist, img_list = [], []
+                for img in user_info[f'{sub}_info']['func'][task]:
+                    runstart = img.find('run' + 4)
+                    img_list.append(img[runstart:])
+                for fname in img_list:
+                    runlist.append(fname.split('_')[0])
+                runlist = list(dict.fromkeys(runlist))
+'''
