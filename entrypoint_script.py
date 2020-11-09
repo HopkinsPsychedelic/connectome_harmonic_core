@@ -89,7 +89,7 @@ for sub in subs:
         multises = False
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
-                user_info[f'{sub}_info']['streamlines'].append([file])
+                user_info[f'{sub}_info']['streamlines'].append(file)
                 print('Located streamlines')
         if args.fprep_dir:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
