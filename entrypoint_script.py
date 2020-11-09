@@ -86,6 +86,7 @@ for sub in subs:
             cs.construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, ses)
     else: #if sub has just one session
         print('[CHAP] Detected only one session')
+        multises = False
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
                 user_info[f'{sub}_info']['streamlines'].append([file])
