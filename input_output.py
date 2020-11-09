@@ -188,7 +188,6 @@ def get_task(fname):
     x = fname[taskstart:]
     task = x.split('_')[0]
     return task
-
     
     
     

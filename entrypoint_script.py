@@ -5,7 +5,7 @@ Created on Tue Sep 15 11:56:47 2020
 
 @author: bwinston
 
-see https://github.com/BIDS-Apps/example/blob/master/run.py 
+see https://github.comk/BIDS-Apps/example/blob/master/run.py 
 https://docs.python.org/3/library/argparse.html
 for reference
 """
@@ -83,7 +83,7 @@ for sub in subs:
                         if f'space-T1w_desc-preproc_bold.nii.gz' in file:
                             user_info[f'{sub}_info']['func'].append(file)                                    
         for ses, file in user_info[f'{sub}_info']['streamlines']:
-            cs.construct_harmonics_calculate_spectra(args, sub, args.output_dir, file, user_info, multises, ses)
+            cs.construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, ses)
     else: #if sub has just one session
         print('[CHAP] Detected only one session')
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
@@ -94,7 +94,7 @@ for sub in subs:
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
                 if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
                     user_info[f'{sub}_info']['func'].append(file) #functional file locations  
-        cs.construct_harmonics_calculate_spectra(sub, args.output_dir, file = user_info[f'{sub}_info']['streamlines'][0])
+        cs.construct_harmonics_calculate_spectra(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
     
 
 

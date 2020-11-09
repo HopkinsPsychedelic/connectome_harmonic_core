@@ -18,7 +18,7 @@ import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
 
-def construct_harmonics_calculate_spectra(args, sub, output_dir, file, user_info, multises, ses=""):
+def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, ses=""):
     tck_name = file.split('/')[-1][:-4]
     print('[CHAP] Saving streamline endpoints and converting to vtk...')
     subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
@@ -35,7 +35,7 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, user_info
     else:
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
         print('[CHAP] Saved surface coordinates and surface indices')
-    streamline_path = f'{output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'
+    streamline_path = f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'
     ec=inout.read_streamline_endpoints(streamline_path) #read endpoint locations into numpy array
     print('[CHAP] Saved endpoint coordinates')
     print('[CHAP] Constructing surface matrix...')
@@ -43,13 +43,13 @@ def construct_harmonics_calculate_spectra(args, sub, output_dir, file, user_info
     ihc_mat=mm.construct_inter_hemi_matrix(sc,tol=3)
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
-    sparse.save_npz(f'{output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save structural connectivity matrix
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save structural connectivity matrix
     print('[CHAP] Saved structural connectivity matrix')
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat, args.evecs) #laplacian decomposition
-    os.mkdir(f'{output_dir}/chap/sub-{sub}/{ses}/vis') #visualization output directory
-    np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vals',vals)
-    np.save(f'{output_dir}/chap/sub-{sub}/{ses}/vecs',vecs)
+    os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #visualization output directory
+    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals)
+    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs)
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) 
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
