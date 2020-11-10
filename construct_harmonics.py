@@ -27,14 +27,13 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
     print('[CHAP] Finished MRtrix commands')
     #construct surface coordinates, surface endpoints
-    lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
+    lh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk' #output from surface reconstruction script
     rh_surf_path = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
     if lh_surf_path.endswith('.vtk'):
         sc,si=inout.read_vtk_surface_both_hem(lh_surf_path, rh_surf_path)
-        print('[CHAP] Saved surface coordinates and surface indices')
     else:
         sc,si=inout.read_gifti_surface_both_hem(lh_surf_path, rh_surf_path)
-        print('[CHAP] Saved surface coordinates and surface indices')
+    print('[CHAP] Saved surface coordinates and surface indices')
     streamline_path = f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'
     ec=inout.read_streamline_endpoints(streamline_path) #read endpoint locations into numpy array
     print('[CHAP] Saved endpoint coordinates')
@@ -57,11 +56,11 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
     if args.fprep_dir: #if functional images are specified
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
+        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
         for vol in user_info[f'{sub}_info']['func']:
-            full_path_lh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_lh.gii'
-            full_path_rh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_rh.gii'
             task = inout.get_task(vol) #get taskname
+            full_path_lh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_lh.gii'
+            full_path_rh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_rh.gii'           
             full_path_lh = full_path_lh[:-6] + f'task-{task}_' + full_path_lh[-6:]
             full_path_rh = full_path_rh[:-6] + f'task-{task}_' + full_path_rh[-6:]
             if 'acq' in vol:
@@ -74,11 +73,7 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
                 full_path_rh = full_path_rh[:-6] + f'run-{run}_' + full_path_rh[-6:]
             print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan(s)') 
             os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
-                
-          
-                
-                
- 
+    print(f'[CHAP] Finished')
 
    
 
