@@ -56,7 +56,8 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
     if args.fprep_dir: #if functional images are specified
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
+        if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func'):
+            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
         for vol in user_info[f'{sub}_info']['func']:
             if ses in vol:
                 task = inout.get_task(vol) #get taskname
@@ -78,7 +79,8 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
                 #read functional timeseries of surface mapped volume
                 timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
                 #power spectra
-                os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
+                if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra'):
+                    os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
                 mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
                 dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
@@ -87,14 +89,16 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
                 print('[CHAP] Computed power spectra')
                 #energy spectra
-                os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
+                if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra'):
+                    os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
                 mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals)
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
                 dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
                 print('[CHAP] Computed energy spectra')
                 #reconstruction spectrum
-                os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
+                if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra'):
+                    os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
                 dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
                 print('[CHAP] Computed reconstruction spectra')
