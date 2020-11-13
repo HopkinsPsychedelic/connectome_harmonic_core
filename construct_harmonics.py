@@ -72,63 +72,39 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
                     run = inout.get_run(vol)
                     full_path_lh = full_path_lh[:-11] + f'run-{run}_' + full_path_lh[-11:]
                     full_path_rh = full_path_rh[:-11] + f'run-{run}_' + full_path_rh[-11:]
-                print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan(s)') 
+                print(f'[CHAP] Mapping {vol} to cortical surface') 
                 os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
-        print(f'[CHAP] Finished')      
-            
-   
-
-
-'''
-       
-        timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
-        os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra')
-        mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
-        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
-        normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', mean_power_spectrum)
-        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', dynamic_power_spectrum)
-        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'owerspectra', normalized_power_spectrum)
-        os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'energyspectra')
-        dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
-        normalized_energy_spectrum = cs.normalized_energy_spectrum(timeseries, vecs)
-        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', mean_energy_spectrum)
-        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'powerspectra', dynamic_energy_spectrum)
-        os.mkdir(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra')
-        recon_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
-        np.save(f'{output_dir}/chap/sub-{sub}/'+ses+'reconspectra', dynamic_reconstruction_spectrum)
-'''
-
-'''
-                for run in runs:
-                    full_path_lh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_run-{run}_lh.gii'
-                    full_path_rh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_run-{run}_rh.gii'
-                    print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan, run {run}')
-                    os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf FUNCVOLPATH {full_path_lh} {full_path_rh}')
-        else:
-            for task in tasklist:
-               full_path_lh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_lh.gii'
-               full_path_rh = '{args.output_dir}/chap/sub-{sub}/{ses}/surfmapped_func_task-{task}_rh.gii'
-               print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan')
-               os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf FUNCVOLPATH {full_path_lh} {full_path_rh}')                  
-
-runlist, img_list = [], []      
-hi = ['sub-111312_ses-test_task-rest_acq-LR_run-1_space-T1w_desc-preproc_bold.nii.gz', 'sub-111312_ses-test_task-rest_acq-LR_run-2_space-T1w_desc-aparcaseg_dseg.nii.gz', 'sub-111312_ses-test_task-WM_acq-LR_space-T1w_desc-aseg_dseg.nii.gz']
-for img in hi:
-    if 'run' in img:
-        runstart = img.find('run') + 4
-        img_list.append(img[runstart:])       
-for fname in img_list:
-    runlist.append(fname.split('_')[0])
-runlist = list(dict.fromkeys(runlist))
-print(runlist)
-for task in tasklist:
-            if any('run' in x for x in user_info[f'{sub}_info']['func'][task]):
-                runlist, img_list = [], []
-                for img in user_info[f'{sub}_info']['func'][task]:
-                    runstart = img.find('run' + 4)
-                    img_list.append(img[runstart:])
-                for fname in img_list:
-                    runlist.append(fname.split('_')[0])
-                runlist = list(dict.fromkeys(runlist))
-'''
+                #read functional timeseries of surface mapped volume
+                timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
+                #power spectra
+                os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
+                mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/mean_power_spectrum', mean_power_spectrum)
+                dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/dynamic_power_spectrum', dynamic_power_spectrum)
+                normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/normalized_power_spectrum', normalized_power_spectrum)
+                print('[CHAP] Computed power spectra')
+                #energy spectra
+                os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
+                mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/mean_energy_spectrum', mean_energy_spectrum)
+                dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/dynamic_energy_spectrum', dynamic_energy_spectrum)
+                print('[CHAP] Computed energy spectra')
+                #reconstruction spectrum
+                os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
+                dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra/dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
+                print('[CHAP] Computed reconstruction spectra')
+    print(f'[CHAP] Finished {ses}')
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                

@@ -98,7 +98,8 @@ for sub in subs:
                 if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
                     user_info[f'{sub}_info']['func'].append(file)   
         cs.construct_harmonics_calculate_spectra(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
-    
+    print(f'[CHAP] Finished {sub}')
+print(f'[CHAP] CHAP completed')
 
 
     
