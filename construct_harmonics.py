@@ -58,26 +58,23 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
     if args.fprep_dir: #if functional images are specified
         os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
         for vol in user_info[f'{sub}_info']['func']:
-            task = inout.get_task(vol) #get taskname
-            full_path_lh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_lh.gii'
-            full_path_rh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_rh.gii'           
-            full_path_lh = full_path_lh[:-6] + f'task-{task}_' + full_path_lh[-6:]
-            full_path_rh = full_path_rh[:-6] + f'task-{task}_' + full_path_rh[-6:]
-            if 'acq' in vol:
-                acq = inout.get_acq(vol)
-                full_path_lh = full_path_lh[:-6] + f'acq-{acq}_' + full_path_lh[-6:]
-                full_path_rh = full_path_rh[:-6] + f'acq-{acq}_' + full_path_rh[-6:]
-            if 'run' in vol:
-                run = inout.get_run(vol)
-                full_path_lh = full_path_lh[:-6] + f'run-{run}_' + full_path_lh[-6:]
-                full_path_rh = full_path_rh[:-6] + f'run-{run}_' + full_path_rh[-6:]
-            print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan(s)') 
-            os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
-    print(f'[CHAP] Finished')
-
-   
-
-            
+            if ses in vol:
+                task = inout.get_task(vol) #get taskname
+                full_path_lh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_lh.func.gii'
+                full_path_rh = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/surfmapped_vol_rh.func.gii'           
+                full_path_lh = full_path_lh[:-11] + f'task-{task}_' + full_path_lh[-11:]
+                full_path_rh = full_path_rh[:-11] + f'task-{task}_' + full_path_rh[-11:]
+                if 'acq' in vol:
+                    acq = inout.get_acq(vol)
+                    full_path_lh = full_path_lh[:-11] + f'acq-{acq}_' + full_path_lh[-11:]
+                    full_path_rh = full_path_rh[:-11] + f'acq-{acq}_' + full_path_rh[-11:]
+                if 'run' in vol:
+                    run = inout.get_run(vol)
+                    full_path_lh = full_path_lh[:-11] + f'run-{run}_' + full_path_lh[-11:]
+                    full_path_rh = full_path_rh[:-11] + f'run-{run}_' + full_path_rh[-11:]
+                print(f'[CHAP] Mapping functional volume to cortical surface for {task} scan(s)') 
+                os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
+        print(f'[CHAP] Finished')      
             
    
 
