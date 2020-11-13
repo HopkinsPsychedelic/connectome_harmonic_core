@@ -36,7 +36,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            x11-utils \
            ssh \
            libx11-dev \
-           libglib2.0-0:i386 \
+           libglib2.0-0 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
