@@ -97,7 +97,7 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
                 print('[CHAP] Computed energy spectra')
                 #reconstruction spectrum
-                if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra'):
+                if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra'):
                     os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
                 dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
                 np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
