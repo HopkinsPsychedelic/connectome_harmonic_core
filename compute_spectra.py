@@ -78,7 +78,6 @@ def normalized_power_spectrum(timeseries,vecs):
 def read_functional_timeseries(lhfunc,rhfunc):
     l = nib.load(lhfunc).darrays
     r = nib.load(rhfunc).darrays
-    print(l)
     timeseries = np.zeros((2*len(l[0].data), len(r)))
     for i in range(len(l)):
         lt = np.array(l[i].data)
