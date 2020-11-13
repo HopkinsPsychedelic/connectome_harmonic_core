@@ -74,34 +74,34 @@ def construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, 
                     full_path_rh = full_path_rh[:-11] + f'run-{run}_' + full_path_rh[-11:]
                 print(f'[CHAP] Mapping {vol} to cortical surface') 
                 os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
+                bids_stuff = inout.get_bids_stuff(full_path_lh)
                 #read functional timeseries of surface mapped volume
                 timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
                 #power spectra
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
                 mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/mean_power_spectrum', mean_power_spectrum)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
                 dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/dynamic_power_spectrum', dynamic_power_spectrum)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
                 normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/normalized_power_spectrum', normalized_power_spectrum)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
                 print('[CHAP] Computed power spectra')
                 #energy spectra
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
                 mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals)
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/mean_energy_spectrum', mean_energy_spectrum)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
                 dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/dynamic_energy_spectrum', dynamic_energy_spectrum)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/powerspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
                 print('[CHAP] Computed energy spectra')
                 #reconstruction spectrum
                 os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
                 dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra/dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
+                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
                 print('[CHAP] Computed reconstruction spectra')
     print(f'[CHAP] Finished {ses}')
                 
                 
-                
-                
+
                 
                 
                 

@@ -189,8 +189,11 @@ def get_task(fname):
     task = x.split('_')[0]
     return task
     
-    
-    
+def get_bids_stuff(lh_full_path):
+    stuff_start = lh_full_path.find('vol_') + 4
+    x = lh_full_path[stuff_start:]
+    bids_stuff = x.split('lh')[0][:-1]
+    return(bids_stuff)
     
     
     
