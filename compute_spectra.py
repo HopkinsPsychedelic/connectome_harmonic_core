@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+import nibabel as nib
 
 
 def dynamic_energy_spectrum(timeseries,vecs,vals):
