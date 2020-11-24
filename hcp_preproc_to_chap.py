@@ -34,8 +34,9 @@ def file_puller(args, sub, user_info):
                             print(f'[CHAP] Unzipping {sub} {ses} {bids_type} directory')
                             zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/{bids_type}')       
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Diffusion/{sub}/T1w/Diffusion' 
+        struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Structural/{sub}/T1w'
         print(f'[CHAP] Running MRtrix commands')
-        os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {diffusion_dir}/../T1w_acpc_dc_restore_1.25.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix 10000000')            
+        os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix 10000000')            
 
 
 
