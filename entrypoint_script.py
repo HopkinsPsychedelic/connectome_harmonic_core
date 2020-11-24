@@ -37,8 +37,7 @@ parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep o
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
 parser.add_argument('--evecs', type = int, help = 'Number of evecs to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
-parser.add_argument('--hcp_test_dir', type = str, help = 'HCP min. preprocessed downloads test session')
-parser.add_argument('--hcp_retest_dir', type = str, help = 'HCP min. preprocessed downloads retest session')
+parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed downloads w/ test and retest folders')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
@@ -50,7 +49,7 @@ if not args.evecs:
 if not args.nnum:
     args.nnum = 20
 #hcp intermediate dir
-if args.hcp_test_dir: 
+if args.hcp_dir: 
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
 #create output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
@@ -60,9 +59,10 @@ user_info = {}
 subs = []
 if args.participant_label: #user input subjects
     subs = args.participant_label.split(" ")
-elif args.hcp_test_dir: #all subjects in hcp output
-    sub_list = os.listdir(args.hcp_test_dir)  
-    subs = [str(sub) for sub in sub_list]                  
+elif args.hcp_dir: #hcp subs
+    sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
+    subs = [sub[:6] for sub in sub_list]
+    subs = list(dict.fromkeys(subs))        
 else: #all subjects from qsi output
     subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
@@ -71,9 +71,8 @@ print(f'[CHAP] Sub(s) found: {subs}')
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subjet output folder
-    if args.hcp_test_dir:
+    if args.hcp_dir:
         hcp_prep.file_puller(args, sub, user_info)
-        
     else:        
         user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
         print(f'[CHAP] Reconstructing surfaces for {sub}...')
@@ -140,8 +139,6 @@ funclist ,img_list = [], []
                             if task in img:
                                 user_info[f'{sub}_info']['func'][task].append(img)   
 '''
-
-
 
 
 

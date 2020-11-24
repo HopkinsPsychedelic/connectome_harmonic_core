@@ -11,7 +11,7 @@ Created on Mon Nov 23 00:21:55 2020
 #user_info['dwi'] = all dwi images for a session
 #user_info['surfs'] = specific surfaces that we want for hcp min preproc
 
-#hierarchy should be sub-105923/ses-test/105923 etc.
+#hierarchy should be 105923/ses-test/zips
 
 
 from zipfile import ZipFile
@@ -25,14 +25,12 @@ def file_puller(args, sub, user_info):
         inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}')
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}')
         if args.fprep_dir:
-            inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/{sub}/ses-{ses}/func')
-        hcp_ses_dir = getattr(args, f'hcp_{ses}_dir')
-        for zipdir in os.listdir(f'{hcp_ses_dir}/{sub}'):
-            print(zipdir)
+            inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/{sub}/ses-{ses}/func')         
+        for zipdir in os.listdir(f'{args.hcp_dir}/ses-{ses}'):
             if sub in zipdir and 'md5' not in zipdir:
                 for bids_type in ['Structural', 'Diffusion']:
                     if bids_type in zipdir:
-                        with ZipFile(f'{hcp_ses_dir}/{sub}/{zipdir}', 'r') as zipObj:
+                        with ZipFile(f'{args.hcp_dir}/ses-{ses}/{zipdir}', 'r') as zipObj:
                             print(f'[CHAP] Unzipping {sub} {ses} {bids_type} directory')
                             zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/{bids_type}')       
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Diffusion/{sub}/T1w/Diffusion' 
@@ -43,7 +41,7 @@ def file_puller(args, sub, user_info):
 
         
 '''               
-        
+   getattr(args, f'hcp_{ses}_dir')     
 #run mrtrix pipeline on user_info[f'{sub}_info'][ses][dwi]
 #do surface stuff for surfs
         
