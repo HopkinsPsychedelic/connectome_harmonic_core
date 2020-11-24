@@ -6,8 +6,8 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-import vtk
-import meshio
+#import vtk
+#import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
 
@@ -194,6 +194,11 @@ def get_bids_stuff(lh_full_path):
     x = lh_full_path[stuff_start:]
     bids_stuff = x.split('lh')[0][:-1]
     return(bids_stuff)
+
+def if_not_exist_make(path):
+    import os
+    if not os.path.exists(path):
+        os.mkdir(path)
     
     
     

@@ -10,6 +10,8 @@ https://docs.python.org/3/library/argparse.html
 for reference
 """
 
+print('[CHAP] Welcome')
+
 import argparse
 import os
 import shutil
@@ -22,87 +24,95 @@ import argparse
 import decomp as dcp
 import utility_functions as uts
 import construct_harmonics as cs
+import hcp_preproc_to_chap as hcp_prep
 #user inputs cl arguments separated by spaces
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
-parser.add_argument('qsi_dir', type = str, help = 'qsirecon output directory')
-parser.add_argument('surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode')
-parser.add_argument('fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename)')
 parser.add_argument('--participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
+parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory')
+parser.add_argument('--surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory')
+parser.add_argument('--fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename)')
 parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space')
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
 parser.add_argument('--evecs', type = int, help = 'Number of evecs to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
+parser.add_argument('--hcp_test_dir', type = str, help = 'HCP min. preprocessed downloads test session')
+parser.add_argument('--hcp_retest_dir', type = str, help = 'HCP min. preprocessed downloads retest session')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
-shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
+if args.fs_license_file:
+    shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')
 #read evecs number, set default to 100
 if not args.evecs:
     args.evecs = 100
 #read nnum number, set default to 20
 if not args.nnum:
     args.nnum = 20
+#hcp intermediate dir
+if args.hcp_test_dir: 
+    inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
 #create output directory
-if not os.path.exists(f'{args.output_dir}/chap'): 
-    os.mkdir(f'{args.output_dir}/chap') 
+inout.if_not_exist_make(f'{args.output_dir}/chap')
 #set empty dict
 user_info = {}
 #find subjects
 subs = []
-print('[CHAP] Loading subjects...')
 if args.participant_label: #user input subjects
     subs = args.participant_label.split(" ")
-else: #for all subjects
+elif args.hcp_test_dir: #all subjects in hcp output
+    sub_list = os.listdir(args.hcp_test_dir)  
+    subs = [str(sub) for sub in sub_list]                  
+else: #all subjects from qsi output
     subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Sub(s) found: {subs}')
 #populate dicts with tck output files (reconstruction) for each session, reconstruct surfaces
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
-    user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
-    print(f'[CHAP] Reconstructing surfaces for {sub}...')
-    os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer data
-    if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}'): #create output subject folder
-        os.mkdir(f'{args.output_dir}/chap/sub-{sub}') 
-    if args.fprep_dir:
-        user_info[f'{sub}_info']['func'] = [] #where functional files will go
-    if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
-        multises = True
-        print(f'[CHAP] Detected multiple sessions for {sub}')
-        for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
-            if 'ses' in ses:
-                print(f'[CHAP] Locating files for {ses}...')
-                if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}'): #create output session folders
-                    os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}') 
-                for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'):
-                    if 'tck' in file:
-                        user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
-                        print('[CHAP] Located streamlines')
-                if args.fprep_dir:
-                    print(f'[CHAP] Detected functional images for {sub}')
-                    for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'): #look for preprocessed images in T1 space 
-                        if f'space-T1w_desc-preproc_bold.nii.gz' in file:
-                            user_info[f'{sub}_info']['func'].append(file)                                    
-        for ses, file in user_info[f'{sub}_info']['streamlines']:
-            cs.construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, ses)
-    else: #if sub has just one session
-        print('[CHAP] Detected only one session')
-        multises = False
-        for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
-            if 'tck' in file:
-                user_info[f'{sub}_info']['streamlines'].append(file)
-                print('Located streamlines')
+    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subjet output folder
+    if args.hcp_test_dir:
+        hcp_prep.file_puller(args, sub, user_info)
+        
+    else:        
+        user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
+        print(f'[CHAP] Reconstructing surfaces for {sub}...')
+        os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer data
         if args.fprep_dir:
-            for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
-                if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
-                    user_info[f'{sub}_info']['func'].append(file)   
-        cs.construct_harmonics_calculate_spectra(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
+            user_info[f'{sub}_info']['func'] = [] #where functional files will go
+        if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
+            multises = True
+            print(f'[CHAP] Detected multiple sessions for {sub}')
+            for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
+                if 'ses' in ses:
+                    print(f'[CHAP] Locating files for {ses}...')
+                    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
+                    for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'):
+                        if 'tck' in file:
+                            user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
+                            print('[CHAP] Located streamlines')
+                    if args.fprep_dir:
+                        print(f'[CHAP] Detected functional images for {sub}')
+                        for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'): #look for preprocessed images in T1 space 
+                            if f'space-T1w_desc-preproc_bold.nii.gz' in file:
+                                user_info[f'{sub}_info']['func'].append(file)                                    
+            for ses, file in user_info[f'{sub}_info']['streamlines']:
+                cs.construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, ses)
+        else: #if sub has just one session
+            print('[CHAP] Detected only one session')
+            multises = False
+            for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
+                if 'tck' in file:
+                    user_info[f'{sub}_info']['streamlines'].append(file)
+                    print('Located streamlines')
+            if args.fprep_dir:
+                for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
+                    if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
+                        user_info[f'{sub}_info']['func'].append(file)   
+            cs.construct_harmonics_calculate_spectra(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
     print(f'[CHAP] Finished {sub}')
 print(f'[CHAP] CHAP completed')
-
-
-    
+ 
   
 '''
 run config
