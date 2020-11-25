@@ -5,8 +5,8 @@ bvals=$2
 bvecs=$3
 T1path=$4
 brainmask=$5
-intermediary_output_path=$5
-num_streamlines=$6
+intermediary_output_path=$6
+num_streamlines=$7
 
 mkdir ${intermediary_output_path}
 cd ${intermediary_output_path}
