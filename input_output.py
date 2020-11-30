@@ -6,9 +6,9 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-#import vtk
-#import meshio
-#from tvtk.api import tvtk, write_data
+import vtk
+import meshio
+from tvtk.api import tvtk, write_data
 import nibabel as nib
 
 

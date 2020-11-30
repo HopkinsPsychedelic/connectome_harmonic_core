@@ -66,7 +66,7 @@ elif args.hcp_dir: #hcp subs
 else: #all subjects from qsi output
     subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-print(f'[CHAP] Sub(s) found: {subs}')
+print(f'[CHAP] Using sub(s): {subs}')
 #populate dicts with tck output files (reconstruction) for each session, reconstruct surfaces
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
