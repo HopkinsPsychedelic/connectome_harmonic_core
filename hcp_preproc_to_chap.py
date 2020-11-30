@@ -31,8 +31,8 @@ def hcp_chapper(args, sub, user_info):
                             zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/{bids_type}')       
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Diffusion/{sub}/T1w/Diffusion' 
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Structural/{sub}/T1w'
-        user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.lh.white.32k_fs_LR.surf.gii'
-        user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.rh.white.32k_fs_LR.surf.gii'
+        user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii'
+        user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii'
         if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'):
             print(f'[CHAP] Endpoints already detected')
             user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'
