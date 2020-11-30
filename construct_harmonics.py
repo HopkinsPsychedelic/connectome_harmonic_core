@@ -34,7 +34,11 @@ def prep_harmonics_bids(args, sub, file, user_info, multises, ses=""):
       
 
 def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises): 
-    sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
+    print(user_info[f'{sub}_info']['surfs']['lh'])
+    if user_info[f'{sub}_info']['surfs']['lh'].endswith('.vtk'):
+        sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
+    else:
+        sc,si=inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(user_info[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array
     print('[CHAP] Saved endpoint coordinates')
