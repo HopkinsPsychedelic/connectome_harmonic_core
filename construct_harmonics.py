@@ -34,8 +34,8 @@ def prep_harmonics_bids(args, sub, file, user_info, multises, ses=""):
       
 
 def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises): 
-    print('YO CHECK IT' + user_info[f'{sub}_info']['surfs']['lh'])
-    if 'vtk' in user_info[f'{sub}_info']['surfs']['lh']:
+    print('YO CHECK IT' + user_info[f'{sub}_info'][ses]['surfs']['lh'])
+    if 'vtk' in user_info[f'{sub}_info'][ses]['surfs']['lh']:
         print('dis a vtk')
         sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
     else:
