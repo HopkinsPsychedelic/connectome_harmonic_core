@@ -34,9 +34,15 @@ def hcp_chapper(args, sub, user_info):
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Structural/{sub}/T1w'
         user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.lh.white.32k_fs_LR.surf.gii'
         user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.rh.white.32k_fs_LR.surf.gii'
-        print(f'[CHAP] Running MRtrix commands')
-        os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix 10000000')
-        user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'
+        if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'):
+            print(f'[CHAP] Endpoints already detected')
+            user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'
+        else: 
+            print(f'[CHAP] Running MRtrix commands')
+            os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix 10000000')
+            os.remove(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000.tck')
+            os.remove(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/DWI.mif')
+            user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'
         ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises = True)   
 
 
