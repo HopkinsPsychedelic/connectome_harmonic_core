@@ -5,23 +5,20 @@ Created on Mon Nov 23 00:21:55 2020
 
 @author: bwinston
 """
-#on our own we will unzip to the format we need
-
-#using hcp preproc
-#user_info['dwi'] = all dwi images for a session
-#user_info['surfs'] = specific surfaces that we want for hcp min preproc
-
-#hierarchy should be 105923/ses-test/zips
+#need to fix qsi method in terms of user_info and session stuff
 
 
 from zipfile import ZipFile
 import os
 import input_output as inout
+import construct_harmonics as ch
 
-def file_puller(args, sub, user_info):
+def hcp_chapper(args, sub, user_info):
+    print(f'[CHAP] Creating directories for HCP subject {sub}')
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}')
     for ses in ['test', 'retest']:
-        user_info[f'{sub}_info'][ses] = {}
+        user_info[f'{sub}_info'][ses], user_info[f'{sub}_info'][ses]['surfs'] = {}, {} 
+        user_info[f'{sub}_info'][ses]['endpoints'], user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh']  = [], [], []
         inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}')
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}')
         if args.fprep_dir:
@@ -35,8 +32,12 @@ def file_puller(args, sub, user_info):
                             zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/{bids_type}')       
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Diffusion/{sub}/T1w/Diffusion' 
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Structural/{sub}/T1w'
+        user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.lh.white.32k_fs_LR.surf.gii'
+        user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.rh.white.32k_fs_LR.surf.gii'
         print(f'[CHAP] Running MRtrix commands')
-        os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix 10000000')            
+        os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix 10000000')
+        user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/mrtrix/10000000_endpoints.vtk'
+        ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises = True)   
 
 
 

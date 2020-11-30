@@ -72,7 +72,7 @@ for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subjet output folder
     if args.hcp_dir:
-        hcp_prep.file_puller(args, sub, user_info)
+        hcp_prep.hcp_chapper(args, sub, user_info)
     else:        
         user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
         print(f'[CHAP] Reconstructing surfaces for {sub}...')
@@ -96,7 +96,7 @@ for sub in subs:
                             if f'space-T1w_desc-preproc_bold.nii.gz' in file:
                                 user_info[f'{sub}_info']['func'].append(file)                                    
             for ses, file in user_info[f'{sub}_info']['streamlines']:
-                cs.construct_harmonics_calculate_spectra(args, sub, file, user_info, multises, ses)
+                cs.prep_harmonics_bids(args, sub, file, user_info, multises, ses)
         else: #if sub has just one session
             print('[CHAP] Detected only one session')
             multises = False
@@ -108,11 +108,13 @@ for sub in subs:
                 for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
                     if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
                         user_info[f'{sub}_info']['func'].append(file)   
-            cs.construct_harmonics_calculate_spectra(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
+            cs.prep_harmonics_bids(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
     print(f'[CHAP] Finished {sub}')
 print(f'[CHAP] CHAP completed')
  
-  
+
+
+
 '''
 run config
 /Users/bwinston/Documents/fMRI/BIDS/test/qsirecon /Users/bwinston/Documents/fMRI/BIDS/test/freesurfer /Users/bwinston/Documents/fMRI/BIDS/test/output/ participant blah --fprep_dir /Users/bwinston/Documents/fMRI/BIDS/test/fmriprep --participant_label 105923
