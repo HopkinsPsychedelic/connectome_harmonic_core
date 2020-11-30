@@ -27,7 +27,7 @@ def hcp_chapper(args, sub, user_info):
                 for bids_type in ['Structural', 'Diffusion']:
                     if bids_type in zipdir:
                         with ZipFile(f'{args.hcp_dir}/ses-{ses}/{zipdir}', 'r') as zipObj:
-                            print(f'[CHAP] Unzipping {sub} {ses} {bids_type} directory')
+                            print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
                             zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/{bids_type}')       
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Diffusion/{sub}/T1w/Diffusion' 
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}/Structural/{sub}/T1w'
