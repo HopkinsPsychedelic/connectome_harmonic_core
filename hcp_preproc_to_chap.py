@@ -18,7 +18,6 @@ def hcp_chapper(args, sub, user_info):
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}')
     for ses in ['test', 'retest']:
         user_info[f'{sub}_info'][ses], user_info[f'{sub}_info'][ses]['surfs'] = {}, {} 
-        user_info[f'{sub}_info'][ses]['endpoints'], user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh']  = [], [], []
         inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/ses-{ses}')
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}')
         if args.fprep_dir:
