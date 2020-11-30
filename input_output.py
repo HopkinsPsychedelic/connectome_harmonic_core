@@ -8,16 +8,17 @@ Created on Thu May 28 18:16:15 2020
 import numpy as np
 import vtk
 import meshio
-from tvtk.api import tvtk, write_data
+#from tvtk.api import tvtk, write_data
 import nibabel as nib
 
-
+'''
 def save_surface(filename,points,edges,feature=None):
     mesh = tvtk.PolyData(points=points, polys=edges)
     if feature is not None:
         mesh.point_data.scalars=feature
     write_data(mesh, filename)
     return
+'''
 
 
 def save_eigenvector(filename,points,edges,vecs):
@@ -131,7 +132,7 @@ def combine_hemis(lhc,rhc,lhi,rhi):
     coords=np.vstack((lhc,rhc))
     si=np.vstack((lhi,rhi+len(rhc)))
     return coords, si
-
+'''
 def split_vtk_feature_to_hems(path,fname):
     sc,si=read_vtk_surface(path+fname)
     feature=read_vtk_feature(path+fname,'scalars')
@@ -142,7 +143,7 @@ def split_vtk_feature_to_hems(path,fname):
     save_surface(path+'lh_'+fname,lsc,lsi,feature[:int(len(sc)/2)])
     save_surface(path+'rh_'+fname,rsc,rsi,feature[int(len(sc)/2):])
     return
-
+'''
 
 def gifti_to_scalar(L,R):
     l=L.darrays
