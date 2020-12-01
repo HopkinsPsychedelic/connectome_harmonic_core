@@ -51,7 +51,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     print('[CHAP] Saved structural connectivity matrix')
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat, args.evecs) #laplacian decomposition
-    os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #visualization output directory
+    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #visualization output directory
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals)
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs)
     if multises:
