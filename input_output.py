@@ -86,17 +86,29 @@ def read_vtk_surface_both_hem(Lfile,Rfile):
     coords,si=combine_hemis(lhc,rhc,lhi,rhi)
     return coords,si
 
-def read_gifti_surface(filename):
-    data=nib.load(filename)
-    points=data.darrays[1].data
-    edges=data.darrays[0].data
-    return points,edges
+def read_gifti_surface(filename,hcp=False):
+    if hcp:
+        data=nib.load(filename)
+        points=data.darrays[0].data
+        edges=data.darrays[1].data
+        return points,edges
+    else:
+        data=nib.load(filename)
+        points=data.darrays[1].data
+        edges=data.darrays[0].data
+        return points,edges
 
-def read_gifti_surface_both_hem(Lfile,Rfile):
-    lhc,lhi=read_gifti_surface(Lfile)
-    rhc,rhi=read_gifti_surface(Rfile)
+def read_gifti_surface_both_hem(Lfile,Rfile,hcp=False):
+    lhc,lhi=read_gifti_surface(Lfile,hcp)
+    rhc,rhi=read_gifti_surface(Rfile,hcp)
     points,edges=combine_hemis(lhc,rhc,lhi,rhi)
     return points,edges
+
+def combine_hemis(lhc,rhc,lhi,rhi):
+    #concatenates surface coordinates of two hemispheres and creates connectivity array for full surface
+    coords=np.vstack((lhc,rhc))
+    si=np.vstack((lhi,rhi+len(lhc)))
+    return coords, si
 
 def read_functional_timeseries(lhfunc,rhfunc,bcp=True):
     l = nib.load(lhfunc).darrays
@@ -127,11 +139,7 @@ def read_streamline_endpoints(filename):
             points[i,:] = data.GetPoint(i)
     return points
 
-def combine_hemis(lhc,rhc,lhi,rhi):
-    #concatenates surface coordinates of two hemispheres and creates connectivity array for full surface
-    coords=np.vstack((lhc,rhc))
-    si=np.vstack((lhi,rhi+len(rhc)))
-    return coords, si
+
 '''
 def split_vtk_feature_to_hems(path,fname):
     sc,si=read_vtk_surface(path+fname)
@@ -202,8 +210,25 @@ def if_not_exist_make(path):
         os.mkdir(path)
     
     
+'''
+def read_gifti_surface(filename):
+    data=nib.load(filename)
+    points=data.darrays[1].data
+    edges=data.darrays[0].data
+    return points,edges
+
+def read_gifti_surface_both_hem(Lfile,Rfile):
+    lhc,lhi=read_gifti_surface(Lfile)
+    rhc,rhi=read_gifti_surface(Rfile)
+    points,edges=combine_hemis(lhc,rhc,lhi,rhi)
+    return points,edges   
     
-    
+def combine_hemis(lhc,rhc,lhi,rhi):
+    #concatenates surface coordinates of two hemispheres and creates connectivity array for full surface
+    coords=np.vstack((lhc,rhc))
+    si=np.vstack((lhi,rhi+len(rhc)))
+    return coords, si
+'''
     
     
     
