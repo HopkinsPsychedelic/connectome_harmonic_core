@@ -37,7 +37,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     if 'vtk' in user_info[f'{sub}_info'][ses]['surfs']['lh']:
         sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
     else:
-        sc,si=inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
+        sc,si=inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(user_info[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array
     print('[CHAP] Saved endpoint coordinates')
