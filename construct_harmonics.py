@@ -43,8 +43,6 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     print('[CHAP] Saved endpoint coordinates')
     print('[CHAP] Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si
-    print(f'shapes: ec is {ec.shape}, sc is {sc.shape}, si is {si.shape}')
-    print(f'last 10 of sc is: {sc[-10:]} - last 10 of si is: {si[-10:]}')
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save structural connectivity matrix
