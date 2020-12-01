@@ -47,7 +47,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     print(f'first 10 of sc is: {sc[:10]} - first 10 of si is: {si[:10]}')
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save structural connectivity matrix
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/ses-{ses}/struc_conn_mat', struc_conn_mat) #save structural connectivity matrix
     print('[CHAP] Saved structural connectivity matrix')
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(struc_conn_mat, args.evecs) #laplacian decomposition
