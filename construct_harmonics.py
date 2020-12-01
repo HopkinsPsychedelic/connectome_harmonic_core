@@ -29,23 +29,21 @@ def prep_harmonics_bids(args, sub, file, user_info, multises, ses=""):
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
     print('[CHAP] Finished MRtrix commands')
     #construct surface coordinates, surface endpoints
-    user_info[f'{sub}_info'][ses]['surfs'][f'lh'] = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
-    user_info[f'{sub}_info'][ses]['surfs'][f'rh'] = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
+    user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
+    user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
       
 
 def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises): 
-    print('YO CHECK IT' + user_info[f'{sub}_info'][ses]['surfs']['lh'])
     if 'vtk' in user_info[f'{sub}_info'][ses]['surfs']['lh']:
-        print('dis a vtk')
         sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
     else:
-        print('dis a gifti')
         sc,si=inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'])
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(user_info[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array
     print('[CHAP] Saved endpoint coordinates')
     print('[CHAP] Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si
+    print(f'shapes: ec is {ec.shape}, sc is {sc.shape}, si is {si.shape}')
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save structural connectivity matrix
