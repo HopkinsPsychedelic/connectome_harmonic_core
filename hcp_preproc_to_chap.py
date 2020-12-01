@@ -21,14 +21,17 @@ def hcp_chapper(args, sub, user_info):
         inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}')
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}')
         if args.fprep_dir:
-            inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/{sub}/{ses}/func')         
-        for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
-            if sub in zipdir and 'md5' not in zipdir:
-                for bids_type in ['Structural', 'Diffusion']:
-                    if bids_type in zipdir:
-                        with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
-                            print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
-                            zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')       
+            inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/{sub}/{ses}/func') 
+        if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural'):
+            print('[CHAP] Data unzipped previously')
+        else:
+            for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
+                if sub in zipdir and 'md5' not in zipdir:
+                    for bids_type in ['Structural', 'Diffusion']:
+                        if bids_type in zipdir:
+                            with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
+                                print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
+                                zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')       
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' 
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w'
         user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii'
@@ -36,12 +39,14 @@ def hcp_chapper(args, sub, user_info):
         if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk'):
             print(f'[CHAP] Endpoints already detected')
         else:
-            print(f'[CHAP] Running MRtrix commands')
+            print(f'[CHAP] Running MRtrix commands, generating streamline endpoints...')
             os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix 10000000')
-            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000.tck')
-            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/DWI.mif')
+            print(f'[CHAP] Removing intermediate files...')
+            for file in ['10000000.tck', 'DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck']:
+                os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
         user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk'
-        ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises = True)   
+        ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises = True) 
+        os.remove(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}')
 
 
 
