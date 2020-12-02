@@ -10,34 +10,32 @@ https://docs.python.org/3/library/argparse.html
 for reference
 """
 
-print('[CHAP] Welcome')
+#TODO: move entrypoint qsi crap to prep_harmonics_bids function
+#TODO: fix sessions stuff for bids method and hcp method
 
-import argparse
-import os
-import shutil
+print('[CHAP] Welcome, chap')
+
+import os, shutil
 from glob import glob
-import numpy as np
-import subprocess
-import numpy as np
 import input_output as inout
 import argparse
-import decomp as dcp
-import utility_functions as uts
 import construct_harmonics as cs
 import hcp_preproc_to_chap as hcp_prep
-#user inputs cl arguments separated by spaces
+#user inputs cl arguments separated by spaces. args without dashes are required
+#for hcp, hcp_dir is required
+#for bids pipeline, qsi_dir, surf_dir, and fs_license_file are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode')
 parser.add_argument('--participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
-parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory')
-parser.add_argument('--surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory')
+parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for BIDS pipeline')
+parser.add_argument('--surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory. Required for BIDS pipeline.')
 parser.add_argument('--fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename)')
-parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space')
+parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space. Optional.')
 parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
-parser.add_argument('--evecs', type = int, help = 'Number of evecs to compute. Default is 100')
+parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
-parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed downloads w/ test and retest folders')
+parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
@@ -48,35 +46,36 @@ if not args.evecs:
 #read nnum number, set default to 20
 if not args.nnum:
     args.nnum = 20
-#hcp intermediate dir
+#make hcp intermediate dir
 if args.hcp_dir: 
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
-#create output directory
+#create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
-#set empty dict
+#set empty user_info dict
 user_info = {}
 #find subjects
 subs = []
 if args.participant_label: #user input subjects
     subs = args.participant_label.split(" ")
-elif args.hcp_dir: #hcp subs
+elif args.hcp_dir: #get list of hcp subs from data downloaded
     sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
     subs = [sub[:6] for sub in sub_list]
-    subs = list(dict.fromkeys(subs))        
+    subs = list(dict.fromkeys(subs))    
 else: #all subjects from qsi output
     subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Using sub(s): {subs}')
-#populate dicts with tck output files (reconstruction) for each session, reconstruct surfaces
 for sub in subs:
     user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subjet output folder
+    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
+    #if HCP, run hcp_prep function
     if args.hcp_dir:
         hcp_prep.hcp_chapper(args, sub, user_info)
-    else:        
+    #else, run BIDS/qsi method
+    else:      
         user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
         print(f'[CHAP] Reconstructing surfaces for {sub}...')
-        os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer data
+        os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer output
         if args.fprep_dir:
             user_info[f'{sub}_info']['func'] = [] #where functional files will go
         if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
@@ -86,14 +85,14 @@ for sub in subs:
                 if 'ses' in ses:
                     print(f'[CHAP] Locating files for {ses}...')
                     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
-                    for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'):
+                    for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'): #look in qsirecon output dir for tck
                         if 'tck' in file:
                             user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
                             print('[CHAP] Located streamlines')
                     if args.fprep_dir:
                         print(f'[CHAP] Detected functional images for {sub}')
-                        for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'): #look for preprocessed images in T1 space 
-                            if f'space-T1w_desc-preproc_bold.nii.gz' in file:
+                        for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'): #look for preprocessed images in fmriprep dir 
+                            if 'space-T1w_desc-preproc_bold.nii.gz' in file:
                                 user_info[f'{sub}_info']['func'].append(file)                                    
             for ses, file in user_info[f'{sub}_info']['streamlines']:
                 cs.prep_harmonics_bids(args, sub, file, user_info, multises, ses)
@@ -110,7 +109,7 @@ for sub in subs:
                         user_info[f'{sub}_info']['func'].append(file)   
             cs.prep_harmonics_bids(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
     print(f'[CHAP] Finished {sub}')
-print(f'[CHAP] CHAP completed')
+print('[CHAP] CHAP completed. Have a nice day.')
  
 
 
