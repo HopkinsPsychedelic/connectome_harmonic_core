@@ -1,0 +1,2 @@
+# connectome_harmonic_core
+If trying to understand CHAP, start by looking at entrypoint_script.py, which runs automatically when the docker container is created. It is heavily commented. Depending on whether the input is BIDS (qsi, fmriprep, freesurfer) or HCP preproc, entrypoint_script will call functions from various other files in this repo. Those files are also commented. CHAP is still very much a work in progress. 
