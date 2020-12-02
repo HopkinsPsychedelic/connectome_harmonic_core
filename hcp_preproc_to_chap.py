@@ -12,6 +12,7 @@ from zipfile import ZipFile
 import os
 import input_output as inout
 import construct_harmonics as ch
+import shutil
 
 def hcp_chapper(args, sub, user_info):
     print(f'[CHAP] Creating directories for HCP subject {sub}')
@@ -46,7 +47,7 @@ def hcp_chapper(args, sub, user_info):
                 os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
         user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk'
         ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises = True) 
-        os.remove(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}')
+        shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}')
 
 
 
