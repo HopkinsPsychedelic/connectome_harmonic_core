@@ -47,11 +47,14 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     print('[CHAP] Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si
     print('[CHAP] Constructing structural connectivity matrix...')
-    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol=3, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
+    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save out structural connectivity matrix
     print('[CHAP] Saved structural connectivity matrix')
+    connectome = struc_conn_mat + surf_mat
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome)
+    print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
-    vals,vecs=dcp.lapDecomp(struc_conn_mat, args.evecs) #laplacian decomposition, returns eigenvals and eigenvectors (see decomp.py)
+    vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvectors (see decomp.py)
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs

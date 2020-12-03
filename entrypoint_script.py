@@ -36,6 +36,7 @@ parser.add_argument('--parc', type = str, help = "path to parcellation file as v
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
 parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
+parser.add_argument('--tol', type = int, help = '(tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
@@ -43,6 +44,9 @@ if args.fs_license_file:
 #read evecs number, set default to 100
 if not args.evecs:
     args.evecs = 100
+#read tol number, set default to 3
+if not args.tol:
+    args.tol = 3
 #read nnum number, set default to 20
 if not args.nnum:
     args.nnum = 20

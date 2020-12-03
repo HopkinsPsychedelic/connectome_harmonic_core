@@ -51,26 +51,25 @@ def construct_inter_hemi_matrix(SC,tol=4):
 
 
 
-
 def construct_structural_connectivity_matrix(SC,EC,tol=3,NNnum=45):
     '''
     SC- array of cortical surface coordinates of size (N_vertices, 3 ) where SC[i]=x_i,y_i,z_i
-    EC- array of streamline endpoint coordinates of size (2*N_streamlines, 3 ) where EC[i]=[x_i,y_i,z_i]
-    tol- search radius of nearest neighbor search for matching endpoints to surface vertices
+    EC- array of streamline endpoint coordinates of size (2*N_streamlines, 3 ) where EC[i]=[x_i,y_i,z_i]. also, EC[0] and EC[1] are endpoints of the same streamline etc.
+    tol- maximum search radius of nearest neighbor search for matching endpoints to surface vertices (in mm)
     NNnum- number of nearest neighboring surface vertices to assign to each endpoint
     '''
-    ind,dist=ut.neighbors(SC,EC,1)
-    bad=[]
-    c=np.arange(len(dist))
-    even=c[::2]
-    odd=c[1::2]
-    for i in range (int(len(dist)/2)):
-        if (dist[even[i]]>=tol or dist[odd[i]]>=tol):
+    ind,dist=ut.neighbors(SC,EC,1) #computes 1 nearest neighbor of each ec in sc space and returns numpy arrays size (len(ec),1) of 1) the index NN surface vertex, and 2) distance from endpoint to vertex
+    bad=[] 
+    c=np.arange(len(dist)) 
+    even=c[::2] #0,2,4,6, etc.
+    odd=c[1::2] #1,3,5,7, etc.
+    for i in range (int(len(dist)/2)): #from 0 to length of ec/2
+        if (dist[even[i]]>=tol or dist[odd[i]]>=tol): #if distance of ec to sc at either endpoint is greater than tol, throw out streamline
             bad.append(even[i])
             bad.append(odd[i])
-    newEC=np.delete(EC,bad,axis=0)
-    s2eInd, s2eDist=ut.neighbors(SC,newEC,1)
-    Rind,Rdist=ut.neighbors(newEC,SC,NNnum)
+    newEC=np.delete(EC,bad,axis=0) #throw out bad fibers
+    s2eInd, s2eDist=ut.neighbors(SC,newEC,1) #compute new ind and dist from "filtered" streamlines
+    Rind,Rdist=ut.neighbors(newEC,SC,NNnum) #find NNum of endpoints for each surface vertex as a minimum
     OtherEndInd=np.zeros(np.shape(Rind))
     for i in range(len(Rind)):
         for j in range (NNnum):
@@ -85,15 +84,13 @@ def construct_structural_connectivity_matrix(SC,EC,tol=3,NNnum=45):
         AccSurfInd=np.column_stack((x,OtherEndInd[:,i]))
         U,C=np.unique(AccSurfInd,axis=0,return_counts=True)
         M[U[:,0],U[:,1]]+=C
-        M[U[:,1],U[:,0]]+=C
-    print(M.nnz)
+        M[U[:,1],U[:,0]]+=C 
 
     x=np.arange(len(SC))
-    M[x,x]=0
-    print(M.nnz)
+    M[x,x]=0 #remove self connections?
+    print(M.nnz/2 + ' nonzero elements') #nonzero elements/2 (connections)
     M=M.tocsr()
     return M.tocsr()
-
 
 def diffusion_matrix(A,t=0):
     Lap,D_sqrt_vec=csgraph.laplacian(A,normed=True,return_diag=True)
