@@ -46,12 +46,13 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     print('[CHAP] Saved endpoint coordinates')
     print('[CHAP] Constructing surface matrix...')
     surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     print('[CHAP] Constructing structural connectivity matrix...')
-    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc 
+    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save out structural connectivity matrix
     print('[CHAP] Saved structural connectivity matrix')
-    connectome = struc_conn_mat + surf_mat
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome)
+    connectome = struc_conn_mat + surf_mat #sum connections and surface
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvectors (see decomp.py)

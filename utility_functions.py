@@ -21,7 +21,7 @@ def neighbors(searchedset,queryset,num):
     nbrs = skn.NearestNeighbors(n_neighbors=num, algorithm='auto').fit(searchedset)
     distances, indices = nbrs.kneighbors(queryset)
     end=time.time()
-    print('neighbors time=',(end-start))
+    print('[CHAP] Neighbors time =',(end-start))
     return indices,distances
 
 def unmask_medial_wall(masked_feature,medial_wall_mask):
