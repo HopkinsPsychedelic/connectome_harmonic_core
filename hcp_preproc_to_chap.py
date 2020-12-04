@@ -6,6 +6,7 @@ Created on Mon Nov 23 00:21:55 2020
 @author: bwinston
 """
 #only works for test-retest two sessions right now, only diffusion and structural (no func yet)
+#TODO save out very inflated surfaces also
 
 from zipfile import ZipFile
 import os

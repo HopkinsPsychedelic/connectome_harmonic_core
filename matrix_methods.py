@@ -88,7 +88,7 @@ def construct_structural_connectivity_matrix(SC,EC,tol=3,NNnum=45):
 
     x=np.arange(len(SC))
     M[x,x]=0 #remove self connections?
-    print('[CHAP] ' + M.nnz/2 + ' nonzero elements') #nonzero elements/2 (connections)
+    print(M.nnz/2) #nonzero elements/2 (connections)
     M=M.tocsr()
     return M.tocsr()
 
