@@ -23,16 +23,17 @@ def hcp_chapper(args, sub, user_info):
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
         if args.fprep_dir: 
             inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/{sub}/{ses}/func') #hcp func folder
-        if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural'): #data was unzipped before
-            print('[CHAP] Data unzipped previously')
-        else: #unzip HCP download folders
-            for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
-                if sub in zipdir and 'md5' not in zipdir:
-                    for bids_type in ['Structural', 'Diffusion']:
-                        if bids_type in zipdir:
-                            with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
-                                print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
-                                zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')      
+        hcp_types = ['Structural', 'Diffusion', 'REST1']
+        for hcp_type in hcp_types:
+            if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data was unzipped before
+                hcp_types.remove(hcp_type)       
+        for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
+            if sub in zipdir and 'md5' not in zipdir:
+                for bids_type in hcp_types:
+                    if bids_type in zipdir:
+                        with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
+                            print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
+                            zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')      
         diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
         user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii' #hcp left hem

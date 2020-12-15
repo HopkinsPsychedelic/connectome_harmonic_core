@@ -208,8 +208,9 @@ def if_not_exist_make(path):
     import os
     if not os.path.exists(path):
         os.mkdir(path)
-    
-    
+
+
+
 '''
 def read_gifti_surface(filename):
     data=nib.load(filename)

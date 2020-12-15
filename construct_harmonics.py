@@ -21,6 +21,43 @@ import compute_spectra as cs
 from scipy import sparse
 
 #this fxn isn't finished, fix user_info session stuff
+def qsi_chap(user_info, args, sub):
+    user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
+    print(f'[CHAP] Reconstructing surfaces for {sub}...')
+    os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer output
+    if args.fprep_dir:
+        user_info[f'{sub}_info']['func'] = [] #where functional files will go
+    if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
+        multises = True
+        print(f'[CHAP] Detected multiple sessions for {sub}')
+        for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
+            if 'ses' in ses:
+                print(f'[CHAP] Locating files for {ses}...')
+                inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
+                for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'): #look in qsirecon output dir for tck
+                    if 'tck' in file:
+                        user_info[f'{sub}_info']['streamlines'].append([ses, file]) #streamlines list with each session's .tck
+                        print('[CHAP] Located streamlines')
+                if args.fprep_dir:
+                    print(f'[CHAP] Detected functional images for {sub}')
+                    for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'): #look for preprocessed images in fmriprep dir 
+                        if 'space-T1w_desc-preproc_bold.nii.gz' in file:
+                            user_info[f'{sub}_info']['func'].append(file)                                    
+        for ses, file in user_info[f'{sub}_info']['streamlines']:
+            cs.prep_harmonics_bids(args, sub, file, user_info, multises, ses)
+    else: #if sub has just one session
+        print('[CHAP] Detected only one session')
+        multises = False
+        for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
+            if 'tck' in file:
+                user_info[f'{sub}_info']['streamlines'].append(file)
+                print('Located streamlines')
+        if args.fprep_dir:
+            for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
+                if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
+                    user_info[f'{sub}_info']['func'].append(file)   
+        cs.prep_harmonics_bids(args, sub, user_info[f'{sub}_info']['streamlines'][0], user_info, multises)
+
 def prep_harmonics_bids(args, sub, file, user_info, multises, ses=""):
     tck_name = file.split('/')[-1][:-4]
     print('[CHAP] Saving streamline endpoints and converting to vtk...')
@@ -66,8 +103,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
     if args.fprep_dir: #if functional images are specified
-        if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func'):
-            os.mkdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
+        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
         for vol in user_info[f'{sub}_info']['func']:
             if ses in vol:
                 task = inout.get_task(vol) #get taskname
@@ -116,7 +152,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
                 
                 
 
-                
+               
                 
                 
                 
