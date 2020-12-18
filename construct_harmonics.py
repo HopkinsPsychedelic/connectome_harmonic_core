@@ -103,7 +103,8 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     else:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
-    if args.hcp_dir == True:
+    if args.hcp_dir:
+        print(f'[CHAP] Saving inflated harmonics for {sub}')
         surf_mat_inf = mm.construct_surface_matrix(sc,si)
         sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat_inf', surf_mat_inf)
         struc_conn_mat_inf=mm.construct_structural_connectivity_matrix(sc_inf, ec, tol = args.tol, NNnum = args.nnum) 
