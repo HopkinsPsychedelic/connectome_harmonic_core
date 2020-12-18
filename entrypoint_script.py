@@ -84,36 +84,6 @@ print('[CHAP] CHAP completed. Have a pleasant day.')
 
 
 
-'''
-run config
-/Users/bwinston/Documents/fMRI/BIDS/test/qsirecon /Users/bwinston/Documents/fMRI/BIDS/test/freesurfer /Users/bwinston/Documents/fMRI/BIDS/test/output/ participant blah --fprep_dir /Users/bwinston/Documents/fMRI/BIDS/test/fmriprep --participant_label 105923
-
-
-for hem in ['rh','lh']:
-            user_info[f'{sub}_info'][f'{hem}_surf'] = []
-            user_info[f'{sub}_info'][f'{hem}_surf'].append(f'{args.surf_dir}/sub-{sub}/surf/{hem}.white') 
-            
-            
-funclist ,img_list = [], []
-                    for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'):
-                        if f'space-T1w_desc-preproc_bold.nii.gz' in file:
-                            funclist.append(file)
-                    for img in funclist:
-                        taskstart = img.find('task') + 5
-                        img_list.append(img[taskstart:])
-                    for fname in img_list:
-                        tasklist.append(fname.split('_')[0])
-                    tasklist = list(dict.fromkeys(tasklist)) #delete duplicate tasknames
-                    for task in tasklist:
-                        user_info[f'{sub}_info']['func'][task] = [] #list for each task
-                        for img in funclist:
-                            if task in img:
-                                user_info[f'{sub}_info']['func'][task].append(img)   
-'''
-
-
-
-
 
 
 

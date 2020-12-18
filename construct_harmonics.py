@@ -78,11 +78,12 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
         sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh']) #generate sc and si (see top of file) 
     else: #probably used hcp method, expects gii surfaces
         sc,si=inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
+        sc_inf,si_inf = inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh_inf'], user_info[f'{sub}_info'][ses]['surfs']['rh_inf'], hcp = True)
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(user_info[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
     print('[CHAP] Saved endpoint coordinates')
     print('[CHAP] Constructing surface matrix...')
-    surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si
+    surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si    
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
@@ -102,6 +103,17 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     else:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
+    if args.hcp_dir == True:
+        surf_mat_inf = mm.construct_surface_matrix(sc,si)
+        sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat_inf', surf_mat_inf)
+        struc_conn_mat_inf=mm.construct_structural_connectivity_matrix(sc_inf, ec, tol = args.tol, NNnum = args.nnum) 
+        sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat_inf', struc_conn_mat_inf)
+        connectome_inf = struc_conn_mat_inf + surf_mat_inf #sum connections and surface
+        sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome_inf', connectome_inf) #save out connectome 
+        vals_inf,vecs_inf=dcp.lapDecomp(connectome_inf, args.evecs)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals_inf',vals_inf)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs_inf',vecs_inf) #save np array eigenvecs
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics_inf.vtk',sc_inf,si_inf,vecs_inf) #harmonics.vtk        
     if args.fprep_dir: #if functional images are specified
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
         for vol in user_info[f'{sub}_info']['func']:

@@ -38,6 +38,8 @@ def hcp_chapper(args, sub, user_info):
         struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
         user_info[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii' #hcp left hem
         user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii' #hcp right hem
+        user_info[f'{sub}_info'][ses]['surfs']['lh_inf'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.very_inflated.32k_fs_LR.surf.gii' #hcp left hem inflated
+        user_info[f'{sub}_info'][ses]['surfs']['rh_inf'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.very_inflated.32k_fs_LR.surf.gii' #hcp right hem inflated
         if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
             print('[CHAP] Endpoints already detected')
         else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
