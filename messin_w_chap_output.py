@@ -77,6 +77,8 @@ plt.spy(surf_mat, markersize = .005)
 
 connectome = struc + surf_mat
 
+hi = connectome.todense()
+
 plt.spy(connectome, markersize = .005)
 
 
