@@ -32,11 +32,11 @@ parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. 
 parser.add_argument('--surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory. Required for BIDS pipeline.')
 parser.add_argument('--fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename)')
 parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space. Optional.')
-parser.add_argument('--parc', type = str, help = "path to parcellation file as vtk with %s for hem")
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
 parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
 parser.add_argument('--tol', type = int, help = '(tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices')
+parser.add_argument('--inf', type = str, help = 'For HCP data, save out harmonics on inflated brain surface. Write \'y\' for example')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
@@ -79,7 +79,7 @@ for sub in subs:
     else:      
         cs.qsi_chap(user_info, args, sub)
     print(f'[CHAP] Finished {sub}')
-print('[CHAP] CHAP completed. Have a pleasant day.')
+print('[CHAP] CHAP completed. Have a pleasant afternoon.')
  
 
 
