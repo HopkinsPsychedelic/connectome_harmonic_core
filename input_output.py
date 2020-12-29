@@ -19,6 +19,28 @@ def save_surface(filename,points,edges,feature=None):
     write_data(mesh, filename)
     return
 '''
+'''
+mask=generate_mask_from_parc()
+m=
+masked_connectivity=utility.mask_connectivity_matrix(m,mask)
+
+vals,mvecs=lap_decomp(m,n)
+
+vecs=util.unmask_medial_wall_vecs(masked_connectivity,mask)
+'''
+
+
+#ts=read_functional_timeseries()
+
+#maskedts=uts.mask_timeseries(ts, mask)
+
+def generate_mask_from_parc_hcp(lhparc,rhparc):
+    #105923/MNINonLinear/fsaverage_LR32k/105923.L.aparc.32k_fs_LR.label.gii'105923/MNINonLinear/fsaverage_LR32k/105923.R.aparc.32k_fs_LR.label.gii'
+    parc=read_gifti_feature_both_hem(lhparc,rhparc).astype('int32')
+    inds1=np.where(parc==-1)[0]
+    mask=np.zeros(len(parc))
+    mask[inds1]=1
+    return mask 
 
 
 def save_eigenvector(filename,points,edges,vecs):
