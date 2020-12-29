@@ -10,6 +10,20 @@ from scipy.sparse import csgraph
 import time
 import numpy as np
 
+from sklearn.decomposition import PCA
+
+
+def get_group_pca_comp(evlist,num):
+    tempmat = np.zeros((np.shape(evlist[0])[1]-1,num*len(evlist)))
+    for i in range (len(evlist)):
+        tempmat[:,i*num:(i+1)*num]=evlist[i][:,1:num]
+        
+    pca = PCA(n_components=num)
+    pca.fit(tempmat.T)
+    components = pca.components_
+    components = components.T
+
+    return components 
 
 def lapDecomp(Asparse,num):
     #Asparse- csr format sparse adjacency matrix
