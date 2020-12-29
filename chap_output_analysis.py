@@ -46,7 +46,7 @@ WITHIN SUBJECT TEST-RETEST RELIABILITY:
 '''
 test_retest_rel('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 200) 
 test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 200)    
- 
+
 hi = hp[1]['ret_used']
 
 def get_key(my_dict, val):
@@ -81,8 +81,8 @@ def test_retest_rel(chap_dir, n_evecs):
     for sub in subs:        
         all_bcorrs.append(cd[sub]['bcorrs']) #list of lists of bcorrs
     cd['bcorr_avg'] = np.average(np.array(all_bcorrs), axis=0) #average of each spot in bcorrs
-    for avg in range(1,n_evecs):
-        bcorr_plot.append(stats.mean(cd['bcorr_avg'][:avg])) 
+    for avg in range(2,n_evecs):
+        bcorr_plot.append(stats.mean(cd['bcorr_avg'][1:avg])) 
     plt.plot(bcorr_plot)
 
 def find_bcorrs(sub, hp, run, n_evecs): 
