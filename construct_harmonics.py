@@ -90,9 +90,6 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save out structural connectivity matrix
     print('[CHAP] Saved structural connectivity matrix')
     connectome = struc_conn_mat + surf_mat #sum connections and surface
-    if args.mask_med_wall == True:
-        connectome = util.mask_connectivity_matrix(connectome, user_info[f'{sub}_info'][ses]['mask'])  
-        print('[CHAP] Masked out medial wall vertices')
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
@@ -101,7 +98,11 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
     if args.mask_med_wall == True:
-        vecs = util.unmask_medial_wall_vecs(vecs, user_info[f'{sub}_info'][ses]['mask'])
+        masked_connectome = util.mask_connectivity_matrix(connectome, user_info[f'{sub}_info'][ses]['mask'])
+        print('[CHAP] Masked out medial wall vertices; computing harmonics...')
+        m_vals,m_vecs=dcp.lapDecomp(masked_connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvectors (see decomp.py)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/masked_vals',m_vals)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/masked_vecs',m_vecs)   
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) #harmonics.vtk
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
