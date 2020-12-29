@@ -21,10 +21,10 @@ def save_surface(filename,points,edges,feature=None):
 '''
 '''
 mask=generate_mask_from_parc()
-m=
+m= conn
 masked_connectivity=utility.mask_connectivity_matrix(m,mask)
 
-vals,mvecs=lap_decomp(m,n)
+vals,mvecs=lap_decomp(masked_connectivity,n)
 
 vecs=util.unmask_medial_wall_vecs(masked_connectivity,mask)
 '''

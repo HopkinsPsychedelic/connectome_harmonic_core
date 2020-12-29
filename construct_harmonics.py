@@ -13,6 +13,7 @@ used in CHAP entrypoint_script
 """
 import decomp as dcp
 import input_output as inout
+import utility_functions as util
 import subprocess
 import numpy as np
 import os
@@ -20,7 +21,6 @@ import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
 
-#this fxn isn't finished, fix user_info session stuff
 def qsi_chap(user_info, args, sub):
     user_info[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
     print(f'[CHAP] Reconstructing surfaces for {sub}...')
@@ -78,6 +78,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
         sc,si=inout.read_vtk_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh']) #generate sc and si (see top of file) 
     else: #probably used hcp method, expects gii surfaces
         sc,si=inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh'], user_info[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
+        sc_inf,si_inf = inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh_inf'], user_info[f'{sub}_info'][ses]['surfs']['rh_inf'], hcp = True)
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(user_info[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
     print('[CHAP] Saved endpoint coordinates')
@@ -89,6 +90,9 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save out structural connectivity matrix
     print('[CHAP] Saved structural connectivity matrix')
     connectome = struc_conn_mat + surf_mat #sum connections and surface
+    if args.mask_med_wall == True:
+        connectome = util.mask_connectivity_matrix(connectome, user_info[f'{sub}_info'][ses]['mask'])  
+        print('[CHAP] Masked out medial wall vertices')
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
@@ -96,26 +100,16 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
+    if args.mask_med_wall == True:
+        vecs = util.unmask_medial_wall_vecs(vecs, user_info[f'{sub}_info'][ses]['mask'])
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) #harmonics.vtk
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
     else:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_infl_harmonics.vtk',sc_inf,si_inf,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
-    if args.hcp_dir:
-        if args.inf: #same process on inflated surfaces
-            print(f'[CHAP] Saving inflated harmonics for {sub}')
-            sc_inf,si_inf = inout.read_gifti_surface_both_hem(user_info[f'{sub}_info'][ses]['surfs']['lh_inf'], user_info[f'{sub}_info'][ses]['surfs']['rh_inf'], hcp = True)
-            surf_mat_inf = mm.construct_surface_matrix(sc,si)
-            sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat_inf', surf_mat_inf)
-            struc_conn_mat_inf=mm.construct_structural_connectivity_matrix(sc_inf, ec, tol = args.tol, NNnum = args.nnum) 
-            sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat_inf', struc_conn_mat_inf)
-            connectome_inf = struc_conn_mat_inf + surf_mat_inf #sum connections and surface
-            sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome_inf', connectome_inf) #save out connectome 
-            vals_inf,vecs_inf=dcp.lapDecomp(connectome_inf, args.evecs)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals_inf',vals_inf)
-            np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs_inf',vecs_inf) #save np array eigenvecs
-            inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics_inf.vtk',sc_inf,si_inf,vecs_inf) #harmonics.vtk        
     if args.fprep_dir: #if functional images are specified
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
         for vol in user_info[f'{sub}_info']['func'][ses]: #each functional volume      

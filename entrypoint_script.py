@@ -36,7 +36,7 @@ parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors to com
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
 parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
 parser.add_argument('--tol', type = int, help = '(tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices')
-parser.add_argument('--inf', type = str, help = 'For HCP data, save out harmonics on inflated brain surface. Write \'y\' for example')
+parser.add_argument('--mask_med_wall' type = bool, help = '(Boolean) mask out medial wall vertices')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:

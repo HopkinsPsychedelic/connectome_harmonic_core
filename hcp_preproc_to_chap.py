@@ -56,5 +56,19 @@ def prep_for_cs(args, sub, user_info, multises, ses):
         for file in ['10000000.tck', 'DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
     user_info[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #streamline endpoints
+    if args.mask_med_wall == True:
+        user_info[f'{sub}_info'][ses]['mask'] = inout.generate_mask_from_parc_hcp(f'{struc_dir}/../MNINonLinear/fsaverage_LR32k/{sub}.L.aparc.32k_fs_LR.label.gii',f'{struc_dir}/../MNINonLinear/fsaverage_LR32k/{sub}.R.aparc.32k_fs_LR.label.gii')
     ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
+    
+
+
+
+
+
+
+
+
+
+
+

@@ -22,24 +22,16 @@ from scipy.stats.stats import pearsonr
 import statistics as stats     
          
 '''
-matching algorithm
-for every ses 1 harmonic, correlation with all others
-standard deviation and error, all harms with .8, .7, sequentially
-each subj. come up with diagonal of best pairs 
-components across subjects (get set of reliable harmonics, look across subjects)
-dont steal from winners -- tiebreaker can be filled by another tie or loser 
+standard deviation and error, all harms with .8, .7, sequentially 
+components across subjects (get set of reliable harmonics, look across subjects) 
 
 average two sessions components? maybe
 do both average of two sessions and just first session and compare to group average connectome harmonics
-continuous variable on non binary matrix - how to do laplacian for average connectome 
 get rid of noise components--those not reliable within a subject or across subjects. interesting will be something
 that's reliable within a subject but not across subjects. (that's where individual differences lie)
 so how do we find reliable harmonics across subjects?
 then we'll find test retest reliability of that, which is a more accurate depiction of test retest rel
-fxnl - 
-What would you be plugging in to PCA?
 PCA would be on set of all harmonics 
-
 
 
 WITHIN SUBJECT TEST-RETEST RELIABILITY:
