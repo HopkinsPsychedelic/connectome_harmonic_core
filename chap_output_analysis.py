@@ -37,7 +37,8 @@ PCA would be on set of all harmonics
 WITHIN SUBJECT TEST-RETEST RELIABILITY:
 '''
 test_retest_rel('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 200) 
-test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 200)    
+test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 200) 
+test_retest_rel('/data2/Brian/connectome_harmonics/three_chap_subjs', 50)   
 
 hi = hp[1]['ret_used']
 
@@ -237,11 +238,18 @@ avg_harms('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap')
 ind_vs_avg('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 100)
 
 
+ev_list = []
+for sub in ['192439', '187547', '194140']:
+   ev_list.append(cd[sub]['test']['vecs'][:,1:51])
+   
+hi = dcp.get_group_pca_comp_b(ev_list, 10)
 
-        
+tempmat = np.zeros((np.shape(ev_list[0])[0],10*len(ev_list)))
+
+tempmat[:,i*num:(i+1)*num]=evlist[i][:,1:num]  
+
+tempmat[:,0:10] = ev_list[0][:,0:10]
 
 
-
-
-
+np.shape(ev_list[0])
      

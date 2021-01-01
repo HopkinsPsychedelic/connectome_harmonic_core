@@ -12,17 +12,24 @@ import numpy as np
 
 from sklearn.decomposition import PCA
 
-
 def get_group_pca_comp(evlist,num):
     tempmat = np.zeros((np.shape(evlist[0])[1]-1,num*len(evlist)))
     for i in range (len(evlist)):
-        tempmat[:,i*num:(i+1)*num]=evlist[i][:,1:num]
-        
+        tempmat[:,i*num:(i+1)*num]=evlist[i][:,1:num] #from 0-10, 10-20, 20-30   
     pca = PCA(n_components=num)
     pca.fit(tempmat.T)
     components = pca.components_
     components = components.T
+    return components 
 
+def get_group_pca_comp_b(evlist,num):
+    tempmat = np.zeros((np.shape(evlist[0])[0],num*len(evlist)))
+    for i in range (len(evlist)):
+        tempmat[:,i*num:(i+1)*num]=evlist[i][:,0:num] #from 0-10, 10-20, 20-30   
+    pca = PCA(n_components=num)
+    pca.fit(tempmat.T)
+    components = pca.components_
+    components = components.T
     return components 
 
 def lapDecomp(Asparse,num):
