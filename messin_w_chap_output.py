@@ -22,7 +22,7 @@ import statistics
 vecs = np.load('/Users/bwinston/Documents/connectome_harmonics/vecs.npy')
 vals = np.load('/Users/bwinston/Documents/connectome_harmonics/vals.npy')
 
-sc,si = inout.read_gifti_surface_both_hem('/Users/bwinston/Documents/fMRI/BIDS/hcp_prep_output/hcp_preproc/sub-105923/ses-test/Structural/105923/T1w/fsaverage_LR32k/105923.L.white.32k_fs_LR.surf.gii', '/Users/bwinston/Documents/fMRI/BIDS/hcp_prep_output/hcp_preproc/sub-105923/ses-test/Structural/105923/T1w/fsaverage_LR32k/105923.R.white.32k_fs_LR.surf.gii', hcp=True)
+sc,si = inout.read_gifti_surface_both_hem('/Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc/ses-retest/105923/T1w/fsaverage_LR32k/105923.L.white.32k_fs_LR.surf.gii', '/Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc/ses-retest/105923/T1w/fsaverage_LR32k/105923.R.white.32k_fs_LR.surf.gii', hcp=True)
 
 ec = inout.read_streamline_endpoints('/Users/bwinston/Downloads/10000000_endpoints.vtk')
 

@@ -37,7 +37,7 @@ PCA would be on set of all harmonics
 WITHIN SUBJECT TEST-RETEST RELIABILITY:
 '''
 test_retest_rel('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 200) 
-test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 200) 
+test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 50) 
 test_retest_rel('/data2/Brian/connectome_harmonics/three_chap_subjs', 50)   
 
 hi = hp[1]['ret_used']
@@ -49,6 +49,7 @@ def get_key(my_dict, val):
 
 #looking at test retest reliability STILL ORDERING EFFECTS IN THIS
 def test_retest_rel(chap_dir, n_evecs):
+    n_evecs = n_evecs-1
     global cd 
     cd = {} #for chap_data
     all_bcorrs, bcorr_plot = [], []
@@ -60,6 +61,7 @@ def test_retest_rel(chap_dir, n_evecs):
         for ses in ['test','retest']:
            cd[sub][ses] = {}
            cd[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy') 
+           cd[sub][ses]['vecs'] = np.delete(cd[sub][ses]['vecs'], 0, axis=1)
         global hp
         hp, hp['holy'] = {}, {} #dict for within these fxns
         hp['corr_orig'] = np.empty((n_evecs,n_evecs))
@@ -74,7 +76,7 @@ def test_retest_rel(chap_dir, n_evecs):
     for sub in subs:        
         all_bcorrs.append(cd[sub]['bcorrs']) #list of lists of bcorrs
     cd['bcorr_avg'] = np.average(np.array(all_bcorrs), axis=0) #average of each spot in bcorrs
-    for avg in range(2,n_evecs):
+    for avg in range(1,n_evecs):
         bcorr_plot.append(stats.mean(cd['bcorr_avg'][1:avg])) 
     plt.plot(bcorr_plot)
 
@@ -236,20 +238,133 @@ hcp_male_ids = [122317, 139839, 146129, 149337, 149741, 151526, 185442, 341834, 
 
 avg_harms('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap')
 ind_vs_avg('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 100)
+'''
+Take everyone from test session, generate 100 pca harmonics. for each subject, find the best test session pairs with 
+those 100 pca harmonics. 
 
+Then, find the average correlation btwn each pca harmonic and its best pair across all subjects--this shows the most reliable components across subjects (maybe). Pick 20.
 
-ev_list = []
-for sub in ['192439', '187547', '194140']:
-   ev_list.append(cd[sub]['test']['vecs'][:,1:51])
+Then, for each subject, find test-retest reliability of those particular harmonics (the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
+'''
+def ind_vs_pca(chap_dir, n_evecs, n_pca):
+    n_evecs = n_evecs-1
+    global ivp
+    ivp, ivp['test'], ivp['retest'] = {}, {}, {}
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*"))
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/{sub}'):
+            subs.remove(sub)
+    ivp['test']['evlist'], ivp['retest']['evlist'] = [], []
+    for sub in subs:
+        ivp[sub] = {}    
+        for ses in ['test','retest']:
+           ivp[sub][ses],ivp[f'{ses}_avg'] = {}, {}
+           ivp[sub][ses]['bcorrs'] = []
+           ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
+           ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
+           ivp[ses]['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
+    for ses in ['test','retest']:
+        ivp[ses]['pca_harms'] = dcp.get_group_pca_comp_b(ivp[ses]['evlist'], 100)
+    for sub in subs:
+        global hp
+        hp = {}
+        for ses in ['test','retest']:
+            hp[ses], hp[ses]['holy'] = {}, {}  
+            hp[ses]['corr_orig'] = np.empty((n_evecs,n_pca)) #init comparison matrix 
+            for evec_pca in range(0,n_pca): 
+                for evec_ses in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
+                    hp[ses]['corr_orig'][evec_ses,evec_pca] = abs(pearsonr(ivp[ses]['pca_harms'][:,evec_pca], ivp[sub][ses]['vecs'][:,evec_ses])[0])
+            hp[ses]['corr_all'] = hp[ses]['corr_orig'].swapaxes(0,1)
+            hp[ses]['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp[ses]['corr_all'])}           
+            find_bcorrs_ivp(sub, ses, hp, 0, hp[ses]['corr_all'], n_evecs)  
+    for sub in subs:
+        for ses in ['test','retest']:
+            for ev in range(n_pca):
+                ivp[sub][ses]['bcorrs'].append(ivp[sub][ses]['pairs'][ev]['bcorr'])
+    ivp['all_test_bcorrs'],ivp['all_retest_bcorrs'] = [],[]
+    for sub in subs:
+        for ses in ['test','retest']:
+            ivp[f'all_{ses}_bcorrs'].append(ivp[sub][ses]['bcorrs']) #list of lists
+    ivp['bcorr_test_avg'] = np.average(np.array(ivp['all_test_bcorrs']), axis = 0)
+    ivp['bcorr_retest_avg'] = np.average(np.array(ivp['all_retest_bcorrs']), axis = 0)
+    bcorr_t_sort = -np.sort(-ivp['bcorr_test_avg'])[::1]
+    bcorr_r_sort = -np.sort(-ivp['bcorr_retest_avg'])[::1]
+    bcorr_t_sort = bcorr_t_sort[:20]
+    bcorr_r_sort = bcorr_r_sort[:20]
+    ivp['pca_t_harms'], ivp['pca_r_harms'] = [], []
+    for c in bcorr_t_sort:
+        ivp['pca_t_harms'].append(np.where(ivp['bcorr_test_avg'] == c)[0][0]) #best pca harmonics
+    for c in bcorr_r_sort:
+        ivp['pca_r_harms'].append(np.where(ivp['bcorr_retest_avg'] == c)[0][0]) 
+    for sub in subs:
+        ivp[sub]['enchilada'] = {} #enchilada is test-retest but with the test ones we care about bc they were similar to PCAs
+        ivp[sub]['enzymatique'] = []
+        ivp[sub]['ti_2_check'] = []
+        for pca_harm in ivp['pca_t_harms']:
+            ivp[sub]['ti_2_check'].append(ivp[sub]['test']['pairs'][pca_harm]['test_ind'])
+    test_retest_rel(chap_dir, n_evecs)
+    all_enzymatiques = []
+    for sub in subs:
+        for ti in ivp[sub]['ti_2_check']:
+            ivp[sub]['enchilada'][ti] = cd[sub]['pairs'][ti]
+            ivp[sub]['enzymatique'].append(ivp[sub]['enchilada'][ti]['bcorr'])
+        all_enzymatiques.append(ivp[sub]['enzymatique'])
+    ivp['test_retest_reliabilty_avg'] = np.average(np.array(all_enzymatiques), axis = 0)
+
+    
+def find_bcorrs_ivp(sub, ses, hp, run, corr_mat, n_evecs): 
+    while len(hp[ses]['corr_all']) > 0:
+        hp[ses][run] = {}
+        hp[ses][run]['maxes'] = {}
+        for ev in hp[ses]['corr_all']: #for each pca evec, which {ses} evec is the best match?
+            hp[ses][run]['maxes'][ev] = {}
+            hp[ses][run]['maxes'][ev]['bcorr'] = max(hp[ses]['corr_all'][ev].values())
+            hp[ses][run]['maxes'][ev][f'{ses}_ind'] = get_key(hp[ses]['corr_all'][ev], max(hp[ses]['corr_all'][ev].values()))
+        hp[ses][run][f'{ses}_used'], hp[ses][run]['win_ind'], hp[ses][run]['good_boys'] = [], [], []
+        for ev in hp[ses]['corr_all']:
+            hp[ses][run][f'{ses}_used'].append(hp[ses][run]['maxes'][ev][f'{ses}_ind'])
+        ses_dups = set([x for x in hp[ses][run][f'{ses}_used'] if hp[ses][run][f'{ses}_used'].count(x) > 1])
+        if ses_dups == 0:
+            break
+        hp[ses][run][f'{ses}_used'] = set(hp[ses][run][f'{ses}_used'])
+        for ses_dup in ses_dups:
+            competition = []
+            for ev in hp[ses][run]['maxes']:
+                if ses_dup == hp[ses][run]['maxes'][ev][f'{ses}_ind']:
+                    competition.append(hp[ses][run]['maxes'][ev]['bcorr'])
+            competition = max(competition)
+            for ev in hp[ses][run]['maxes']:
+                if hp[ses][run]['maxes'][ev]['bcorr'] == competition:
+                    hp[ses][run]['win_ind'].append(ev)
+        for ev in hp[ses]['corr_all']:
+            if hp[ses][run]['maxes'][ev][f'{ses}_ind'] not in ses_dups:
+               hp[ses][run]['good_boys'].append(ev) 
+        for ev in list(hp[ses]['corr_all']):
+            if ev in (set(hp[ses][run]['good_boys']) | set(hp[ses][run]['win_ind'])):
+               hp[ses]['holy'][ev] = hp[ses][run]['maxes'][ev]
+               del hp[ses]['corr_all'][ev]
+        for ev in hp[ses]['corr_all']:
+            for s_ev in hp[ses][run][f'{ses}_used']:
+                del hp[ses]['corr_all'][ev][s_ev]
+        run = run + 1
+        find_bcorrs_ivp(sub, ses, hp, run, hp[ses]['corr_all'], len(hp[ses]['corr_all']))
+    ivp[sub][ses]['pairs'] = hp[ses]['holy']
+
    
-hi = dcp.get_group_pca_comp_b(ev_list, 10)
+ind_vs_pca('/Users/bwinston/Downloads/chap_out_test', 200, 100)    
+test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 200)    
+    
+'''notes for what to do b-ri - just run test_retest_rel and save the columns of 
+the output for the test evs that we care about from the pca thing mmmkay?'''
+    
+  
+    
+    
+    
+    
+    
+    
 
-tempmat = np.zeros((np.shape(ev_list[0])[0],10*len(ev_list)))
-
-tempmat[:,i*num:(i+1)*num]=evlist[i][:,1:num]  
-
-tempmat[:,0:10] = ev_list[0][:,0:10]
 
 
-np.shape(ev_list[0])
-     
