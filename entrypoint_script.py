@@ -13,7 +13,16 @@ for reference
 #TODO: move entrypoint qsi crap to prep_harmonics_bids function
 #TODO: fix sessions stuff for bids method and hcp method
 
-print('[CHAP] Welcome, chap')
+print('''
+ __          __  _                                   _                 _  
+ \ \        / / | |                                 | |               | | 
+  \ \  /\  / /__| | ___ ___  _ __ ___   ___      ___| |__   __ _ _ __ | | 
+   \ \/  \/ / _ \ |/ __/ _ \| '_ ` _ \ / _ \    / __| '_ \ / _` | '_ \| | 
+    \  /\  /  __/ | (_| (_) | | | | | |  __/_  | (__| | | | (_| | |_) |_| 
+     \/  \/ \___|_|\___\___/|_| |_| |_|\___( )  \___|_| |_|\__,_| .__/(_) 
+                                           |/                   | |       
+                                                                |_|       
+''')
 
 import os, shutil
 from glob import glob
@@ -56,6 +65,7 @@ if args.hcp_dir:
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
 #set empty user_info dict
+global user_info
 user_info = {}
 #find subjects
 subs = []
@@ -83,10 +93,10 @@ print('[CHAP] CHAP completed. Have a pleasant afternoon.')
  
 
 
+'''
+/Users/bwinston/Documents/fMRI/BIDS/hcp_prep_output participant --hcp_dir /Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc  
 
-
-
-
+'''
 
 
 

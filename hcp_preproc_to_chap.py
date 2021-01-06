@@ -28,9 +28,9 @@ def prep_for_cs(args, sub, user_info, multises, ses):
     user_info[f'{sub}_info'][ses], user_info[f'{sub}_info'][ses]['surfs'] = {}, {} #where hcp surface files will go
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #intermediate ses folder
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
-    if args.fprep_dir: 
-        inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/{sub}/{ses}/func') #hcp func folder
-    hcp_types = ['Structural', 'Diffusion', 'REST1']
+    if any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if rsfc data is there
+        inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
+    hcp_types = ['Structural', 'Diffusion', 'REST1', 'REST2', 'WM'] #etc.
     for hcp_type in hcp_types:
         if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data was unzipped before
             hcp_types.remove(hcp_type)       
@@ -47,6 +47,7 @@ def prep_for_cs(args, sub, user_info, multises, ses):
     user_info[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii' #hcp right hem
     user_info[f'{sub}_info'][ses]['surfs']['lh_inf'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.very_inflated.32k_fs_LR.surf.gii' #hcp left hem inflated
     user_info[f'{sub}_info'][ses]['surfs']['rh_inf'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.very_inflated.32k_fs_LR.surf.gii' #hcp right hem inflated
+    user_info[f'{sub}_info'][ses]['rest1'] = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/REST1/{sub}/MNINonLinear/Results/rfMRI_REST1_LR/rfMRI_REST1_LR_Atlas_hp2000_clean.dtseries.nii'
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
         print('[CHAP] Endpoints already detected')
     else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
@@ -61,8 +62,7 @@ def prep_for_cs(args, sub, user_info, multises, ses):
     ch.construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
     
-
-
+#/Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc/
 
 
 

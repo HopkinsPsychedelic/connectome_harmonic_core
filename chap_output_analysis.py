@@ -280,9 +280,11 @@ ind_vs_avg('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 10
 Take everyone from test session, generate 100 pca harmonics. for each subject, find the best test session pairs with 
 those 100 pca harmonics. 
 
-Then, find the average correlation btwn each pca harmonic and its best pair across all subjects--this shows the most reliable components across subjects (maybe). Pick 20.
+Then, find the average correlation btwn each pca harmonic and its best pair across all subjects--this shows 
+the most reliable components across subjects (maybe). Pick 20.
 
-Then, for each subject, find test-retest reliability of those particular harmonics (the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
+Then, for each subject, find test-retest reliability of those particular harmonics
+(the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
 '''
 def ind_vs_pca(chap_dir, n_evecs, n_pca):
     n_evecs = n_evecs-1
