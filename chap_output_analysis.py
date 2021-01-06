@@ -14,7 +14,7 @@ import decomp as dcp
 from scipy import sparse
 import numpy as np
 import utility_functions as ut
-from sklearn.metrics import pairwise_distances_chunked
+from sklearn.metrics import pairwise_distances_chunked, pairwise
 import time
 from scipy.sparse import csgraph
 import matplotlib.pylab as plt
@@ -38,9 +38,9 @@ WITHIN SUBJECT TEST-RETEST RELIABILITY:
 '''
 test_retest_rel('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 200) 
 test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 50) 
-test_retest_rel('/data2/Brian/connectome_harmonics/three_chap_subjs', 50)   
+test_retest_rel_r('/data2/Brian/connectome_harmonics/three_chap_subjs', 100)
+test_retest_rel_cos('/data2/Brian/connectome_harmonics/three_chap_subjs', 100)
 
-hi = hp[1]['ret_used']
 
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -48,13 +48,51 @@ def get_key(my_dict, val):
              return key
 
 #looking at test retest reliability STILL ORDERING EFFECTS IN THIS
-def test_retest_rel(chap_dir, n_evecs):
+def test_retest_rel_cos(chap_dir, n_evecs):
     n_evecs = n_evecs-1
     global cd 
     cd = {} #for chap_data
     all_bcorrs, bcorr_plot = [], []
     subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
+    for sub in subs:
+        cd[sub] = {}
+        cd[sub]['bcorrs'] = []
+        for ses in ['test','retest']:
+           cd[sub][ses] = {}
+           cd[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy') 
+           cd[sub][ses]['vecs'] = np.delete(cd[sub][ses]['vecs'], 0, axis=1)
+        global hp
+        hp, hp['holy'] = {}, {} #dict for within these fxns
+        hp['corr_orig'] = np.empty((n_evecs,n_evecs))
+        for evec_test in range(0,n_evecs): 
+            for evec_retest in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
+                hp['corr_orig'][evec_retest,evec_test] = chap_cosine_sim(cd[sub]['test']['vecs'][:,evec_test], cd[sub]['retest']['vecs'][:,evec_retest]) #comparing column with column (ev with ev)
+        hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
+        hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
+        find_bcorrs(sub, hp, 0, n_evecs) #run find bcorrs function, get best pairs
+        for ev in range(n_evecs):
+            cd[sub]['bcorrs'].append(cd[sub]['pairs'][ev]['bcorr']) #all ideal corrs (w/ no repeats)
+    for sub in subs:        
+        all_bcorrs.append(cd[sub]['bcorrs']) #list of lists of bcorrs
+    cd['bcorr_avg'] = np.average(np.array(all_bcorrs), axis=0) #average of each spot in bcorrs
+    #for avg in range(1,n_evecs):
+        #bcorr_plot.append(stats.mean(cd['bcorr_avg'][1:avg])) 
+    #plt.plot(bcorr_plot)
+
+def test_retest_rel_r(chap_dir, n_evecs):
+    n_evecs = n_evecs-1
+    global cd 
+    cd = {} #for chap_data
+    all_bcorrs, bcorr_plot = [], []
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
     for sub in subs:
         cd[sub] = {}
         cd[sub]['bcorrs'] = []
@@ -76,9 +114,9 @@ def test_retest_rel(chap_dir, n_evecs):
     for sub in subs:        
         all_bcorrs.append(cd[sub]['bcorrs']) #list of lists of bcorrs
     cd['bcorr_avg'] = np.average(np.array(all_bcorrs), axis=0) #average of each spot in bcorrs
-    for avg in range(1,n_evecs):
-        bcorr_plot.append(stats.mean(cd['bcorr_avg'][1:avg])) 
-    plt.plot(bcorr_plot)
+    #for avg in range(1,n_evecs):
+        #bcorr_plot.append(stats.mean(cd['bcorr_avg'][1:avg])) 
+    #plt.plot(bcorr_plot)
 
 def find_bcorrs(sub, hp, run, n_evecs): 
     while len(hp['corr_all']) > 0:
@@ -253,7 +291,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_pca):
     subject_dirs = glob(os.path.join(chap_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
     for sub in ['test_avg', 'retest_avg', 'total_avg']:
-        if os.path.exists(f'{chap_dir}/{sub}'):
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
     ivp['test']['evlist'], ivp['retest']['evlist'] = [], []
     for sub in subs:
@@ -352,19 +390,35 @@ def find_bcorrs_ivp(sub, ses, hp, run, corr_mat, n_evecs):
     ivp[sub][ses]['pairs'] = hp[ses]['holy']
 
    
-ind_vs_pca('/Users/bwinston/Downloads/chap_out_test', 200, 100)    
-test_retest_rel('/Users/bwinston/Downloads/chap_out_test', 200)    
-    
-'''notes for what to do b-ri - just run test_retest_rel and save the columns of 
-the output for the test evs that we care about from the pca thing mmmkay?'''
-    
-  
+ind_vs_pca('/Users/bwinston/Downloads/chap_out_test', 200, 100)   
+ind_vs_pca('/data/hcp_test_retest_pp/derivatives/chap', 200, 100)   
     
     
+'''cosine similarity'''
+ 
+vec_1 = np.load('/data2/Brian/connectome_harmonics/three_chap_subjs/sub-187547/ses-test/vecs.npy')[:,5]
+
+vec_2 = np.load('/data2/Brian/connectome_harmonics/three_chap_subjs/sub-187547/ses-retest/vecs.npy')[:,5]
+
+vec_1=vec_1.reshape(-1,1)
+
+vec_2=vec_2.reshape(-1,1)
+
+vec_1 = vec_1.swapaxes(0,1)
+
+vec_2 = vec_2.swapaxes(0,1)
+
+pairwise.cosine_similarity(vec_1, vec_2)
+    
+def chap_cosine_sim(vec_1, vec_2):
+    vec_1 = vec_1.reshape(-1,1)
+    vec_1 = vec_1.swapaxes(0,1)
+    vec_2 = vec_2.reshape(-1,1)
+    vec_2 = vec_2.swapaxes(0,1)
+    return abs(pairwise.cosine_similarity(vec_1, vec_2))
     
     
-    
-    
+chap_cosine_sim(vec_1, vec_2)   
 
 
 
