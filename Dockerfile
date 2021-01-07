@@ -164,6 +164,8 @@ RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neur
 
 RUN chmod 777 /opt/freesurfer-6.0.0
 
+RUN rm -rf /opt/conda/pkgs/*
+
 USER neuro 
 
 #https://github.com/moby/moby/issues/22832
@@ -178,12 +180,6 @@ RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
 
 RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
-
-USER root
-
-RUN rm -rf /opt/conda/pkgs/*
-
-USER neuro 
 
 WORKDIR /home/neuro
 
