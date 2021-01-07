@@ -134,7 +134,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     elif any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')):
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
         func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'
-        if user_info[f'{sub}_info'][ses].has_key('rest1'): #if rest1 data
+        if 'rest1' in user_info[f'{sub}_info'][ses]: #if rest1 data
             rest1 = user_info[f'{sub}_info'][ses]['rest1']
             bids_stuff = f'sub-{sub}_ses-{ses}_task-rest1'
             os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
