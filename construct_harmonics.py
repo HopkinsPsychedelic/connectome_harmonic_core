@@ -136,36 +136,44 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
         func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'
         if 'rest1' in user_info[f'{sub}_info'][ses]: #if rest1 data
             rest1 = user_info[f'{sub}_info'][ses]['rest1']
-            bids_stuff = f'sub-{sub}_ses-{ses}_task-rest1'
+            bids_stuff = f'sub-{sub}_{ses}_task-rest1'
+            print('[CHAP] Extracting timecourse from HCP surface files...')
             os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
             os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
             func_spectra(args, sub, ses, f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii', bids_stuff, vecs, vals)
     print(f'[CHAP] Finished session: {ses}')
 
 def func_spectra(args, sub, ses, full_path_lh, full_path_rh, bids_stuff, vecs, vals):
-    #read functional timeseries of surface mapped volume
+    #read functional timeseries 
+    print('[CHAP] Reading functional timeseries...')
     timeseries = cs.read_functional_timeseries(full_path_lh, full_path_rh)
-    #power spectra
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
-    mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
-    dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
-    normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
-    print('[CHAP] Computed mean, dynamic, and normalized power spectra for {bids_stuff} scan')
-    #energy spectra
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
-    mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals)
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
-    dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
-    print('[CHAP] Computed mean and dynamic energy spectra for {bids_stuff} scan')
-    #reconstruction spectrum
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
-    dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
-    print('[CHAP] Computed dynamic reconstruction spectrum for {bids_stuff} scan')
+    if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra'):
+        print('[CHAP] Spectra already computed. If you want to run again, delete the old stuff, chap')
+    else:
+        #power spectra
+        print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff} scan...')
+        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
+        mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
+        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
+        normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
+        print(f'[CHAP] Saved power spectra for {bids_stuff} scan')
+        #energy spectra
+        print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff} scan...')
+        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
+        mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
+        dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
+        print(f'[CHAP] Saved mean and dynamic energy spectra for {bids_stuff} scan')
+        #reconstruction spectrum
+        print(f'[CHAP] Computing dynamic reconstruction spectrum for {bids_stuff} scan...')
+        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
+        dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals)
+        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
+        print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
 
                 
 '''
