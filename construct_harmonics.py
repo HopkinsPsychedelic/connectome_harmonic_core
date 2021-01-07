@@ -131,7 +131,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
             os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
             bids_stuff = inout.get_bids_stuff(full_path_lh) #part of filename
             func_spectra(args, sub, ses, full_path_lh, full_path_rh, bids_stuff, vecs, vals)
-    elif any('REST' in x for x in os.listdir(f'{args.chap_dir}/{ses}')):
+    elif any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')):
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
         func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'
         if user_info[f'{sub}_info'][ses].has_key('rest1'): #if rest1 data
