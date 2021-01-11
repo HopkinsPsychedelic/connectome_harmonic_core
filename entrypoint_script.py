@@ -34,18 +34,18 @@ import hcp_preproc_to_chap as hcp_prep
 #for hcp, hcp_dir is required
 #for bids pipeline, qsi_dir, surf_dir, and fs_license_file are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
-parser.add_argument('output_dir', type = str, help = 'CHAP output directory')
+parser.add_argument('output_dir', type = str, help = 'CHAP output directory (path)')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode')
 parser.add_argument('--participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
 parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for BIDS pipeline')
 parser.add_argument('--surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory. Required for BIDS pipeline.')
-parser.add_argument('--fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename)')
-parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space. Optional.')
-parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors to compute. Default is 100')
-parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint' )
-parser.add_argument('--hcp_dir', type = str, help = 'HCP min. preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
-parser.add_argument('--tol', type = int, help = '(tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices')
-parser.add_argument('--mask_med_wall', type = bool, help = '(Boolean) mask out medial wall vertices')
+parser.add_argument('--fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename). Required for BIDS pipeline.')
+parser.add_argument('--fprep_dir', type = str, help = 'BIDS-organized fMRIprep output dir. Functional images should be in T1w/anat space. Always optional.')
+parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100')
+parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 20' )
+parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
+parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3mm')
+parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. True or False.H')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
@@ -89,7 +89,64 @@ for sub in subs:
     else:      
         cs.qsi_chap(user_info, args, sub)
     print(f'[CHAP] Finished {sub}')
-print('[CHAP] CHAP completed. Have a pleasant afternoon.')
+print('''
+  /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$                                                    /$$             /$$                     /$$
+ /$$__  $$| $$  | $$ /$$__  $$| $$__  $$                                                  | $$            | $$                    | $$
+| $$  \__/| $$  | $$| $$  \ $$| $$  \ $$        /$$$$$$$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ | $$  /$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$$
+| $$      | $$$$$$$$| $$$$$$$$| $$$$$$$/       /$$_____/ /$$__  $$| $$_  $$_  $$ /$$__  $$| $$ /$$__  $$|_  $$_/   /$$__  $$ /$$__  $$
+| $$      | $$__  $$| $$__  $$| $$____/       | $$      | $$  \ $$| $$ \ $$ \ $$| $$  \ $$| $$| $$$$$$$$  | $$    | $$$$$$$$| $$  | $$
+| $$    $$| $$  | $$| $$  | $$| $$            | $$      | $$  | $$| $$ | $$ | $$| $$  | $$| $$| $$_____/  | $$ /$$| $$_____/| $$  | $$
+|  $$$$$$/| $$  | $$| $$  | $$| $$            |  $$$$$$$|  $$$$$$/| $$ | $$ | $$| $$$$$$$/| $$|  $$$$$$$  |  $$$$/|  $$$$$$$|  $$$$$$$
+ \______/ |__/  |__/|__/  |__/|__/             \_______/ \______/ |__/ |__/ |__/| $$____/ |__/ \_______/   \___/   \_______/ \_______/
+                                                                                | $$                                                  
+                                                                                | $$                                                  
+                                                                                |__/                                                  
+
+ /$$   /$$                                                               /$$                                                     /$$                      /$$$$$$   /$$                                                                    
+| $$  | $$                                                              | $$                                                    | $$                     /$$__  $$ | $$                                                                    
+| $$  | $$  /$$$$$$  /$$    /$$ /$$$$$$         /$$$$$$         /$$$$$$ | $$  /$$$$$$   /$$$$$$   /$$$$$$$  /$$$$$$  /$$$$$$$  /$$$$$$          /$$$$$$ | $$  \__//$$$$$$    /$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$$     
+| $$$$$$$$ |____  $$|  $$  /$$//$$__  $$       |____  $$       /$$__  $$| $$ /$$__  $$ |____  $$ /$$_____/ |____  $$| $$__  $$|_  $$_/         |____  $$| $$$$   |_  $$_/   /$$__  $$ /$$__  $$| $$__  $$ /$$__  $$ /$$__  $$| $$__  $$    
+| $$__  $$  /$$$$$$$ \  $$/$$/| $$$$$$$$        /$$$$$$$      | $$  \ $$| $$| $$$$$$$$  /$$$$$$$|  $$$$$$   /$$$$$$$| $$  \ $$  | $$            /$$$$$$$| $$_/     | $$    | $$$$$$$$| $$  \__/| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$    
+| $$  | $$ /$$__  $$  \  $$$/ | $$_____/       /$$__  $$      | $$  | $$| $$| $$_____/ /$$__  $$ \____  $$ /$$__  $$| $$  | $$  | $$ /$$       /$$__  $$| $$       | $$ /$$| $$_____/| $$      | $$  | $$| $$  | $$| $$  | $$| $$  | $$    
+| $$  | $$|  $$$$$$$   \  $/  |  $$$$$$$      |  $$$$$$$      | $$$$$$$/| $$|  $$$$$$$|  $$$$$$$ /$$$$$$$/|  $$$$$$$| $$  | $$  |  $$$$/      |  $$$$$$$| $$       |  $$$$/|  $$$$$$$| $$      | $$  | $$|  $$$$$$/|  $$$$$$/| $$  | $$ /$$
+|__/  |__/ \_______/    \_/    \_______/       \_______/      | $$____/ |__/ \_______/ \_______/|_______/  \_______/|__/  |__/   \___/         \_______/|__/        \___/   \_______/|__/      |__/  |__/ \______/  \______/ |__/  |__/|__/
+                                                              | $$                                                                                                                                                                         
+                                                              | $$                                                                                                                                                                         
+                                                              |__/                                                                                                                                                                         
+''')                                                                                                                                    
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+                                                                                                                                      
+')
  
 
 

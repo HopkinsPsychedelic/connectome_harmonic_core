@@ -14,11 +14,12 @@ import decomp as dcp
 from scipy import sparse
 import numpy as np
 import utility_functions as ut
-from sklearn.metrics import pairwise_distances_chunked, pairwise
+from sklearn.metrics import pairwise_distances_chunked, pairwise, f1_score
 import time
 from scipy.sparse import csgraph
 import matplotlib.pylab as plt
 from scipy.stats.stats import pearsonr
+from scipy.spatial import distance
 import statistics as stats     
          
 '''
@@ -399,28 +400,120 @@ ind_vs_pca('/data/hcp_test_retest_pp/derivatives/chap', 200, 100)
 '''cosine similarity'''
  
 vec_1 = np.load('/data2/Brian/connectome_harmonics/three_chap_subjs/sub-187547/ses-test/vecs.npy')[:,5]
-
 vec_2 = np.load('/data2/Brian/connectome_harmonics/three_chap_subjs/sub-187547/ses-retest/vecs.npy')[:,5]
-
 vec_1=vec_1.reshape(-1,1)
-
 vec_2=vec_2.reshape(-1,1)
-
 vec_1 = vec_1.swapaxes(0,1)
-
 vec_2 = vec_2.swapaxes(0,1)
-
-pairwise.cosine_similarity(vec_1, vec_2)
-    
+pairwise.cosine_similarity(vec_1, vec_2)    
 def chap_cosine_sim(vec_1, vec_2):
     vec_1 = vec_1.reshape(-1,1)
     vec_1 = vec_1.swapaxes(0,1)
     vec_2 = vec_2.reshape(-1,1)
     vec_2 = vec_2.swapaxes(0,1)
-    return abs(pairwise.cosine_similarity(vec_1, vec_2))
-    
-    
+    return abs(pairwise.cosine_similarity(vec_1, vec_2))        
 chap_cosine_sim(vec_1, vec_2)   
 
+'''dice coefficient'''
+distance.dice()
 
 
+
+
+'''spectra'''
+
+chap_out = '/Users/bwinston/Downloads/chap_out_test'
+global s
+s = {}
+for sub in ['105923', '103818']:
+    s[sub] = {}
+    for ses in ['test','retest']:
+        s[sub][ses] = {}
+        s[sub][ses]['power'] = {}
+        s[sub][ses]['energy'] = {}
+        s[sub][ses]['recon'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/reconspectra/sub-{sub}_ses-{ses}_task-rest1_dynamic_reconstruction_spectrum.npy')
+        s[sub][ses]['recon'] = np.delete(s[sub][ses]['recon'], 0, axis=0)
+        for spec in ['power', 'energy']:
+            for t in ['mean', 'dynamic']:
+                s[sub][ses][spec][t] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/{spec}spectra/sub-{sub}_ses-{ses}_task-rest1_{t}_{spec}_spectrum.npy')
+                s[sub][ses][spec][t] = np.delete(s[sub][ses][spec][t], 0, axis=0)
+        s[sub][ses]['power']['normalized'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/powerspectra/sub-{sub}_ses-{ses}_task-rest1_normalized_power_spectrum.npy')
+        s[sub][ses]['power']['normalized'] = np.delete(s[sub][ses]['power']['normalized'], 0, axis=0)
+        
+pearsonr(s['105923']['test']['energy']['mean'], s['105923']['retest']['energy']['mean']) 
+
+#step 1: optimally order sub1ses1 with sub1ses2
+test_retest_rel_2v('/Users/bwinston/Downloads/chap_out_test/sub-105923/ses-test/vecs.npy','/Users/bwinston/Downloads/chap_out_test/sub-105923/ses-retest/vecs.npy',100)
+cd['ret_ind'] = []
+for ev in range(99):
+    cd['ret_ind'].append(cd['pairs'][ev]['ret_ind'])
+pearsonr(s['105923']['test']['energy']['mean'], s['105923']['retest']['energy']['mean'][cd['ret_ind']])
+
+'''Measures of test-retest reliability'''
+#step 1: sub1ses1 vs sub1ses2
+test_retest_rel_r('/Users/bwinston/Downloads/just_105', 100)
+real_pairs_105 = cd['105923']['pairs'] 
+real_bcorrs = cd['105923']['bcorrs']
+fake_pairs_105 = cd['105923']['pairs'] 
+fake_bcorrs = cd['105923']['bcorrs']
+stats.mean(fake_bcorrs[:20])
+stats.mean(real_bcorrs[:20])
+ 
+def test_retest_rel_2v(vec_1, vec_2, n_evecs):
+    n_evecs = n_evecs-1
+    global cd 
+    cd = {} #for chap_data
+    cd['bcorrs'] = []
+    cd['vec_1'] = np.load(vec_1)
+    cd['vec_2'] = np.load(vec_2)
+    for i in ['1', '2']:   
+        cd[f'vec_{i}'] = np.delete(cd[f'vec_{i}'], 0, axis=1)
+    global hp
+    hp, hp['holy'] = {}, {} #dict for within these fxns
+    hp['corr_orig'] = np.empty((n_evecs,n_evecs))
+    for evec_1 in range(0,n_evecs): 
+        for evec_2 in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
+            hp['corr_orig'][evec_2,evec_1] = abs(pearsonr(cd[f'vec_1'][:,evec_1], cd[f'vec_2'][:,evec_2])[0]) #comparing column with column (ev with ev)
+    hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
+    hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
+    find_bcorrs_2v(sub, hp, 0, n_evecs) #run find bcorrs function, get best pairs
+    for ev in range(n_evecs):
+        cd['bcorrs'].append(cd['pairs'][ev]['bcorr']) #all ideal corrs (w/ no repeats)
+
+def find_bcorrs_2v(sub, hp, run, n_evecs): 
+    while len(hp['corr_all']) > 0:
+        hp[run] = {}
+        hp[run]['maxes'] = {}
+        for ev in hp['corr_all']: #for each test session evec, which retest session evec is the best match?
+            hp[run]['maxes'][ev] = {} #test session ev's dict
+            hp[run]['maxes'][ev]['bcorr'] = max(hp['corr_all'][ev].values()) #best correlation w/ any retest ev
+            hp[run]['maxes'][ev]['ret_ind'] = get_key(hp['corr_all'][ev], max(hp['corr_all'][ev].values())) #which retest ev was above?
+        hp[run]['ret_used'], hp[run]['win_ind'], hp[run]['good_boys'] = [], [], []
+        for ev in hp['corr_all']:
+            hp[run]['ret_used'].append(hp[run]['maxes'][ev]['ret_ind']) #tally retest indices used above
+        ret_dups = set([x for x in hp[run]['ret_used'] if hp[run]['ret_used'].count(x) > 1]) #retest evs that were used multiple times
+        if ret_dups == 0:
+            break
+        hp[run]['ret_used'] = set(hp[run]['ret_used']) #take out duplicates from ret_used
+        for ret_dup in ret_dups: #for each retest ev in demand by multiple
+            competition = [] #competition is within the retest ev
+            for ev in hp[run]['maxes']: 
+                if ret_dup == hp[run]['maxes'][ev]['ret_ind']: #if a test evec is involved in a dispute
+                    competition.append(hp[run]['maxes'][ev]['bcorr']) #add its correlation to retest ev's competition 
+            competition = max(competition) 
+            for ev in hp[run]['maxes']:
+                if hp[run]['maxes'][ev]['bcorr'] == competition: #if its correlation was a winner, leave as is
+                    hp[run]['win_ind'].append(ev) #add test ev that won to win_ind
+        for ev in hp['corr_all']:
+            if hp[run]['maxes'][ev]['ret_ind'] not in ret_dups: #if test ev not involved in any disputes, add to good_boys
+               hp[run]['good_boys'].append(ev) 
+        for ev in list(hp['corr_all']):
+            if ev in (set(hp[run]['good_boys']) | set(hp[run]['win_ind'])):
+               hp['holy'][ev] = hp[run]['maxes'][ev] #add good boys and winners to holy
+               del hp['corr_all'][ev] #delete them from corr_all
+        for ev in hp['corr_all']:
+            for r_ev in hp[run]['ret_used']:
+                del hp['corr_all'][ev][r_ev] #idk what this is doing
+        run = run + 1
+        find_bcorrs_2v(sub, hp, run, len(hp['corr_all'])) #rerun function on smaller corr_all (leftovers)
+    cd['pairs'] = hp['holy']

@@ -127,5 +127,8 @@ for x in range(1,200):
 plt.plot(mean_of_good_fits, 'g')
 
 
+        
+        
+        
     
 
