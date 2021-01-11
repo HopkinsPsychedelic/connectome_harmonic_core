@@ -43,3 +43,86 @@ def lapDecomp(Asparse,num):
     end = time.time()
     print('decomposition time=', (end-start),'seconds, which is', (end - start)/60, 'minutes')
     return vals,vecs
+
+def cos_norm(v1,v2):
+    
+    dot = np.dot(v1,v2)
+    
+    n1 = np.linalg.norm(v1)
+    n2 = np.linalg.norm(v2)
+    
+    return np.abs(dot/(n1*n2))
+
+def reconstruct_vec(vtarg,vbasis):
+    vrecon=np.zeros(np.shape(vtarg))
+    for i in range(len(vbasis[0,:])):
+        c = np.dot(vtarg,vbasis[:,i])
+        
+        vrecon+=c*vbasis[:,i]
+        
+    return vrecon
+
+def reconstruct_basis(vecs,basisvecs):
+    reconvecs=np.zeros(np.shape(vecs))
+    for i in range (len(vecs[0,:])):
+        reconvecs[:,i]=reconstruct_vec(vecs[:,i], basisvecs)
+    
+    return reconvecs
+
+
+def get_projection_coefs(vtarg,vbasis,metric='cos'):
+    coefs=np.zeros(len(vbasis[0,:]))
+    
+    for i in range(len(vbasis[0,:])):
+        if metric=='cos':
+            coefs[i]=cos_norm(vtarg,vbasis[:,i])
+        if metric=='dot':
+            coefs[i]=np.dot(vtarg,vbasis[:,i])
+    
+    return coefs
+
+def recon_npercent_best(vtarg,vbasis,percent):
+    coscoefs=get_projection_coefs(vtarg, vbasis)
+    dotcoefs=get_projection_coefs(vtarg, vbasis,metric='dot')
+    
+    numcoefs=int(len(coscoefs)*(percent/100))
+    
+    sortinds=np.argsort(coscoefs)[::-1]
+    sorted_coscoefs=coscoefs[sortinds]
+    sorted_dotcoefs=dotcoefs[sortinds]
+    sorted_vbasis=vbasis[:,sortinds]
+    
+    resultvec=np.zeros(len(vtarg))
+    
+    for i in range(numcoefs):
+        resultvec+=sorted_dotcoefs[i]*sorted_vbasis[:,i]
+    
+    return resultvec
+
+def get_recon_as_function_of_number_of_vecs_used(vtarg,vbasis):
+    percents=np.arange(1,100)
+    reconquals=[]
+    for p in percents:
+        recvec=recon_npercent_best(vtarg,vbasis,p)
+        q = cos_norm(recvec,vtarg)
+        reconquals.append(q)
+    return reconquals
+
+def get_number_of_vecs_needed(vtarg,vbasis,tol=.01):
+    
+    reconquals=get_recon_as_function_of_number_of_vecs_used(vtarg, vbasis)
+    
+    finalval=reconquals[-1]
+    for i in range(len(reconquals)-1):
+        if (finalval-reconquals[i])<=tol:
+            return i
+
+    
+def get_av_num_vecs_needed(vecstarg,vecsbasis):
+    num=0
+    for i in range (len(vecstarg[0,:])):
+        n=get_number_of_vecs_needed(vecstarg[:,i], vecsbasis)
+        print(n)
+        num+=n
+    
+    return num/len(vecstarg[0,:])
