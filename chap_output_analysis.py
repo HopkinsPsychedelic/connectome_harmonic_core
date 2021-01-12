@@ -414,15 +414,9 @@ def chap_cosine_sim(vec_1, vec_2):
     return abs(pairwise.cosine_similarity(vec_1, vec_2))        
 chap_cosine_sim(vec_1, vec_2)   
 
-'''dice coefficient'''
-distance.dice()
-
-
-
-
 '''spectra'''
-
-chap_out = '/Users/bwinston/Downloads/chap_out_test'
+#chap_out = '/Users/bwinston/Downloads/chap_out_test'
+chap_out = '/data/hcp_test_retest_pp/derivatives/chap'
 global s
 s = {}
 for sub in ['105923', '103818']:
@@ -439,15 +433,24 @@ for sub in ['105923', '103818']:
                 s[sub][ses][spec][t] = np.delete(s[sub][ses][spec][t], 0, axis=0)
         s[sub][ses]['power']['normalized'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/powerspectra/sub-{sub}_ses-{ses}_task-rest1_normalized_power_spectrum.npy')
         s[sub][ses]['power']['normalized'] = np.delete(s[sub][ses]['power']['normalized'], 0, axis=0)
-        
-pearsonr(s['105923']['test']['energy']['mean'], s['105923']['retest']['energy']['mean']) 
+#unordered correlation btwn spectra within/across subject    
+print('within subj. mean energy correlation:' + str(pearsonr(s['103818']['test']['energy']['mean'], s['103818']['retest']['energy']['mean'])[0]))
+print('within subj. mean pwr correlation:' + str(pearsonr(s['103818']['test']['power']['mean'], s['103818']['retest']['power']['mean'])[0]))
+print('across subj. mean energy correlation:' + str(pearsonr(s['103818']['test']['energy']['mean'], s['105923']['test']['energy']['mean'])[0]))
+print('across subj. mean pwr correlation:' + str(pearsonr(s['103818']['test']['power']['mean'], s['105923']['test']['power']['mean'])[0]))
 
 #step 1: optimally order sub1ses1 with sub1ses2
-test_retest_rel_2v('/Users/bwinston/Downloads/chap_out_test/sub-105923/ses-test/vecs.npy','/Users/bwinston/Downloads/chap_out_test/sub-105923/ses-retest/vecs.npy',100)
+test_retest_rel_2v(f'{chap_out}/sub-103818/ses-test/vecs.npy',f'{chap_out}/sub-103818/ses-retest/vecs.npy',100)
+#test_retest_rel_2v(f'{chap_out}/sub-103818/ses-test/vecs.npy',f'{chap_out}/sub-105923/ses-test/vecs.npy',100)
 cd['ret_ind'] = []
 for ev in range(99):
     cd['ret_ind'].append(cd['pairs'][ev]['ret_ind'])
-pearsonr(s['105923']['test']['energy']['mean'], s['105923']['retest']['energy']['mean'][cd['ret_ind']])
+#ordered correlation btwn spectra within/across subject
+print('ordered within subj. mean energy correlation:' + str(pearsonr(s['103818']['test']['energy']['mean'], s['103818']['retest']['energy']['mean'][cd['ret_ind']])[0]))
+print('ordered within subj. mean pwr correlation:' + str(pearsonr(s['103818']['test']['power']['mean'], s['103818']['retest']['power']['mean'][cd['ret_ind']])[0]))
+print('ordered across subj. mean energy correlation:' + str(pearsonr(s['103818']['test']['energy']['mean'], s['105923']['test']['energy']['mean'][cd['ret_ind']])[0]))
+print('ordered across subj. mean pwr correlation:' + str(pearsonr(s['103818']['test']['power']['mean'], s['105923']['test']['power']['mean'][cd['ret_ind']])[0]))
+
 
 '''Measures of test-retest reliability'''
 #step 1: sub1ses1 vs sub1ses2
@@ -459,6 +462,15 @@ fake_bcorrs = cd['105923']['bcorrs']
 stats.mean(fake_bcorrs[:20])
 stats.mean(real_bcorrs[:20])
  
+
+'''patrick sparsity metric v1.0'''
+#sub1ses1 vs. sub1ses2
+dcp.get_av_num_vecs_needed(np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/vecs.npy'), np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-retest/vecs.npy'))
+#sub1ses1 vs. sub2ses1
+dcp.get_av_num_vecs_needed(np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-105923/ses-retest/vecs.npy'), np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-retest/vecs.npy'))
+
+
+
 def test_retest_rel_2v(vec_1, vec_2, n_evecs):
     n_evecs = n_evecs-1
     global cd 
