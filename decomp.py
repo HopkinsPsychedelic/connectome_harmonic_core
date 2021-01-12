@@ -126,3 +126,20 @@ def get_av_num_vecs_needed(vecstarg,vecsbasis):
         num+=n
     
     return num/len(vecstarg[0,:])
+
+
+def subspace_distance_eff(v1,v2):
+    start=time.time()
+    v1=v1.astype('float32')
+    v2=v2.astype('float32')
+    p1=np.matmul(v1,v1.T)
+    print('projmat1 done')
+    p2=np.matmul(v2,v2.T)
+    print('projmat2 done')
+    dif=p1-p2
+    print('D computed')
+    u,singular_values,right_evecs=scipy.sparse.linalg.svds(dif,k=1,which='LM',return_singular_vectors=True)
+    print('done')
+    end=time.time()
+    print(f'{end-start} seconds taken for dimension {np.shape(v1)}')
+    return singular_values[0]
