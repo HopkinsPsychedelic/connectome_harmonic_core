@@ -186,8 +186,6 @@ def func_spectra(args, sub, ses, timeseries, bids_stuff, vecs, vals):
 '''
 wb_command -cifti-separate in.dtseries.nii COLUMN -metric CORTEX_LEFT out.func.gii 
 ''' 
-                
-  
 
   
     
