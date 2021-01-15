@@ -134,7 +134,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
     elif any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')):
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
         func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'
-        if 'rest1' in user_info[f'{sub}_info'][ses]: #if rest1 data
+        if 'rest1_lr' in user_info[f'{sub}_info'][ses]: #if rest1 data
             for n in ['1','2']:
                 for dire in ['lr', 'rl']:
                     scan = user_info[f'{sub}_info'][ses][f'rest{n}_{dire}']
