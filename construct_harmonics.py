@@ -156,8 +156,11 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
         print('[CHAP] Spectra computed previously. If you want to run again, delete the old stuff, chap')
     else:
         inout.if_not_exist_make(f'{task_dir}')
+        bids_stuff = bids_stuff[:-7]
+        #save out timeseries
+        np.save(f'{task_dir}/{bids_stuff}_timeseries', timeseries)
         for spec in ['powerspectra', 'energyspectra','reconspectra']:
-            inout.if_not_exist_make(f'{task_dir}/{spec}')
+            inout.if_not_exist_make(f'{task_dir}/{spec}') 
         #power spectra
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff} scan...')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
@@ -184,11 +187,8 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
 '''
 wb_command -cifti-separate in.dtseries.nii COLUMN -metric CORTEX_LEFT out.func.gii 
 ''' 
-
   
-    
-  
-    
+'''save out timeseries'''
   
     
   
