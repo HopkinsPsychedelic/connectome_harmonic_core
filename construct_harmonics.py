@@ -144,7 +144,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
                     user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
                     user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = (user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] - np.mean(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'])) / np.std(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'])
-                print('[CHAP] Combining LR and RL PE direction scans for REST{n}...')
+                print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
                 user_info[f'{sub}_info'][ses][f'rest{n}_comb'] = np.concatenate((user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_rl']), axis=1)  
                 func_spectra(args, sub, ses, user_info[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
     print(f'[CHAP] Finished session: {ses}')
@@ -170,14 +170,14 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
         #energy spectra
         print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff} scan...')
         mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals) #average energy over the whole scan (average of dynamic for each harmonic)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
+        np.save(f'{task_dir}/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
         dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals) #energy at each TR
-        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
+        np.save(f'{task_dir}/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
         print(f'[CHAP] Saved mean and dynamic energy spectra for {bids_stuff} scan')
         #reconstruction spectrum
         print(f'[CHAP] Computing dynamic reconstruction spectrum for {bids_stuff} scan...')
         dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals) #takes on negative values
-        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
+        np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
         print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
 
                 
