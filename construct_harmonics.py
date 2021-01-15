@@ -135,41 +135,40 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func')
         func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'
         if 'rest1' in user_info[f'{sub}_info'][ses]: #if rest1 data
-            rest1_lr = user_info[f'{sub}_info'][ses]['rest1_lr']
-            rest1_rl = user_info[f'{sub}_info'][ses]['rest1_rl']
-            bids_stuff = f'sub-{sub}_{ses}_task-rest1'
-            print('[CHAP] Extracting timecourse from HCP surface files...')
-            os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1_lr} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_acq-lr_hem-l.func.gii')
-            os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1_lr} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_acq-lr_hem-r.func.gii')
-            os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1_rl} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_acq_-rl_hem-l.func.gii')
-            os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {rest1_rl} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_acq_-rl_hem-r.func.gii')
-            timeseries_lr = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_acq_-lr_hem-l.func.gii', f'{func_dir}/{bids_stuff}_acq-lr_hem-r.func.gii')
-            timeseries_rl = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_acq_-rl_hem-l.func.gii', f'{func_dir}/{bids_stuff}_acq-rl_hem-r.func.gii')
-            timeseries_lr = (timeseries_lr - np.mean(timeseries_lr)) / np.std(timeseries_lr)
-            timeseries_rl = (timeseries_rl - np.mean(timeseries_rl)) / np.std(timeseries_rl)
-            print('[CHAP] Combining LR and RL PE direction scans...')
-            timeseries = np.concatenate((timeseries_lr, timeseries_rl), axis=1)  
-            func_spectra(args, sub, ses, timeseries, bids_stuff, vecs, vals)
+            for n in ['1','2']:
+                for dire in ['lr', 'rl']:
+                    scan = user_info[f'{sub}_info'][ses][f'rest{n}_{dire}']
+                    bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
+                    print('[CHAP] Extracting timecourse from HCP surface files...')
+                    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
+                    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
+                    user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+                    user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = (user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] - np.mean(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'])) / np.std(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'])
+                print('[CHAP] Combining LR and RL PE direction scans for REST{n}...')
+                user_info[f'{sub}_info'][ses][f'rest{n}_comb'] = np.concatenate((user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_rl']), axis=1)  
+                func_spectra(args, sub, ses, user_info[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
     print(f'[CHAP] Finished session: {ses}')
 
-def func_spectra(args, sub, ses, timeseries, bids_stuff, vecs, vals):
-    #read functional timeseries 
-    if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra'):
-        print('[CHAP] Spectra already computed. If you want to run again, delete the old stuff, chap')
+def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
+    #read functional timeseries
+    task_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{task}'
+    if os.path.exists(f'{task_dir}'):
+        print('[CHAP] Spectra computed previously. If you want to run again, delete the old stuff, chap')
     else:
+        inout.if_not_exist_make(f'{task_dir}')
+        for spec in ['powerspectra', 'energyspectra','reconspectra']:
+            inout.if_not_exist_make(f'{task_dir}/{spec}')
         #power spectra
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff} scan...')
-        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
+        np.save(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
         dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals) #power at each TR
-        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
+        np.save(f'{task_dir}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
         normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
+        np.save(f'{task_dir}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
         print(f'[CHAP] Saved power spectra for {bids_stuff} scan')
         #energy spectra
         print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff} scan...')
-        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra')
         mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals) #average energy over the whole scan (average of dynamic for each harmonic)
         np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
         dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals) #energy at each TR
@@ -177,7 +176,6 @@ def func_spectra(args, sub, ses, timeseries, bids_stuff, vecs, vals):
         print(f'[CHAP] Saved mean and dynamic energy spectra for {bids_stuff} scan')
         #reconstruction spectrum
         print(f'[CHAP] Computing dynamic reconstruction spectrum for {bids_stuff} scan...')
-        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra')
         dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals) #takes on negative values
         np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
         print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
