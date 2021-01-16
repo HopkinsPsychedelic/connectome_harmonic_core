@@ -19,6 +19,7 @@ import matplotlib.pylab as plt
 from scipy.stats.stats import pearsonr
 from scipy.spatial import distance
 import statistics as stats     
+import compute_spectra as cs
          
 '''
 standard deviation and error, all harms with .8, .7, sequentially 
@@ -107,13 +108,13 @@ dcp.subspace_distance_eff(v1,v2)
 chap_out = '/data/hcp_test_retest_pp/derivatives/chap'
 global s
 s = {}
-for sub in ['105923', '103818']:
+for sub in ['111312']: #'105923', '103818',
     s[sub] = {}
     for ses in ['test','retest']:
         s[sub][ses] = {}
         s[sub][ses]['power'] = {}
         s[sub][ses]['energy'] = {}
-        s[sub][ses]['recon'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/reconspectra/sub-{sub}_ses-{ses}_task-rest1_dynamic_reconstruction_spectrum.npy')
+        s[sub][ses]['recon'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/REST1/reconspectra/sub-{sub}_ses-{ses}_task-rest1_dynamic_reconstruction_spectrum.npy')
         s[sub][ses]['recon'] = np.delete(s[sub][ses]['recon'], 0, axis=0)
         for spec in ['power', 'energy']:
             for t in ['mean', 'dynamic']:
@@ -145,9 +146,17 @@ recon spectrum:
 histogram of values/frequency of plot (zero crossings)
 shannon entropy for histogram (how compressible)
 
-PE directions concat over time (as in, first the RL scan then the LR) - normalize values (bc BOLD is arbitrary)
 compare REST1 and REST2 within session and also REST1 to REST1 across sessions
 '''
+
+
+
+
+
+
+
+
+
 def test_retest_rel_2v(vec_1, vec_2, n_evecs):
     n_evecs = n_evecs-1
     global cd 
