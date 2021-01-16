@@ -231,7 +231,18 @@ def if_not_exist_make(path):
     if not os.path.exists(path):
         os.mkdir(path)
 
+def normalize_ts(ts):
+    nm=np.zeros(np.shape(ts))
+    m=np.mean(ts, axis=1)
+    std=np.std(ts, axis=1)
+    for i in range(len(ts.T)):
+        nm[:,i]=(ts[:,i]-m)/std
+    return nm
 
+def combine_pe(ts_lr, ts_rl):
+    ts_lr_n = normalize_ts(ts_lr)
+    ts_rl_n = normalize_ts(ts_rl)
+    return np.hstack((ts_lr_n, ts_rl_n))
 
 '''
 def read_gifti_surface(filename):

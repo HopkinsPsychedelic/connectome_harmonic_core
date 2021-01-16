@@ -190,7 +190,7 @@ wb_command -cifti-separate in.dtseries.nii COLUMN -metric CORTEX_LEFT out.func.g
   
 '''save out timeseries'''
   
-    
+   
   
     
   
