@@ -143,9 +143,8 @@ def construct_harmonics_calculate_spectra(args, sub, ses, user_info, multises):
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
                     user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
-                    user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = (user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] - np.mean(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'])) / np.std(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'])
                 print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
-                user_info[f'{sub}_info'][ses][f'rest{n}_comb'] = np.concatenate((user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_rl']), axis=1)  
+                user_info[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], user_info[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
                 func_spectra(args, sub, ses, user_info[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
     print(f'[CHAP] Finished session: {ses}')
 
@@ -187,11 +186,7 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
 '''
 wb_command -cifti-separate in.dtseries.nii COLUMN -metric CORTEX_LEFT out.func.gii 
 ''' 
-  
-'''save out timeseries'''
-  
-   
-  
+
     
   
     
