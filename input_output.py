@@ -232,12 +232,9 @@ def if_not_exist_make(path):
         os.mkdir(path)
 
 def normalize_ts(ts):
-    nm=np.zeros(np.shape(ts))
-    m=np.mean(ts, axis=1)
-    std=np.std(ts, axis=1)
-    for i in range(len(ts.T)):
-        nm[:,i]=(ts[:,i]-m)/std
-    return nm
+    ts=ts.T
+    nts=(ts - np.mean(ts, axis=0)) / np.std(ts, axis=0)
+    return nts.T
 
 def combine_pe(ts_lr, ts_rl):
     ts_lr_n = normalize_ts(ts_lr)
