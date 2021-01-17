@@ -30,6 +30,7 @@ import input_output as inout
 import argparse
 import construct_harmonics as cs
 import hcp_preproc_to_chap as hcp_prep
+import numpy as np
 #user inputs cl arguments separated by spaces. args without dashes are required
 #for hcp, hcp_dir is required
 #for bids pipeline, qsi_dir, surf_dir, and fs_license_file are required
@@ -59,14 +60,15 @@ if not args.tol:
 #read nnum number, set default to 20
 if not args.nnum:
     args.nnum = 20
-#make hcp intermediate dir
-if args.hcp_dir: 
-    inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
-#set empty user_info dict
-global user_info
-user_info = {}
+#set empty u dict
+global u
+u = {}
+#make hcp intermediate dir, load mask
+if args.hcp_dir: 
+    inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
+    u['mask'] = np.load(f'{args.hcp_dir}/hcp_mask.npy')
 #find subjects
 subs = []
 if args.participant_label: #user input subjects
@@ -80,14 +82,14 @@ else: #all subjects from qsi output
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Using sub(s): {subs}')
 for sub in subs:
-    user_info[f'{sub}_info'] = {}  #create dict in user_info for each subjs info
+    u[f'{sub}_info'] = {}  #create dict in u for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
     #if HCP, run hcp_prep function
     if args.hcp_dir:
-        hcp_prep.hcp_chapper(args, sub, user_info)
+        hcp_prep.hcp_chapper(args, sub, u)
     #else, run BIDS/qsi method
     else:      
-        cs.qsi_chap(user_info, args, sub)
+        cs.qsi_chap(u, args, sub)
     print(f'[CHAP] Finished {sub}')
 print('''
   /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$                                                    /$$             /$$                     /$$
