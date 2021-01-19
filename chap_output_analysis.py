@@ -55,7 +55,6 @@ hcp_male_ids = [122317, 139839, 146129, 149337, 149741, 151526, 185442, 341834, 
 hcp_all = hcp_fem_ids + hcp_male_ids
 hcp_all = [str(i) for i in hcp_all]
 
-
 avg_harms('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap')
 t_rt.ind_vs_avg('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 100)
 

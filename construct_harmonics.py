@@ -142,7 +142,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
                 u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
                 func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
             for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
-                os.remove(f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
+                os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
     print(f'[CHAP] Finished session: {ses}')
 
 def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
