@@ -118,9 +118,9 @@ for sub in ['111312']: #'105923', '103818',
         s[sub][ses]['recon'] = np.delete(s[sub][ses]['recon'], 0, axis=0)
         for spec in ['power', 'energy']:
             for t in ['mean', 'dynamic']:
-                s[sub][ses][spec][t] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/{spec}spectra/sub-{sub}_ses-{ses}_task-rest1_{t}_{spec}_spectrum.npy')
+                s[sub][ses][spec][t] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/REST1/{spec}spectra/sub-{sub}_ses-{ses}_task-rest1_{t}_{spec}_spectrum.npy')
                 s[sub][ses][spec][t] = np.delete(s[sub][ses][spec][t], 0, axis=0)
-        s[sub][ses]['power']['normalized'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/powerspectra/sub-{sub}_ses-{ses}_task-rest1_normalized_power_spectrum.npy')
+        s[sub][ses]['power']['normalized'] = np.load(f'{chap_out}/sub-{sub}/ses-{ses}/func/REST1/powerspectra/sub-{sub}_ses-{ses}_task-rest1_normalized_power_spectrum.npy')
         s[sub][ses]['power']['normalized'] = np.delete(s[sub][ses]['power']['normalized'], 0, axis=0)
 #unordered correlation btwn spectra within/across subject    
 print('within subj. mean energy correlation:' + str(pearsonr(s['103818']['test']['energy']['mean'], s['103818']['retest']['energy']['mean'])[0]))
