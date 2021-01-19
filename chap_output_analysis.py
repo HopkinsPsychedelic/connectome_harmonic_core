@@ -52,6 +52,9 @@ op = iva['bcorr_retest_avg']
 
 hcp_fem_ids = [103818, 105923, 111312, 114823, 115320, 125525, 130518, 135528, 137128, 143325, 144226, 158035, 169343, 172332, 175439, 177746, 187547, 192439, 194140, 195041, 200109, 200614, 204521, 250427, 287248, 562345,627549, 660951, 859671,861456, 877168]
 hcp_male_ids = [122317, 139839, 146129, 149337, 149741, 151526, 185442, 341834, 433839, 599671, 601127, 783462, 917255]
+hcp_all = hcp_fem_ids + hcp_male_ids
+hcp_all = [str(i) for i in hcp_all]
+
 
 avg_harms('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap')
 t_rt.ind_vs_avg('/Users/bwinston/Documents/connectome_harmonics/chap_output/chap', 100)
