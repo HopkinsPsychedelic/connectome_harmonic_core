@@ -20,6 +20,7 @@ import os
 import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
+from itertools import product
 
 def qsi_chap(u, args, sub):
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
@@ -140,6 +141,8 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
                 print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
                 u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
                 func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
+            for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
+                os.remove(f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
     print(f'[CHAP] Finished session: {ses}')
 
 def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
@@ -150,8 +153,6 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
     else:
         inout.if_not_exist_make(f'{task_dir}')
         bids_stuff = bids_stuff[:-7]
-        #save out timeseries
-        np.save(f'{task_dir}/{bids_stuff}_timeseries', timeseries)
         for spec in ['powerspectra', 'energyspectra','reconspectra']:
             inout.if_not_exist_make(f'{task_dir}/{spec}') 
         #power spectra
@@ -164,14 +165,12 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
         print(f'[CHAP] Saved power spectra for {bids_stuff} scan')
         #energy spectra
-        print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff} scan...')
         mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals) #average energy over the whole scan (average of dynamic for each harmonic)
         np.save(f'{task_dir}/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
         dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals) #energy at each TR
         np.save(f'{task_dir}/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
-        print(f'[CHAP] Saved mean and dynamic energy spectra for {bids_stuff} scan')
+        print(f'[CHAP] Saved energy spectra for {bids_stuff} scan')
         #reconstruction spectrum
-        print(f'[CHAP] Computing dynamic reconstruction spectrum for {bids_stuff} scan...')
         dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals) #takes on negative values
         np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
         print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
@@ -180,9 +179,10 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
 '''
 wb_command -cifti-separate in.dtseries.nii COLUMN -metric CORTEX_LEFT out.func.gii 
 ''' 
+for n in ['1','2']:
+   for dire in ['lr', 'rl']:
+       print(f'{n}{dire}')
 
-    
-  
     
   
     
