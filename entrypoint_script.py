@@ -37,7 +37,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory (path)')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode')
-parser.add_argument('--participant_label', nargs='+', help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a list')
+parser.add_argument('--participant_label', type = str, help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a list')
 parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for BIDS pipeline')
 parser.add_argument('--surf_dir', type = str, help = 'BIDS-organized Freesurfer output directory. Required for BIDS pipeline.')
 parser.add_argument('--fs_license_file', type = str, help = 'Path to Freesurfer license file (including filename). Required for BIDS pipeline.')
@@ -72,7 +72,7 @@ if args.hcp_dir:
 #find subjects
 subs = []
 if args.participant_label: #user input subjects
-    subs = [str(sub) for sub in args.participant_label]
+    subs = args.participant_label.split(" ")
 elif args.hcp_dir: #get list of hcp subs from data downloaded
     sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
     subs = [sub[:6] for sub in sub_list]
@@ -113,9 +113,6 @@ Have a pleasant afternoon.
 /Users/bwinston/Documents/fMRI/BIDS/hcp_prep_output participant --hcp_dir /Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc  
 
 '''
-
-
-
 
 
 
