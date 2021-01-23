@@ -10,9 +10,6 @@ https://docs.python.org/3/library/argparse.html
 for reference
 """
 
-#TODO: move entrypoint qsi crap to prep_harmonics_bids function
-#TODO: fix sessions stuff for bids method and hcp method
-
 print('''
  __          __  _                                   _                 _  
  \ \        / / | |                                 | |               | | 
