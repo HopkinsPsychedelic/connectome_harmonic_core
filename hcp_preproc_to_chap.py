@@ -57,7 +57,7 @@ def prep_for_cs(args, sub, u, multises, ses):
         print('[CHAP] Running MRtrix commands to generate streamline endpoints...')
         os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix 10000000')
         print('[CHAP] Removing intermediate files...')
-        for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
+        for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck', '10000000.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #streamline endpoints
     ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
