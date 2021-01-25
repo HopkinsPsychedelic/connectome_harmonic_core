@@ -461,15 +461,42 @@ plt.plot(hey)
                     
     
         
+#let's check where it stops separating!        
+def struc_metric_1_sep(chap_dir, n_evecs):
+    global sm 
+    sm = {} #for chap_data
+    sm['within_subj_all'], sm['across_subj_all'] = [],[]
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
+    for sub in subs:
+        sm[sub] = {}
+        for ses in ['test','retest']:
+           sm[sub][ses] = {}
+           sm[sub][ses]['vecs'] = f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy'
+        sm[sub][sub] = test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs)
+        sm['within_subj_all'].append(sm[sub][sub])
+        sm[sub]['c_sub_all'] = [] #where empty averages will go
+    sm['within_subj_avg'] = np.average(np.array(sm['within_subj_all']), axis=0)
+    for sub in subs:
+        sm[sub]['across_all'], sm[sub]['across_avg'] = [], []
+        for c_sub in subs:
+            if c_sub != sub:
+                sm[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    sm[sub]['across_all'].append(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
+        sm[sub]['across_avg'] = np.average(np.array(sm[sub]['across_all']), axis=0)
+        sm['across_subj_all'].append(sm[sub]['across_avg'])
+    sm['across_subj_avg'] = np.average(np.array(sm['across_subj_all']), axis=0)
+    plt.plot(sm['within_subj_avg'])
+    plt.plot(sm['across_subj_avg'])
+    return sm['within_subj_avg'], sm['across_subj_avg']        
         
-        
-        
-        
-        
-        
-        
-        
-        
+struc_metric_1_sep('/Users/bwinston/Downloads/chap_out_test', 100)             
+ 
+
         
         
         
