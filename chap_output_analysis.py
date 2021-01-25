@@ -13,7 +13,7 @@ import input_output as inout
 import decomp as dcp
 import test_retest_fxns as t_rt
 import utility_functions as ut
-from sklearn.metrics import pairwise_distances_chunked, pairwise, f1_score
+from sklearn.metrics import pairwise_distances_chunked, pairwise
 import time
 import matplotlib.pylab as plt
 from scipy.stats.stats import pearsonr
@@ -90,6 +90,11 @@ print('across subj test session avg. reliability is ' + str(stats.mean(t_rt.test
 print('within subj 105923 avg. reliability is ' + str(stats.mean(t_rt.test_retest_rel_2v(f'{chap_out}/sub-105923/ses-test/vecs.npy', f'{chap_out}/sub-105923/ses-retest/vecs.npy', 100))))
 print('across subj retest session avg. reliability is ' + str(stats.mean(t_rt.test_retest_rel_2v(f'{chap_out}/sub-103818/ses-retest/vecs.npy', f'{chap_out}/sub-105923/ses-retest/vecs.npy', 100))))
 
+hi = t_rt.test_retest_rel_2v(f'{chap_out}/sub-103818/ses-test/vecs.npy', f'{chap_out}/sub-103818/ses-retest/vecs.npy', 100)
+
+
+
+
 '''patrick sparsity metric
 for a couple subjects: within subj. = ~32; across subjs = mid-40s
 '''
@@ -106,8 +111,8 @@ v2 = np.delete(np.load(f'{chap_out}/sub-103818/ses-retest/vecs.npy'), 0, axis=1)
 dcp.subspace_distance_eff(v1,v2)
 
 '''spectra'''
-#chap_out = '/Users/bwinston/Downloads/chap_out_test'
-chap_out = '/data/hcp_test_retest_pp/derivatives/chap'
+chap_out = '/Users/bwinston/Downloads/chap_out_test'
+#chap_out = '/data/hcp_test_retest_pp/derivatives/chap'
 global s
 s = {}
 for sub in ['111312']: #'105923', '103818',

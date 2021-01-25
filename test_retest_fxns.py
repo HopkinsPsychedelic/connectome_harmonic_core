@@ -14,7 +14,7 @@ import decomp as dcp
 from scipy import sparse
 import numpy as np
 import utility_functions as ut
-from sklearn.metrics import pairwise_distances_chunked, pairwise, f1_score
+from sklearn.metrics import pairwise_distances_chunked, pairwise
 import time
 from scipy.sparse import csgraph
 import matplotlib.pylab as plt
@@ -67,7 +67,7 @@ def test_retest_rel_r(chap_dir, n_evecs):
     n_evecs = n_evecs-1
     global cd 
     cd = {} #for chap_data
-    all_bcorrs, bcorr_plot = [], []
+    all_bcorrs = []
     subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
     for sub in ['test_avg', 'retest_avg', 'total_avg']:
@@ -415,3 +415,64 @@ def find_bcorrs_2v(hp, run, n_evecs):
         run = run + 1
         find_bcorrs_2v(hp, run, len(hp['corr_all'])) #rerun function on smaller corr_all (leftovers)
     cd['pairs'] = hp['holy']     
+    
+##METRIC 1
+chap_out = '/Users/bwinston/Downloads/chap_out_test'        
+
+def struc_metric_1(chap_dir, n_evecs):
+    global sm 
+    sm = {} #for chap_data
+    sm['within_subj_all'], sm['across_subj_all'] = [],[]
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
+    for sub in subs:
+        sm[sub] = {}
+        for ses in ['test','retest']:
+           sm[sub][ses] = {}
+           sm[sub][ses]['vecs'] = f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy'
+        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs))
+        sm['within_subj_all'].append(sm[sub][sub])
+        sm[sub]['c_sub_all'] = [] #where empty averages will go
+    for sub in subs:
+        for c_sub in subs:
+            if c_sub != sub:
+                sm[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
+                sm[sub][c_sub]['avg'] = (sm[sub][c_sub]['test'] + sm[sub][c_sub]['retest']) / 2
+                sm[sub]['c_sub_all'].append(sm[sub][c_sub]['avg'])
+        sm['across_subj_all'].append(stats.mean(sm[sub]['c_sub_all']))
+    sm['within_subj_avg'] = stats.mean(sm['within_subj_all']) 
+    sm['across_subj_avg'] = stats.mean(sm['across_subj_all'])
+    return sm['within_subj_avg'], sm['across_subj_avg']
+           
+hi = struc_metric_1('/Users/bwinston/Downloads/chap_out_test', 6)       
+
+for i in range(2, 20):
+    jeff = struc_metric_1('/Users/bwinston/Downloads/chap_out_test', i)
+    yo.append(jeff[0])
+    hey.append(jeff[1])     
+
+plt.plot(yo)
+plt.plot(hey)
+                    
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
