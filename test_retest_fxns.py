@@ -417,7 +417,7 @@ def find_bcorrs_2v(hp, run, n_evecs):
     cd['pairs'] = hp['holy']     
     
 ##METRIC 1
-chap_out = '/Users/bwinston/Downloads/chap_out_test'        
+#chap_out = '/Users/bwinston/Downloads/chap_out_test'        
 
 def struc_metric_1(chap_dir, n_evecs):
     global sm 
@@ -448,19 +448,7 @@ def struc_metric_1(chap_dir, n_evecs):
     sm['within_subj_avg'] = stats.mean(sm['within_subj_all']) 
     sm['across_subj_avg'] = stats.mean(sm['across_subj_all'])
     return sm['within_subj_avg'], sm['across_subj_avg']
-           
-hi = struc_metric_1('/Users/bwinston/Downloads/chap_out_test', 6)       
-
-for i in range(2, 20):
-    jeff = struc_metric_1('/Users/bwinston/Downloads/chap_out_test', i)
-    yo.append(jeff[0])
-    hey.append(jeff[1])     
-
-plt.plot(yo)
-plt.plot(hey)
-                    
-    
-        
+                   
 #let's check where it stops separating!        
 def struc_metric_1_sep(chap_dir, n_evecs):
     global sm 
@@ -493,10 +481,37 @@ def struc_metric_1_sep(chap_dir, n_evecs):
     plt.plot(sm['within_subj_avg'])
     plt.plot(sm['across_subj_avg'])
     return sm['within_subj_avg'], sm['across_subj_avg']        
-        
-struc_metric_1_sep('/Users/bwinston/Downloads/chap_out_test', 100)             
- 
-
+         
+##Metric 2 (sparsity shit)
+def struc_metric_2(chap_dir):
+    global sp 
+    sp = {} #for chap_data
+    sp['within_subj_all'], sp['across_subj_all'] = [],[]
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
+    for sub in subs:
+        sp[sub] = {}
+        for ses in ['test','retest']:
+           sp[sub][ses] = {}
+           sp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
+        sp[sub][sub] = dcp.get_av_num_vecs_needed(sp[sub]['test']['vecs'], sp[sub]['retest']['vecs'])
+        sp['within_subj_all'].append(sp[sub][sub])
+        sp[sub]['c_sub_all'] = [] #where empty averages will go
+    for sub in subs:
+        for c_sub in subs:
+            if c_sub != sub:
+                sp[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    sp[sub][c_sub][ses] = dcp.get_av_num_vecs(sp[sub][ses]['vecs'], sp[c_sub][ses]['vecs'])
+                sp[sub][c_sub]['avg'] = (sp[sub][c_sub]['test'] + sp[sub][c_sub]['retest']) / 2
+                sp[sub]['c_sub_all'].append(sp[sub][c_sub]['avg'])
+        sp['across_subj_all'].append(stats.mean(sp[sub]['c_sub_all']))
+    sp['within_subj_avg'] = stats.mean(sp['within_subj_all']) 
+    sp['across_subj_avg'] = stats.mean(sp['across_subj_all'])
+    return sp['within_subj_avg'], sp['across_subj_avg']
         
         
         

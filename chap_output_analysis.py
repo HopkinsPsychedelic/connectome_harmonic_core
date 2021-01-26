@@ -82,26 +82,18 @@ chap_cosine_sim(vec_1, vec_2)
 
 '''Measures of structural test-retest reliability'''
 #best correlations within subj. vs. across subj.
-#within subj (for 100 evs) = ~0.41; across subj. = ~0.25
 #significance of difference 
+hi = t_rt.struc_metric_1(chap_out, n_evecs)
+
 #where does within subj vs. across subj. separate?
-print('within subj 103818 avg. reliability is ' + str(stats.mean(t_rt.test_retest_rel_2v(f'{chap_out}/sub-103818/ses-test/vecs.npy', f'{chap_out}/sub-103818/ses-retest/vecs.npy', 100))))
-print('across subj test session avg. reliability is ' + str(stats.mean(t_rt.test_retest_rel_2v(f'{chap_out}/sub-103818/ses-test/vecs.npy', f'{chap_out}/sub-105923/ses-test/vecs.npy', 100))))
-print('within subj 105923 avg. reliability is ' + str(stats.mean(t_rt.test_retest_rel_2v(f'{chap_out}/sub-105923/ses-test/vecs.npy', f'{chap_out}/sub-105923/ses-retest/vecs.npy', 100))))
-print('across subj retest session avg. reliability is ' + str(stats.mean(t_rt.test_retest_rel_2v(f'{chap_out}/sub-103818/ses-retest/vecs.npy', f'{chap_out}/sub-105923/ses-retest/vecs.npy', 100))))
-
-hi = t_rt.test_retest_rel_2v(f'{chap_out}/sub-103818/ses-test/vecs.npy', f'{chap_out}/sub-103818/ses-retest/vecs.npy', 100)
-
-
-
+hi = t_rt.struc_metric_1_sep(chap_out, n_evecs)
 
 '''patrick sparsity metric
 for a couple subjects: within subj. = ~32; across subjs = mid-40s
 '''
-#sub1ses1 vs. sub1ses2
-dcp.get_av_num_vecs_needed(np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/vecs.npy'), np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-retest/vecs.npy'))
-#sub1ses1 vs. sub2ses1
-dcp.get_av_num_vecs_needed(np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-105923/ses-retest/vecs.npy'), np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-retest/vecs.npy'))
+hi = t_rt.struc_metric_2('/Users/bwinston/Downloads/chap_out_test')
+
+
 
 '''patrick second sparsity metric
 for one subject: within subj = 1; across subj. = 1...
