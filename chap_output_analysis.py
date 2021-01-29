@@ -82,15 +82,22 @@ chap_cosine_sim(vec_1, vec_2)
 
 '''Measures of structural test-retest reliability'''
 #best correlations within subj. vs. across subj.
-#significance of difference 
-hi = t_rt.struc_metric_1(chap_out, n_evecs)
+#significance of difference?
+print(t_rt.struc_metric_1('/Users/bwinston/Downloads/chap_out_test', 100))
+#within subj. avg = .45; across subj. average = .25 (for three subjs, 100 evecs)
+#both numbers get higher when you include fewer evecs
 
 #where does within subj vs. across subj. separate?
-hi = t_rt.struc_metric_1_sep(chap_out, n_evecs)
+print(t_rt.struc_metric_1_sep('/Users/bwinston/Downloads/chap_out_test', 100))
+#show plot--they don't separate! (at least not before 100 evs)
 
-'''patrick sparsity metric
-for a couple subjects: within subj. = ~32; across subjs = mid-40s
-'''
+#fisher transform of pearson r then t-test
+#
+
+'''patrick sparsity metric'''
+#for three subjects: within subj. = ~30; across subjs = ~45
+#takes a while to run but code is there
+
 hi = t_rt.struc_metric_2('/Users/bwinston/Downloads/chap_out_test')
 
 
@@ -107,7 +114,7 @@ chap_out = '/Users/bwinston/Downloads/chap_out_test'
 #chap_out = '/data/hcp_test_retest_pp/derivatives/chap'
 global s
 s = {}
-for sub in ['111312']: #'105923', '103818',
+for sub in ['111312', '105923', '103818']:
     s[sub] = {}
     for ses in ['test','retest']:
         s[sub][ses] = {}
@@ -147,6 +154,17 @@ shannon entropy for histogram (how compressible)
 
 compare REST1 and REST2 within session and also REST1 to REST1 across sessions
 '''
+#how many zero crossings per harmonic on avg. (plot)
+t_rt.ev_freq('/Users/bwinston/Downloads/chap_out_test', 100)
+
+#comparing within vs. across subject for spectrum of frequencies
+print(t_rt.freq_comp('/Users/bwinston/Downloads/chap_out_test', 100))
+#0.42 to .346
+
+#AM I DOING SHANNON ENTROPY RIGHT? discretize, then run function
+t_rt.ev_shan_ent('/Users/bwinston/Downloads/chap_out_test', 100)
+#shannon entropy of each ev timeseries. list of 99 entropies, compare that across sessions to get within session, e.g.
+#.626 within, .56 across
 
 
 
@@ -154,7 +172,8 @@ compare REST1 and REST2 within session and also REST1 to REST1 across sessions
 
 
 
-
+'''
+'''
 
 def test_retest_rel_2v(vec_1, vec_2, n_evecs):
     n_evecs = n_evecs-1

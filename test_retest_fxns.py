@@ -19,8 +19,10 @@ import time
 from scipy.sparse import csgraph
 import matplotlib.pylab as plt
 from scipy.stats.stats import pearsonr
+from scipy.stats import entropy
 from scipy.spatial import distance
-import statistics as stats     
+import statistics as stats  
+import pandas as pd   
     
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -85,7 +87,7 @@ def test_retest_rel_r(chap_dir, n_evecs):
         hp['corr_orig'] = np.empty((n_evecs,n_evecs))
         for evec_test in range(0,n_evecs): 
             for evec_retest in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-                hp['corr_orig'][evec_retest,evec_test] = abs(pearsonr(cd[sub]['test']['vecs'][:,evec_test], cd[sub]['retest']['vecs'][:,evec_retest])[0]) #comparing column with column (ev with ev)
+                hp['corr_orig'][evec_retest,evec_test] = np.arctanh(abs(pearsonr(cd[sub]['test']['vecs'][:,evec_test], cd[sub]['retest']['vecs'][:,evec_retest])[0])) #comparing column with column (ev with ev)
         hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
         hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
         find_bcorrs(sub, hp, 0, n_evecs) #run find bcorrs function, get best pairs
@@ -370,7 +372,7 @@ def test_retest_rel_2v(vec_1, vec_2, n_evecs):
     hp['corr_orig'] = np.empty((n_evecs,n_evecs))
     for evec_1 in range(0,n_evecs): 
         for evec_2 in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-            hp['corr_orig'][evec_2,evec_1] = abs(pearsonr(cd[f'vec_1'][:,evec_1], cd[f'vec_2'][:,evec_2])[0]) #comparing column with column (ev with ev)
+            hp['corr_orig'][evec_2,evec_1] = np.arctanh(abs(pearsonr(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2])[0])) #comparing column with column (ev with ev)
     hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
     hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
     find_bcorrs_2v(hp, 0, n_evecs) #run find bcorrs function, get best pairs
@@ -514,7 +516,167 @@ def struc_metric_2(chap_dir):
     return sp['within_subj_avg'], sp['across_subj_avg']
         
         
-        
-        
-        
+'''
+spectra/functional shit
+'''
 
+#frequency
+
+def zero_crossings(ts):
+    return ((ts[:-1] * ts[1:]) < 0).sum()        
+        
+def ev_freq(chap_dir, n_evecs):
+    global s
+    s = {}
+    s['freq_avg'] = []
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in subs:
+        s[sub] = {}
+        for ses in ['test','retest']:
+            s[sub][ses] = {}
+            for scan in ['REST1', 'REST2']:
+                s[sub][ses][scan] = {}
+                s[sub][ses][scan]['power'], s[sub][ses][scan]['energy'] = {}, {}
+                s[sub][ses][scan]['recon'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/reconspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_dynamic_reconstruction_spectrum.npy')
+                s[sub][ses][scan]['recon'] = np.delete(s[sub][ses][scan]['recon'], 0, axis=0)
+                for spec in ['power', 'energy']:
+                    for t in ['mean', 'dynamic']:
+                        s[sub][ses][scan][spec][t] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/{spec}spectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_{t}_{spec}_spectrum.npy')
+                        s[sub][ses][scan][spec][t] = np.delete(s[sub][ses][scan][spec][t], 0, axis=0)
+                s[sub][ses][scan]['power']['normalized'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/powerspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_normalized_power_spectrum.npy')
+                s[sub][ses][scan]['power']['normalized'] = np.delete(s[sub][ses][scan]['power']['normalized'], 0, axis=0)
+    for sub in subs:
+        s[sub]['freq'] = []
+        for ev in range(n_evecs-1):
+            s[sub][ev] = []
+            for ses in ['test','retest']:
+                for scan in ['REST1', 'REST2']:
+                    s[sub][ev].append(zero_crossings(s[sub][ses][scan]['recon'][ev]))
+            s[sub]['freq'].append(stats.mean(s[sub][ev]))
+        s['freq_avg'].append(s[sub]['freq'])
+    s['freq_avg'] = np.average(np.array(s['freq_avg']), axis=0)
+    plt.plot(s['freq_avg'])
+    
+def freq_comp(chap_dir, n_evecs):
+    global s
+    s = {}
+    s['freq_avg'] = []
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in subs:
+        s[sub] = {}
+        for ses in ['test','retest']:
+            s[sub][ses] = {}
+            for scan in ['REST1', 'REST2']:
+                s[sub][ses][scan] = {}
+                s[sub][ses][scan]['power'], s[sub][ses][scan]['energy'] = {}, {}
+                s[sub][ses][scan]['recon'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/reconspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_dynamic_reconstruction_spectrum.npy')
+                s[sub][ses][scan]['recon'] = np.delete(s[sub][ses][scan]['recon'], 0, axis=0)
+                for spec in ['power', 'energy']:
+                    for t in ['mean', 'dynamic']:
+                        s[sub][ses][scan][spec][t] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/{spec}spectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_{t}_{spec}_spectrum.npy')
+                        s[sub][ses][scan][spec][t] = np.delete(s[sub][ses][scan][spec][t], 0, axis=0)
+                s[sub][ses][scan]['power']['normalized'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/powerspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_normalized_power_spectrum.npy')
+                s[sub][ses][scan]['power']['normalized'] = np.delete(s[sub][ses][scan]['power']['normalized'], 0, axis=0)  
+    s['within_subj_all'] = []
+    s['across_subj_all'] = []
+    for sub in subs:
+        for ses in ['test','retest']:
+            s[sub][ses]['freq'] = []
+            for ev in range(n_evecs-1):
+                s[sub][ses][ev] = []
+                for scan in ['REST1', 'REST2']:
+                    s[sub][ses][ev].append(zero_crossings(s[sub][ses][scan]['recon'][ev]))
+                s[sub][ses][ev] = stats.mean(s[sub][ses][ev])
+                s[sub][ses]['freq'].append(s[sub][ses][ev])
+        s[sub][sub] = np.arctanh(pearsonr(s[sub]['test']['freq'], s[sub]['retest']['freq'])[0])
+        s['within_subj_all'].append(s[sub][sub])
+    for sub in subs:
+        s[sub]['c_sub_all'] = []
+        for c_sub in subs:
+            if c_sub != sub:
+                s[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    s[sub][c_sub][ses] = pearsonr(s[sub][ses]['freq'], s[c_sub][ses]['freq'])[0]
+                s[sub][c_sub]['avg'] = (s[sub][c_sub]['test'] + s[sub][c_sub]['retest']) / 2
+                s[sub]['c_sub_all'].append(s[sub][c_sub]['avg'])
+        s['across_subj_all'].append(stats.mean(s[sub]['c_sub_all']))
+    s['within_subj_avg'] = stats.mean(s['within_subj_all']) 
+    s['across_subj_avg'] = stats.mean(s['across_subj_all'])
+    return s['within_subj_avg'], s['across_subj_avg']
+           
+freq_comp('/Users/bwinston/Downloads/chap_out_test', 100)
+
+'''shan entropy'''
+def shan_entropy_kite(dist):
+    #https://www.kite.com/python/answers/how-to-calculate-shannon-entropy-in-python
+    pd_series = pd.Series(dist)
+    counts = pd_series.value_counts()
+    shan_entropy = entropy(counts)   
+    return shan_entropy
+
+def shan_entropy(dist):
+    bins = list(np.linspace(-65, 65, 40))
+    p = np.digitize(dist, bins=bins)
+    return shan_entropy_kite(p)
+
+def ev_shan_ent(chap_dir, n_evecs):
+    global se
+    se = {}
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for sub in subs:
+        se[sub] = {}
+        for ses in ['test','retest']:
+            se[sub][ses] = {}
+            for scan in ['REST1', 'REST2']:
+                se[sub][ses][scan] = {}
+                se[sub][ses][scan]['power'], se[sub][ses][scan]['energy'] = {}, {}
+                se[sub][ses][scan]['recon'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/reconspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_dynamic_reconstruction_spectrum.npy')
+                se[sub][ses][scan]['recon'] = np.delete(se[sub][ses][scan]['recon'], 0, axis=0)
+                for spec in ['power', 'energy']:
+                    for t in ['mean', 'dynamic']:
+                        se[sub][ses][scan][spec][t] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/{spec}spectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_{t}_{spec}_spectrum.npy')
+                        se[sub][ses][scan][spec][t] = np.delete(se[sub][ses][scan][spec][t], 0, axis=0)
+                se[sub][ses][scan]['power']['normalized'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/powerspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_normalized_power_spectrum.npy')
+                se[sub][ses][scan]['power']['normalized'] = np.delete(se[sub][ses][scan]['power']['normalized'], 0, axis=0)
+    se['across_sub_avg'] = []
+    se['within_sub_avg'] = []
+    for sub in subs:
+        for ses in ['test','retest']:
+            se[sub][ses]['ent'] = []
+            for scan in ['REST1', 'REST2']:
+                se[sub][ses][scan]['ent'] = []
+                for ev in range(n_evecs-1):
+                    se[sub][ses][scan]['ent'].append(shan_entropy(se[sub][ses][scan]['recon'][ev])) 
+                se[sub][ses]['ent'].append(se[sub][ses][scan]['ent'])
+            se[sub][ses]['ent'] = np.average(np.array(se[sub][ses]['ent']), axis=0)
+        se[sub]['within_sub'] = np.arctanh(pearsonr(se[sub]['test']['ent'], se[sub]['retest']['ent'])[0])
+        se['within_sub_avg'].append(se[sub]['within_sub'])
+    for sub in subs:
+        se[sub]['ent_corrs'] = []
+        for c_sub in subs:
+            if c_sub != sub:
+                se[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    se[sub][c_sub][ses] = np.arctanh(pearsonr(se[sub][ses]['ent'], se[c_sub][ses]['ent'])[0])
+                se[sub]['ent_corrs'].append((se[sub][c_sub]['test'] + se[sub][c_sub]['retest'])/2)
+        se[sub]['across_subs'] = stats.mean(se[sub]['ent_corrs'])
+        se['across_sub_avg'].append(se[sub]['across_subs'])
+    se['across_sub_avg'] = stats.mean(se['across_sub_avg'])
+    se['within_sub_avg'] = stats.mean(se['within_sub_avg'])
+    return se['within_sub_avg'], se['across_sub_avg']
+    
+ev_shan_ent('/Users/bwinston/Downloads/chap_out_test', 100)
+'''                    
+                        
+                    sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
+                sm[sub][c_sub]['avg'] = (sm[sub][c_sub]['test'] + sm[sub][c_sub]['retest']) / 2
+                sm[sub]['c_sub_all'].append(sm[sub][c_sub]['avg'])
+        sm['across_subj_all'].append(stats.mean(sm[sub]['c_sub_all']))
+    sm['within_subj_avg'] = stats.mean(sm['within_subj_all']) 
+    sm['across_subj_avg'] = stats.mean(sm['across_subj_all'])
+    return sm['within_subj_avg'], sm['across_subj_avg']
+
+'''
