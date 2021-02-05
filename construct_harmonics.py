@@ -88,8 +88,9 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
     connectome = struc_conn_mat + surf_mat #sum connections and surface
-    connectome = uts.mask_connectivity_matrix(connectome, u['mask']) #mask medial wall
-    print('[CHAP] Masked out medial wall vertices; computing harmonics...')
+    if args.hcp_dir:
+        connectome = uts.mask_connectivity_matrix(connectome, u['mask']) #mask medial wall
+        print('[CHAP] Masked out medial wall vertices; computing harmonics...')
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
@@ -179,9 +180,6 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
 '''
 wb_command -cifti-separate in.dtseries.nii COLUMN -metric CORTEX_LEFT out.func.gii 
 ''' 
-for n in ['1','2']:
-   for dire in ['lr', 'rl']:
-       print(f'{n}{dire}')
 
     
   
