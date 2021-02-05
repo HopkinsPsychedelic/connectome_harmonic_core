@@ -453,6 +453,7 @@ def struc_metric_1(chap_dir, n_evecs):
                    
 #let's check where it stops separating!        
 def struc_metric_1_sep(chap_dir, n_evecs):
+    print('ehllo')
     global sm 
     sm = {} #for chap_data
     sm['within_subj_all'], sm['across_subj_all'] = [],[]
@@ -479,6 +480,7 @@ def struc_metric_1_sep(chap_dir, n_evecs):
                     sm[sub]['across_all'].append(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
         sm[sub]['across_avg'] = np.average(np.array(sm[sub]['across_all']), axis=0)
         sm['across_subj_all'].append(sm[sub]['across_avg'])
+        print(f'finished {sub}')
     sm['across_subj_avg'] = np.average(np.array(sm['across_subj_all']), axis=0)
     plt.plot(sm['within_subj_avg'])
     plt.plot(sm['across_subj_avg'])
@@ -487,14 +489,15 @@ def struc_metric_1_sep(chap_dir, n_evecs):
 ##Metric 2 (sparsity shit)
 def struc_metric_2(chap_dir):
     global sp 
+    print('hey')
     sp = {} #for chap_data
     sp['within_subj_all'], sp['across_subj_all'] = [],[]
     subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-    for sub in ['test_avg', 'retest_avg', 'total_avg']:
-        if os.path.exists(f'{chap_dir}/sub-{sub}'):
-            subs.remove(sub)
-    for sub in subs:
+    c_subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    for c_sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{c_sub}'):
+            c_subs.remove(c_sub)
+    for sub in c_subs:
         sp[sub] = {}
         for ses in ['test','retest']:
            sp[sub][ses] = {}
@@ -502,20 +505,29 @@ def struc_metric_2(chap_dir):
         sp[sub][sub] = dcp.get_av_num_vecs_needed(sp[sub]['test']['vecs'], sp[sub]['retest']['vecs'])
         sp['within_subj_all'].append(sp[sub][sub])
         sp[sub]['c_sub_all'] = [] #where empty averages will go
+    print('within stuff done')
+
+def struc_metric_2_across(chap_dir):   
+    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
+    for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
     for sub in subs:
         for c_sub in subs:
             if c_sub != sub:
                 sp[sub][c_sub] = {}
                 for ses in ['test','retest']:
-                    sp[sub][c_sub][ses] = dcp.get_av_num_vecs(sp[sub][ses]['vecs'], sp[c_sub][ses]['vecs'])
+                    sp[sub][c_sub][ses] = dcp.get_av_num_vecs_needed(sp[sub][ses]['vecs'], sp[c_sub][ses]['vecs'])
                 sp[sub][c_sub]['avg'] = (sp[sub][c_sub]['test'] + sp[sub][c_sub]['retest']) / 2
                 sp[sub]['c_sub_all'].append(sp[sub][c_sub]['avg'])
         sp['across_subj_all'].append(stats.mean(sp[sub]['c_sub_all']))
-    sp['within_subj_avg'] = stats.mean(sp['within_subj_all']) 
+        print(f'sub {sub} done')
     sp['across_subj_avg'] = stats.mean(sp['across_subj_all'])
-    return sp['within_subj_avg'], sp['across_subj_avg']
-        
-        
+    return sp['across_subj_avg'], sp['across_subj_all']
+
+metric_2_forreal_across = struc_metric_2_across('/data/hcp_test_retest_pp/derivatives/chap')      
+ 
 '''
 spectra/functional shit
 '''
@@ -606,8 +618,6 @@ def freq_comp(chap_dir, n_evecs):
     s['across_subj_avg'] = stats.mean(s['across_subj_all'])
     return s['within_subj_avg'], s['across_subj_avg']
            
-freq_comp('/Users/bwinston/Downloads/chap_out_test', 100)
-
 '''shan entropy'''
 def shan_entropy_kite(dist):
     #https://www.kite.com/python/answers/how-to-calculate-shannon-entropy-in-python
@@ -667,8 +677,7 @@ def ev_shan_ent(chap_dir, n_evecs):
     se['across_sub_avg'] = stats.mean(se['across_sub_avg'])
     se['within_sub_avg'] = stats.mean(se['within_sub_avg'])
     return se['within_sub_avg'], se['across_sub_avg']
-    
-ev_shan_ent('/Users/bwinston/Downloads/chap_out_test', 100)
+
 '''                    
                         
                     sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
