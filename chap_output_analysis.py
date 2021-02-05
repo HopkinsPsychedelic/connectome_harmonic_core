@@ -83,12 +83,15 @@ chap_cosine_sim(vec_1, vec_2)
 '''Measures of structural test-retest reliability'''
 #best correlations within subj. vs. across subj.
 #significance of difference?
-print(t_rt.struc_metric_1('/Users/bwinston/Downloads/chap_out_test', 100))
+metric_1_forreal = t_rt.struc_metric_1('/data/hcp_test_retest_pp/derivatives/chap', 100)
+metric_1 = np.array([metric_1_forreal[0], metric_1_forreal[1]])
+np.save('/data/hcp_test_retest_pp/derivatives/chap_analysis/struc_metrics/struc_metric_1', metric_1)
 #within subj. avg = .45; across subj. average = .25 (for three subjs, 100 evecs)
 #both numbers get higher when you include fewer evecs
 
 #where does within subj vs. across subj. separate?
-print(t_rt.struc_metric_1_sep('/Users/bwinston/Downloads/chap_out_test', 100))
+sep_forreal = t_rt.struc_metric_1_sep('/data/hcp_test_retest_pp/derivatives/chap', 100)
+np.save('/data/hcp_test_retest_pp/derivatives/chap_analysis/struc_metrics/struc_metric_1_sep', sep_forreal)
 #show plot--they don't separate! (at least not before 100 evs)
 
 #fisher transform of pearson r then t-test
@@ -98,8 +101,9 @@ print(t_rt.struc_metric_1_sep('/Users/bwinston/Downloads/chap_out_test', 100))
 #for three subjects: within subj. = ~30; across subjs = ~45
 #takes a while to run but code is there
 
-hi = t_rt.struc_metric_2('/Users/bwinston/Downloads/chap_out_test')
-
+metric_2_forreal = t_rt.struc_metric_2('/data/hcp_test_retest_pp/derivatives/chap')
+within = np.array(metric_2_forreal[1])
+np.save('/data/hcp_test_retest_pp/derivatives/chap_analysis/struc_metrics/struc_metric_2_within', within)
 
 
 '''patrick second sparsity metric
@@ -173,7 +177,6 @@ t_rt.ev_shan_ent('/Users/bwinston/Downloads/chap_out_test', 100)
 
 
 '''
-'''
 
 def test_retest_rel_2v(vec_1, vec_2, n_evecs):
     n_evecs = n_evecs-1
@@ -234,3 +237,4 @@ def find_bcorrs_2v(hp, run, n_evecs):
         run = run + 1
         find_bcorrs_2v(hp, run, len(hp['corr_all'])) #rerun function on smaller corr_all (leftovers)
     cd['pairs'] = hp['holy']     
+'''
