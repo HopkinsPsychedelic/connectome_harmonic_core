@@ -10,6 +10,9 @@ import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
+import test_retest_fxns as t_rt
+import pandas as pd
+from scipy.stats import pearsonr
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -241,6 +244,34 @@ def combine_pe(ts_lr, ts_rl):
     ts_rl_n = normalize_ts(ts_rl)
     return np.hstack((ts_lr_n, ts_rl_n))
 
+def network_verts(network, parcel_csv, dtseries):
+    network_parcels = np.where(parcel_csv['Community']==network)[0]
+    network_parcels = [p+1 for p in network_parcels]
+    dtseries = [int(p) for p in dtseries]
+    network_verts = []
+    for p in dtseries:
+        if p in network_parcels:
+            network_verts.append(1)
+        else:
+            network_verts.append(0)
+    return np.array(network_verts)
+
+
+parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
+dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
+dtseries = np.expand_dims(dtseries,1)
+masked_vecs = np.load('/Users/bwinston/Downloads/chap_out_test/sub-105923/ses-retest/vecs.npy')
+masked_vecs = np.delete(masked_vecs,0,axis=1)
+net_verts = {}
+for network in list(set(parcel_csv['Community'])):
+    net_verts[network] = {} 
+    net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
+    net_verts[network]['corrs'] = []
+    for i in range(0,99):
+       net_verts[network]['corrs'].append(abs(pearsonr(net_verts[network]['verts'],masked_vecs[:,i])[0])) 
+    
+    
+    
 '''
 def read_gifti_surface(filename):
     data=nib.load(filename)
