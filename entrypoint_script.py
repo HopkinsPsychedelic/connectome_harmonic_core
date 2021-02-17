@@ -58,7 +58,7 @@ if not args.tol:
 if not args.nnum:
     args.nnum = 20
 #create CHAP output directory
-inout.if_not_exist_make(f'{args.output_dir}/chap')
+inout.if_not_exist_make(f"{args.output_dir}/chap")
 #set empty u dict
 global u
 u = {}
