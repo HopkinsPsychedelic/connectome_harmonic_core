@@ -174,8 +174,8 @@ ARG CACHE_DATE
 ARG SSH_KEY
 ENV SSH_KEY=$SSH_KEY
 RUN mkdir /home/neuro/.ssh/
-RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_rsa
-RUN chmod 600 /home/neuro/.ssh/id_rsa
+RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_ed25519
+RUN chmod 600 /home/neuro/.ssh/id_ed25519
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
 
