@@ -13,6 +13,7 @@ import nibabel as nib
 import test_retest_fxns as t_rt
 import pandas as pd
 from scipy.stats import pearsonr
+from sklearn.preprocessing import MinMaxScaler,normalize
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -243,6 +244,16 @@ def combine_pe(ts_lr, ts_rl):
     ts_lr_n = normalize_ts(ts_lr)
     ts_rl_n = normalize_ts(ts_rl)
     return np.hstack((ts_lr_n, ts_rl_n))
+
+def normalize_ev(ev):
+    ev = ev.reshape(1,-1)
+    ev = ev.T
+    scaler = MinMaxScaler(feature_range=(-1,1))
+    ev = scaler.fit_transform(ev)
+    return ev.T
+
+def scale_ev(ev):
+    return np.interp(ev, (ev.min(), ev.max()), (-1, +1))
 
 def network_verts(network, parcel_csv, dtseries):
     network_parcels = np.where(parcel_csv['Community']==network)[0]
