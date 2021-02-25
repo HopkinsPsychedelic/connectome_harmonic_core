@@ -510,6 +510,7 @@ def struc_metric_2(chap_dir):
 def struc_metric_2_across(chap_dir):   
     subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
+    sp = {}
     for sub in ['test_avg', 'retest_avg', 'total_avg']:
         if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
