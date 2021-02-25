@@ -22,15 +22,20 @@ def get_group_pca_comp(evlist,num):
     components = components.T
     return components 
 
-def get_group_pca_comp_b(evlist,num):
-    tempmat = np.zeros((np.shape(evlist[0])[0],num*len(evlist)))
-    for i in range (len(evlist)):
-        tempmat[:,i*num:(i+1)*num]=evlist[i][:,0:num] #from 0-10, 10-20, 20-30   
-    pca = PCA(n_components=num)
-    pca.fit(tempmat.T)
+def get_group_pca_comp_brian(evlist, n_comp, n_evecs):
+    tempmat = np.zeros((np.shape(evlist[0])[0],n_evecs*len(evlist)))
+    for i in range (len(evlist)): #num subs * num sessions
+        tempmat[:,i*n_evecs:(i+1)*n_evecs]=evlist[i][:,0:n_evecs] 
+    pca = PCA(n_components=n_comp,svd_solver='full')
+    pca = pca.fit(tempmat.T)
+    variance = pca.explained_variance_ratio_
     components = pca.components_
     components = components.T
-    return components 
+    return components,variance
+#when i == 0
+#tempmat[:,0:99]=evlist[0][:,0:99]
+#when i == 1
+#tempmat[:,99:198] = evlist[1][:,0:99]
 
 def lapDecomp(Asparse,num):
     #Asparse- csr format sparse adjacency matrix

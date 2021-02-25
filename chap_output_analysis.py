@@ -171,8 +171,7 @@ t_rt.ev_shan_ent('/Users/bwinston/Downloads/chap_out_test', 100)
 #.626 within, .56 across
 
 
-
-
+'''RSN STUFF'''
 
 
 
