@@ -13,6 +13,7 @@ import nibabel as nib
 import test_retest_fxns as t_rt
 import pandas as pd
 from scipy.stats import pearsonr
+from sklearn.preprocessing import MinMaxScaler,normalize
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -244,6 +245,16 @@ def combine_pe(ts_lr, ts_rl):
     ts_rl_n = normalize_ts(ts_rl)
     return np.hstack((ts_lr_n, ts_rl_n))
 
+def normalize_ev(ev):
+    ev = ev.reshape(1,-1)
+    ev = ev.T
+    scaler = MinMaxScaler(feature_range=(-1,1))
+    ev = scaler.fit_transform(ev)
+    return ev.T
+
+def scale_ev(ev):
+    return np.interp(ev, (ev.min(), ev.max()), (-1, +1))
+
 def network_verts(network, parcel_csv, dtseries):
     network_parcels = np.where(parcel_csv['Community']==network)[0]
     network_parcels = [p+1 for p in network_parcels]
@@ -256,7 +267,7 @@ def network_verts(network, parcel_csv, dtseries):
             network_verts.append(0)
     return np.array(network_verts)
 
-
+'''
 parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
 dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
 dtseries = np.expand_dims(dtseries,1)
@@ -272,7 +283,7 @@ for network in list(set(parcel_csv['Community'])):
     
     
     
-'''
+
 def read_gifti_surface(filename):
     data=nib.load(filename)
     points=data.darrays[1].data

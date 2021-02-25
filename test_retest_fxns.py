@@ -23,6 +23,7 @@ from scipy.stats import entropy
 from scipy.spatial import distance
 import statistics as stats  
 import pandas as pd   
+from nilearn import plotting
     
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -251,7 +252,7 @@ the most reliable components across subjects (maybe). Pick 20.
 Then, for each subject, find test-retest reliability of those particular harmonics
 (the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
 '''
-def ind_vs_pca(chap_dir, n_evecs, n_comp):
+def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
     n_evecs = n_evecs-1
     global ivp
     ivp, ivp['test'], ivp['retest'] = {}, {}, {}
@@ -265,13 +266,21 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp):
         ivp[sub] = {}    
         for ses in ['test','retest']:
            ivp[sub][ses],ivp[f'{ses}_avg'] = {}, {}
-           ivp[sub][ses]['bcorrs'] = []
+           ivp[sub][ses]['bcorrs'],ivp[sub][ses]['inds'] = [],[]
            ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
+           ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,n_evecs])
+           mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
+           for ev in range(n_evecs):
+               ivp[sub][ses]['unmasked_vecs'][:,ev]=ut.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
     ivp['pca_harms'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[0]
     ivp['variance'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[1]
-    ivp['tempmat'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[2]
+    ivp['unmasked_pca_harms'] = np.empty([64984,n_comp])
+    for ev in range(n_comp):
+        ivp['unmasked_pca_harms'][:,ev] = ut.unmask_medial_wall(ivp['pca_harms'][:,ev],mask)
+    for ev in range(n_evecs):
+        ivp['unmasked_pca_harms']
     for sub in subs:
         global hp
         hp = {}
@@ -283,17 +292,44 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp):
                     hp[ses]['corr_orig'][evec_ses,evec_pca] = abs(pearsonr(ivp['pca_harms'][:,evec_pca], ivp[sub][ses]['vecs'][:,evec_ses])[0])
             hp[ses]['corr_all'] = hp[ses]['corr_orig'].swapaxes(0,1)
             hp[ses]['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp[ses]['corr_all'])}           
-            find_bcorrs_ivp(sub, ses, hp, 0, hp[ses]['corr_all'], n_evecs)  
+            find_bcorrs_ivp(sub, ses, hp, 0, n_evecs)  
     for sub in subs:
         for ses in ['test','retest']:
             for ev in range(n_comp):
                 ivp[sub][ses]['bcorrs'].append(ivp[sub][ses]['pairs'][ev]['bcorr'])
+                ivp[sub][ses]['inds'].append(ivp[sub][ses]['pairs'][ev][f'{ses}_ind'])
     ivp['all_test_bcorrs'],ivp['all_retest_bcorrs'] = [],[]
     for sub in subs:
         for ses in ['test','retest']:
             ivp[f'all_{ses}_bcorrs'].append(ivp[sub][ses]['bcorrs']) #list of lists
     ivp['bcorr_test_avg'] = np.average(np.array(ivp['all_test_bcorrs']), axis = 0)
     ivp['bcorr_retest_avg'] = np.average(np.array(ivp['all_retest_bcorrs']), axis = 0)
+    ivp['pca_to_match_avg'] = (ivp['bcorr_retest_avg']+ivp['bcorr_retest_avg'])/2
+    ivp['PCs'] = {}
+    for pc in range(n_comp):
+        ivp['PCs'][pc] = {}
+        display = plotting.plot_s0281urf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=True,title=f'PC{pc}',vmax=.005)
+        plotting.show()
+        plt.close(display)
+        fig,ax = plt.subplots(len(subs),2,subplot_kw={'projection': '3d'})
+        fig.suptitle(f'PC {pc}')
+        row = 0
+        for sub in subs:
+            ivp['PCs'][pc][sub] = {}
+            for ses in ['test','retest']:
+                ivp['PCs'][pc][sub][ses] = ivp[sub][ses]['pairs'][pc][f'{ses}_ind'] #which vec to plot
+                ind = ivp['PCs'][pc][sub][ses]
+                col=0 if ses=='test' else 1    
+                if pearsonr(ivp['unmasked_pca_harms'][:,pc],ivp[sub][ses]['unmasked_vecs'][:,ind])[0] < 0:
+                    vec = np.negative(ivp[sub][ses]['unmasked_vecs'][:,ind])
+                else:
+                    vec = ivp[sub][ses]['unmasked_vecs'][:,ind]
+                display = plotting.plot_surf([sc,si],vec,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,vmin=-.005,axes=ax[row][col],figure=fig)
+                ax[row][col].set_title(f'{sub} {ses} harmonic {ind}', fontsize=10)
+            row = row+1
+        plotting.show()
+        plt.close(fig)
+'''    
     bcorr_t_sort = -np.sort(-ivp['bcorr_test_avg'])[::1]
     bcorr_r_sort = -np.sort(-ivp['bcorr_retest_avg'])[::1]
     bcorr_t_sort = bcorr_t_sort[:20]
@@ -317,9 +353,9 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp):
             ivp[sub]['enzymatique'].append(ivp[sub]['enchilada'][ti]['bcorr'])
         all_enzymatiques.append(ivp[sub]['enzymatique'])
     ivp['test_retest_reliabilty_avg'] = np.average(np.array(all_enzymatiques), axis = 0)
-
+'''
     
-def find_bcorrs_ivp(sub, ses, hp, run, corr_mat, n_evecs): 
+def find_bcorrs_ivp(sub, ses, hp, run, n_evecs): 
     while len(hp[ses]['corr_all']) > 0:
         hp[ses][run] = {}
         hp[ses][run]['maxes'] = {}
@@ -354,7 +390,7 @@ def find_bcorrs_ivp(sub, ses, hp, run, corr_mat, n_evecs):
             for s_ev in hp[ses][run][f'{ses}_used']:
                 del hp[ses]['corr_all'][ev][s_ev]
         run = run + 1
-        find_bcorrs_ivp(sub, ses, hp, run, hp[ses]['corr_all'], len(hp[ses]['corr_all']))
+        find_bcorrs_ivp(sub, ses, hp, run, len(hp[ses]['corr_all']))
     ivp[sub][ses]['pairs'] = hp[ses]['holy']
 
 '''2v shit'''
@@ -710,7 +746,7 @@ def vecs_vs_rsn(ivp,net_verts, chap_dir):
         plt.xlabel(network)
         plt.show()
 
-vecs_vs_rsn(ivp,net_verts,'/Users/bwinston/Downloads/chap_out_test')
+#vecs_vs_rsn(ivp,net_verts,'/Users/bwinston/Downloads/chap_out_test')
 
 
 '''                    
