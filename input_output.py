@@ -267,7 +267,7 @@ def network_verts(network, parcel_csv, dtseries):
             network_verts.append(0)
     return np.array(network_verts)
 
-
+'''
 parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
 dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
 dtseries = np.expand_dims(dtseries,1)
@@ -283,7 +283,7 @@ for network in list(set(parcel_csv['Community'])):
     
     
     
-'''
+
 def read_gifti_surface(filename):
     data=nib.load(filename)
     points=data.darrays[1].data

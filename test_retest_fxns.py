@@ -308,7 +308,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
     ivp['PCs'] = {}
     for pc in range(n_comp):
         ivp['PCs'][pc] = {}
-        display = plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=True,title=f'PC{pc}',vmax=.005)
+        display = plotting.plot_s0281urf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=True,title=f'PC{pc}',vmax=.005)
         plotting.show()
         plt.close(display)
         fig,ax = plt.subplots(len(subs),2,subplot_kw={'projection': '3d'})
@@ -329,7 +329,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
             row = row+1
         plotting.show()
         plt.close(fig)
-    
+'''    
     bcorr_t_sort = -np.sort(-ivp['bcorr_test_avg'])[::1]
     bcorr_r_sort = -np.sort(-ivp['bcorr_retest_avg'])[::1]
     bcorr_t_sort = bcorr_t_sort[:20]
@@ -353,7 +353,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
             ivp[sub]['enzymatique'].append(ivp[sub]['enchilada'][ti]['bcorr'])
         all_enzymatiques.append(ivp[sub]['enzymatique'])
     ivp['test_retest_reliabilty_avg'] = np.average(np.array(all_enzymatiques), axis = 0)
-
+'''
     
 def find_bcorrs_ivp(sub, ses, hp, run, n_evecs): 
     while len(hp[ses]['corr_all']) > 0:
