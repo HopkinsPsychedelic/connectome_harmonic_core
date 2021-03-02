@@ -183,4 +183,4 @@ RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/r
 
 WORKDIR /home/neuro
 
-#ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
+ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
