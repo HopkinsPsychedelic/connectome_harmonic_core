@@ -14,7 +14,7 @@ import decomp as dcp
 from scipy import sparse
 import numpy as np
 import utility_functions as ut
-from sklearn.metrics import pairwise_distances_chunked, pairwise
+from sklearn.metrics import pairwise_distances_chunked, pairwise,mutual_info_score,adjusted_mutual_info_score
 import time
 from scipy.sparse import csgraph
 import matplotlib.pyplot as plt
@@ -252,7 +252,7 @@ the most reliable components across subjects (maybe). Pick 20.
 Then, for each subject, find test-retest reliability of those particular harmonics
 (the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
 '''
-def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
+def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, lh, rh):
     n_evecs = n_evecs-1
     global ivp
     ivp, ivp['test'], ivp['retest'] = {}, {}, {}
@@ -269,7 +269,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
            ivp[sub][ses]['bcorrs'],ivp[sub][ses]['inds'] = [],[]
            ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
-           ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,n_evecs])
+           ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
            mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
            for ev in range(n_evecs):
                ivp[sub][ses]['unmasked_vecs'][:,ev]=ut.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
@@ -306,29 +306,38 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
     ivp['bcorr_retest_avg'] = np.average(np.array(ivp['all_retest_bcorrs']), axis = 0)
     ivp['pca_to_match_avg'] = (ivp['bcorr_retest_avg']+ivp['bcorr_retest_avg'])/2
     ivp['PCs'] = {}
+    sc,si = inout.read_gifti_surface_both_hem(lh,rh,hcp=True)
+    lhc,lhi = inout.read_gifti_surface(lh,hcp=True)
     for pc in range(n_comp):
         ivp['PCs'][pc] = {}
-        display = plotting.plot_s0281urf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=True,title=f'PC{pc}',vmax=.005)
-        plotting.show()
-        plt.close(display)
-        fig,ax = plt.subplots(len(subs),2,subplot_kw={'projection': '3d'})
-        fig.suptitle(f'PC {pc}')
-        row = 0
         for sub in subs:
+            fig,ax = plt.subplots(3,4,subplot_kw={'projection': '3d'})
+            fig.subplots_adjust(left=0.12, right=.99, bottom=0.001, top=.877, wspace=.017, hspace=0.05)
+            fig.suptitle(f'PC{pc} sub-{sub}', fontsize=14)
+            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][0])
+            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][2])
+            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][3])
+            fig.text(.07,.71, f'PC{pc}',fontsize=13)
+            plotting.plot_surf_stat_map([lhc,lhi],ivp['unmasked_pca_harms'][:,pc][:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][1])
             ivp['PCs'][pc][sub] = {}
             for ses in ['test','retest']:
                 ivp['PCs'][pc][sub][ses] = ivp[sub][ses]['pairs'][pc][f'{ses}_ind'] #which vec to plot
                 ind = ivp['PCs'][pc][sub][ses]
-                col=0 if ses=='test' else 1    
+                row=1 if ses=='test' else 2    
                 if pearsonr(ivp['unmasked_pca_harms'][:,pc],ivp[sub][ses]['unmasked_vecs'][:,ind])[0] < 0:
                     vec = np.negative(ivp[sub][ses]['unmasked_vecs'][:,ind])
                 else:
                     vec = ivp[sub][ses]['unmasked_vecs'][:,ind]
-                display = plotting.plot_surf([sc,si],vec,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,vmin=-.005,axes=ax[row][col],figure=fig)
-                ax[row][col].set_title(f'{sub} {ses} harmonic {ind}', fontsize=10)
-            row = row+1
-        plotting.show()
-        plt.close(fig)
+                plotting.plot_surf_stat_map([sc,si],vec,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][0])
+                plotting.plot_surf_stat_map([sc,si],vec,view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][2])
+                plotting.plot_surf_stat_map([sc,si],vec,view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][3])
+                height=.415 if ses=='test' else .115
+                xcord=.025 if ses=='test' else 0
+                fig.text(xcord,height, f'{ses} H{ind}',fontsize=13)
+                plotting.plot_surf_stat_map([lhc,lhi],vec[:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][1])
+            #fig.tight_layout()
+            plotting.show()
+            plt.close(fig)
 '''    
     bcorr_t_sort = -np.sort(-ivp['bcorr_test_avg'])[::1]
     bcorr_r_sort = -np.sort(-ivp['bcorr_retest_avg'])[::1]
@@ -747,6 +756,12 @@ def vecs_vs_rsn(ivp,net_verts, chap_dir):
 
 #vecs_vs_rsn(ivp,net_verts,'/Users/bwinston/Downloads/chap_out_test')
 
+def binarize_harms(vecs):
+    b_vecs = np.empty((64984,len(vecs[0])))
+    for vec in range(len(vecs[0])): #1-99, e.g.
+        for vtx in range(len(vecs[:,vec])): #1-64k, e.g.
+                b_vecs[:,vec][vtx] = 1 if vecs[:,vec][vtx]>0 else 0
+    return b_vecs 
 
 '''                    
                         

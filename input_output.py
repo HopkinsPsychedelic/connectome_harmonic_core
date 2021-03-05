@@ -14,6 +14,7 @@ import test_retest_fxns as t_rt
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler,normalize
+import utility_functions as uts
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -268,6 +269,7 @@ def network_verts(network, parcel_csv, dtseries):
     return np.array(network_verts)
 
 '''
+#NET VERTS
 parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
 dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
 dtseries = np.expand_dims(dtseries,1)
@@ -279,9 +281,8 @@ for network in list(set(parcel_csv['Community'])):
     net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
     net_verts[network]['corrs'] = []
     for i in range(0,99):
-       net_verts[network]['corrs'].append(abs(pearsonr(net_verts[network]['verts'],masked_vecs[:,i])[0])) 
-    
-    
+       net_verts[network]['corrs'].append(abs(pearsonr(net_verts[network]['verts'],masked_vecs[:,i])[0]))    
+    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
     
 
 def read_gifti_surface(filename):
