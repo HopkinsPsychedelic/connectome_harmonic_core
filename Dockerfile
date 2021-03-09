@@ -151,6 +151,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda install -c mrtrix3 mrtrix3 \
     && sync && conda clean -y --all && sync \
     && pip3 install vtk \
+    && pip3 install matplotlib \
     && rm -rf ~/.cache/pip* \
     && sync
 
