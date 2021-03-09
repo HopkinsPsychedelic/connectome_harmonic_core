@@ -87,6 +87,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
     connectome = struc_conn_mat + surf_mat #sum connections and surface
     if args.hcp_dir:
         connectome = uts.mask_connectivity_matrix(connectome, u['mask']) #mask medial wall
@@ -98,13 +99,19 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
+    if args.hcp_dir:
+        unmasked_vecs = np.empty([64984,args.evecs])
+        for ev in range(args.evecs):
+            unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],u['mask'])
+    else:
+        unmasked_vecs = vecs
     if multises:
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) #harmonics.vtk
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,unmasked_vecs) #harmonics.vtk
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,unmasked_vecs) #inflated harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
     else:
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_infl_harmonics.vtk',sc_inf,si_inf,vecs)
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,unmasked_vecs)
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_infl_harmonics.vtk',sc_inf,si_inf,unmasked_vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
     if args.fprep_dir: #if functional images are specified (BIDS method)
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
