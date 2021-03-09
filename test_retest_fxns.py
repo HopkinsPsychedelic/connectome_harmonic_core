@@ -21,8 +21,7 @@ from scipy.stats.stats import pearsonr
 from scipy.stats import entropy
 from scipy.spatial import distance
 from sklearn.utils import shuffle
-import statistics as stats  
-import pandas as pd   
+import statistics as stats    
 from nilearn import plotting
 from random import shuffle
 import datetime
