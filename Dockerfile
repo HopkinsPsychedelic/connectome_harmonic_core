@@ -152,6 +152,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && sync && conda clean -y --all && sync \
     && pip3 install vtk \
     && pip3 install matplotlib \
+    && pip3 install nilearn \
     && rm -rf ~/.cache/pip* \
     && sync
 
