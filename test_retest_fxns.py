@@ -13,7 +13,7 @@ import input_output as inout
 import decomp as dcp
 from scipy import sparse
 import numpy as np
-import utility_functions as ut
+import utility_functions as uts
 from sklearn.metrics import pairwise_distances_chunked, pairwise,mutual_info_score,adjusted_mutual_info_score
 import time
 import matplotlib.pyplot as plt
@@ -253,7 +253,7 @@ the most reliable components across subjects (maybe). Pick 20.
 Then, for each subject, find test-retest reliability of those particular harmonics
 (the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
 '''
-def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, lh, rh):
+def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
     n_evecs = n_evecs-1
     global ivp
     ivp, ivp['test'], ivp['retest'] = {}, {}, {}
@@ -273,13 +273,13 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, lh, rh):
            ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
            mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
            for ev in range(n_evecs):
-               ivp[sub][ses]['unmasked_vecs'][:,ev]=ut.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
+               ivp[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
-    ivp['pca_harms'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[0]
-    ivp['variance'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[1]
+    ivp['pca_harms'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs_for_pca)[0]
+    ivp['variance'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs_for_pca)[1]
     ivp['unmasked_pca_harms'] = np.empty([64984,n_comp])
     for ev in range(n_comp):
-        ivp['unmasked_pca_harms'][:,ev] = ut.unmask_medial_wall(ivp['pca_harms'][:,ev],mask)
+        ivp['unmasked_pca_harms'][:,ev] = uts.unmask_medial_wall(ivp['pca_harms'][:,ev],mask)
     for ev in range(n_evecs):
         ivp['unmasked_pca_harms']
     for sub in subs:
@@ -408,8 +408,7 @@ def find_bcorrs_ivp(sub, ses, hp, run, n_evecs):
 
 '''2v shit'''
 
-def test_retest_rel_2v(vec_1, vec_2, n_evecs):
-    n_evecs = n_evecs-1
+def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca, vec_1 = pca
     global cd 
     cd = {} #for chap_data
     cd['bcorrs'] = []
@@ -421,20 +420,21 @@ def test_retest_rel_2v(vec_1, vec_2, n_evecs):
         cd['vec_2'] = np.load(vec_2)
     else:
         cd['vec_2'] = vec_2
-    for i in ['1', '2']:
-        cd[f'vec_{i}'] = np.delete(cd[f'vec_{i}'], 0, axis=1)
     global hp
     hp, hp['holy'] = {}, {} #dict for within these fxns
-    hp['corr_orig'] = np.empty((n_evecs,n_evecs))
-    for evec_1 in range(0,n_evecs): 
+    hp['corr_orig'] = np.empty((n_evecs,n_comp))
+    for evec_1 in range(0,n_comp): 
         for evec_2 in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-            hp['corr_orig'][evec_2,evec_1] = np.arctanh(abs(pearsonr(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2])[0])) #comparing column with column (ev with ev)
+            hp['corr_orig'][evec_2,evec_1] = abs(pearsonr(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2])[0]) #comparing column with column (ev with ev)
     hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
     hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
     find_bcorrs_2v(hp, 0, n_evecs) #run find bcorrs function, get best pairs
-    for ev in range(n_evecs):
+    for ev in range(n_comp):
         cd['bcorrs'].append(cd['pairs'][ev]['bcorr']) #all ideal corrs (w/ no repeats)
-    return cd['bcorrs']
+    if pairs == True:
+        return cd['pairs']
+    else:
+        return cd['bcorrs']
 
 def find_bcorrs_2v(hp, run, n_evecs): 
     while len(hp['corr_all']) > 0:
@@ -767,12 +767,20 @@ def binarize_harms(vecs):
                 b_vecs[:,vec][vtx] = 1 if vecs[:,vec][vtx]>0 else 0
     return b_vecs 
 
-def randomize_tracts(struc_conn_mat,surf_mat):
+def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs
     indices = np.arange(struc_conn_mat.shape[0]) #gets the number of rows 
-    np.random.shuffle(indices)
+    np.random.shuffle(indices) #shuffle cols?
     shuffled_mat = struc_conn_mat[indices, :] 
-    ut = sparse.triu(shuffled_mat)
-    connectome = ut + ut.T + surf_mat
+    ut = sparse.triu(shuffled_mat) #gets upper triangle
+    connectome = ut + ut.T + surf_mat #adj matrix is ut + transpose for lower triangle + surface matrix
+    connectome = uts.mask_connectivity_matrix(connectome,mask)
+    vals,vecs=dcp.lapDecomp(connectome, n_evecs)
+    vecs = np.delete(vecs, 0, axis=1)
+    unmasked_vecs = np.empty([64984,n_evecs-1])
+    for ev in range(n_evecs-1):
+        unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
+    return vecs,unmasked_vecs
+    
     
     
 '''                    
@@ -786,35 +794,13 @@ def randomize_tracts(struc_conn_mat,surf_mat):
     return sm['within_subj_avg'], sm['across_subj_avg']
 '''
 
-def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, lh, rh):
-    n_evecs = n_evecs-1
-    global ivp
-    ivp, ivp['test'], ivp['retest'] = {}, {}, {}
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*"))
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
-    for sub in ['test_avg', 'retest_avg', 'total_avg']:
-        if os.path.exists(f'{chap_dir}/sub-{sub}'):
-            subs.remove(sub)
-    ivp['evlist'] = []
-    for sub in subs:
-        ivp[sub] = {}    
-        for ses in ['test','retest']:
-           ivp[sub][ses],ivp[f'{ses}_avg'] = {}, {}
-           ivp[sub][ses]['bcorrs'],ivp[sub][ses]['inds'] = [],[]
-           ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
-           ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
-           ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
-           mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
-           for ev in range(n_evecs):
-               ivp[sub][ses]['unmasked_vecs'][:,ev]=ut.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
-           ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
-    ivp['pca_harms'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[0]
-    ivp['variance'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[1]
-    ivp['unmasked_pca_harms'] = np.empty([64984,n_comp])
-    for ev in range(n_comp):
-        ivp['unmasked_pca_harms'][:,ev] = ut.unmask_medial_wall(ivp['pca_harms'][:,ev],mask)
-    for ev in range(n_evecs):
-        ivp['unmasked_pca_harms']
+def mc_vs_pca(vecs, n_evecs, n_comp, pca, lh, rh): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
+    global mcvp
+    test_retest_rel_2v(pca, vecs, n_evecs, n_comp, pairs=True)
+
+
+
+
     for sub in subs:
         global hp
         hp = {}
@@ -842,9 +828,10 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, lh, rh):
     ivp['PCs'] = {}
     sc,si = inout.read_gifti_surface_both_hem(lh,rh,hcp=True)
     lhc,lhi = inout.read_gifti_surface(lh,hcp=True)
-    for pc in [0]:#range(n_comp):
+    for pc in range(n_comp):
+        begin_time = datetime.datetime.now()
         ivp['PCs'][pc] = {}
-        for sub in ['103818']:#subs:
+        for sub in subs:
             fig,ax = plt.subplots(3,4,subplot_kw={'projection': '3d'})
             fig.subplots_adjust(left=0.12, right=.99, bottom=0.001, top=.877, wspace=.017, hspace=0.05)
             fig.suptitle(f'PC{pc} sub-{sub}', fontsize=14)
@@ -871,7 +858,9 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, lh, rh):
                 plotting.plot_surf_stat_map([lhc,lhi],vec[:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][1])
             #fig.tight_layout()
             fig.savefig(f'/Users/bwinston/Downloads/PC-{pc}_sub-{sub}.png',dpi=150)
-            plt.close(fig)
+            fig.clf()
+            plt.close('all')
+        print(f'Finished PC{pc}. it took {datetime.datetime.now() - begin_time} h:m:s')   
 
 
 

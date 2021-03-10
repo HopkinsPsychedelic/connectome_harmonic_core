@@ -35,7 +35,7 @@ def mask_timeseries(timeseries_unmasked,medial_wall_mask):
         masked_timeseries[:,i]=mask_medial_wall(timeseries_unmasked[:,i],medial_wall_mask)
     return masked_timeseries
 
-def mask_connectivity_matrix(matrix,medial_wall_mask)  :
+def mask_connectivity_matrix(matrix,medial_wall_mask):
     keep_inds=np.where(medial_wall_mask==0)[0]
     return matrix[keep_inds][:,keep_inds]
       
