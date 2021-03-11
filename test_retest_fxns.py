@@ -14,7 +14,8 @@ import decomp as dcp
 from scipy import sparse
 import numpy as np
 import utility_functions as uts
-from sklearn.metrics import pairwise_distances_chunked, pairwise,mutual_info_score,adjusted_mutual_info_score
+from sklearn.metrics import pairwise_distances_chunked, pairwise,f1_score
+from sklearn.feature_selection import mutual_info_regression
 import time
 import matplotlib.pyplot as plt
 from scipy.stats.stats import pearsonr
@@ -761,7 +762,7 @@ def vecs_vs_rsn(ivp,net_verts, chap_dir):
 #vecs_vs_rsn(ivp,net_verts,'/Users/bwinston/Downloads/chap_out_test')
 
 def binarize_harms(vecs):
-    b_vecs = np.empty((64984,len(vecs[0])))
+    b_vecs = np.empty((59412,len(vecs[0])))
     for vec in range(len(vecs[0])): #1-99, e.g.
         for vtx in range(len(vecs[:,vec])): #1-64k, e.g.
                 b_vecs[:,vec][vtx] = 1 if vecs[:,vec][vtx]>0 else 0
@@ -794,10 +795,31 @@ def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs
     return sm['within_subj_avg'], sm['across_subj_avg']
 '''
 
-def mc_vs_pca(vecs, n_evecs, n_comp, pca, lh, rh): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
+def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
     global mcvp
-    test_retest_rel_2v(pca, vecs, n_evecs, n_comp, pairs=True)
+    mcvp = {}
+    mcvp['pairs'] = test_retest_rel_2v(pca, vecs, n_evecs, n_comp, True)
+    mcvp['pca'] = pca
+    mcvp['b_vecs'] = binarize_harms(vecs)
+    mcvp['bn_vecs'] = binarize_harms(np.negative(vecs))
+    n_vecs = np.negative(vecs)
+    mcvp['mut_infos'], mcvp['f_scores'],mcvp['pearson_rs'] = [],[],[]
+    for network in net_verts:
+        for pc in range(n_comp):
+            ind = mcvp['pairs'][pc]['ret_ind']
+            if pearsonr(vecs[:,ind],net_verts[network]['verts'])[0] > 0:
+                mcvp['mut_infos'].append(mutual_info_regression(vecs[:,ind].reshape(-1,1), net_verts[network]['mi_verts']))
+                mcvp['f_scores'].append(f1_score(mcvp['b_vecs'][:,ind], net_verts[network]['verts']))
+            else:
+                mcvp['mut_infos'].append(mutual_info_regression(n_vecs[:,ind].reshape(-1,1), net_verts[network]['mi_verts']))
+                mcvp['f_scores'].append(f1_score(mcvp['bn_vecs'][:,ind], net_verts[network]['verts']))
+        
+#vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
 
+       
+    #vec_2 for each pc MI and f-score w/ each network
+    #for each sub/ses (set of harmonics), list of 40 (MI), list of 40 (f-score) with each network.
+    #so basically 40*2*n_networks
 
 
 

@@ -279,12 +279,14 @@ net_verts = {}
 for network in list(set(parcel_csv['Community'])):
     net_verts[network] = {} 
     net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
+    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
+    net_verts[network]['mi_verts'] = net_verts[network]['verts'].reshape(-1,1)
+
     net_verts[network]['corrs'] = []
     for i in range(0,99):
        net_verts[network]['corrs'].append(abs(pearsonr(net_verts[network]['verts'],masked_vecs[:,i])[0]))    
-    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
-    
-
+'''   
+'''
 def read_gifti_surface(filename):
     data=nib.load(filename)
     points=data.darrays[1].data
