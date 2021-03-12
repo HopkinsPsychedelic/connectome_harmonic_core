@@ -272,7 +272,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
            ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
            ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
-           mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
+           mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
            for ev in range(n_evecs):
                ivp[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
@@ -797,23 +797,28 @@ def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs
 
 def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
     global mcvp
+    begin_time = datetime.datetime.now()
+    interm_time = datetime.datetime.now()
     mcvp = {}
     mcvp['pairs'] = test_retest_rel_2v(pca, vecs, n_evecs, n_comp, True)
     mcvp['pca'] = pca
     mcvp['b_vecs'] = binarize_harms(vecs)
     mcvp['bn_vecs'] = binarize_harms(np.negative(vecs))
     n_vecs = np.negative(vecs)
-    mcvp['mut_infos'], mcvp['f_scores'],mcvp['pearson_rs'] = [],[],[]
     for network in net_verts:
+        mcvp[network] = {}
+        mcvp[network]['pearsons'], mcvp[network]['f_scores'] = [],[]
         for pc in range(n_comp):
             ind = mcvp['pairs'][pc]['ret_ind']
             if pearsonr(vecs[:,ind],net_verts[network]['verts'])[0] > 0:
-                mcvp['mut_infos'].append(mutual_info_regression(vecs[:,ind].reshape(-1,1), net_verts[network]['mi_verts']))
-                mcvp['f_scores'].append(f1_score(mcvp['b_vecs'][:,ind], net_verts[network]['verts']))
+                mcvp[network]['pearsons'].append(pearsonr(vecs[:,ind], net_verts[network]['verts'])[0])
+                mcvp[network]['f_scores'].append(f1_score(mcvp['b_vecs'][:,ind], net_verts[network]['verts']))
             else:
-                mcvp['mut_infos'].append(mutual_info_regression(n_vecs[:,ind].reshape(-1,1), net_verts[network]['mi_verts']))
-                mcvp['f_scores'].append(f1_score(mcvp['bn_vecs'][:,ind], net_verts[network]['verts']))
-        
+                mcvp[network]['pearsons'].append(pearsonr(n_vecs[:,ind], net_verts[network]['verts'])[0])
+                mcvp[network]['f_scores'].append(f1_score(mcvp['bn_vecs'][:,ind], net_verts[network]['verts']))
+        print(f'finished {network}. it took {datetime.datetime.now() - interm_time}')
+        interm_time = datetime.datetime.now()
+    print(f'finished everything. in total it took {datetime.datetime.now() - begin_time}')
 #vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
 
        

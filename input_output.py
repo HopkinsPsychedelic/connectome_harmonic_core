@@ -270,16 +270,16 @@ def network_verts(network, parcel_csv, dtseries):
 
 '''
 #NET VERTS
-parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
-dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
+parcel_csv = pd.read_csv('/data2/Brian/connectome_harmonics/Parcels/Parcels.csv')
+dtseries = np.array(np.loadtxt('/data2/Brian/connectome_harmonics/Gordon_Parcels_LR.dtseries.txt'))
 dtseries = np.expand_dims(dtseries,1)
-masked_vecs = np.load('/Users/bwinston/Downloads/chap_out_test/sub-105923/ses-retest/vecs.npy')
+masked_vecs = np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-114823/ses-test/vecs.npy')
 masked_vecs = np.delete(masked_vecs,0,axis=1)
 net_verts = {}
 for network in list(set(parcel_csv['Community'])):
     net_verts[network] = {} 
     net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
-    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
+    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/data2/Brian/connectome_harmonics/mask.npy'))
     net_verts[network]['mi_verts'] = net_verts[network]['verts'].reshape(-1,1)
 
     net_verts[network]['corrs'] = []
