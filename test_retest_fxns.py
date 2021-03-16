@@ -770,7 +770,7 @@ def binarize_harms(vecs):
                 b_vecs[:,vec][vtx] = 1 if vecs[:,vec][vtx]>0 else 0
     return b_vecs 
 
-def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs
+def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs e.g. 100
     indices = np.arange(struc_conn_mat.shape[0]) #gets the number of rows 
     np.random.shuffle(indices) #shuffle cols?
     shuffled_mat = struc_conn_mat[indices, :] 
@@ -834,7 +834,7 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
                 iters=1 if mc==False else 2
                 for i in range(iters):
                     if mc == True:
-                        vecs = randomize_tracts(np.load(f'{chap_dir}/sub-{sub}/{ses}-ses/struc_conn_mat.npz'),np.load(f'{chap_dir}/sub-{sub}/{ses}-ses/surf_mat.npz'),n_evecs,mask)[0]
+                        vecs = randomize_tracts(sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/struc_conn_mat.npz'),sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/surf_mat.npz'),n_evecs+1,mask)[0]
                     else:
                         vecs = ivp[sub][ses]['vecs']
                     mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)

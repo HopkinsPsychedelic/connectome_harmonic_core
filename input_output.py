@@ -299,7 +299,11 @@ for network in list(set(parcel_csv['Community'])):
 '''
 def get_subs(chap_dir):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-   return [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+   subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+   for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
+   return subs
 
 def mofl(list_of_lists):
     return np.mean(np.array(list_of_lists),axis=0)
