@@ -272,7 +272,8 @@ def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
            ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
            ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
-           mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
+           mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
+           #/data2/Brian/connectome_harmonics/mask.npy
            for ev in range(n_evecs):
                ivp[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
@@ -307,6 +308,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
     ivp['bcorr_test_avg'] = np.average(np.array(ivp['all_test_bcorrs']), axis = 0)
     ivp['bcorr_retest_avg'] = np.average(np.array(ivp['all_retest_bcorrs']), axis = 0)
     ivp['pca_to_match_avg'] = (ivp['bcorr_retest_avg']+ivp['bcorr_retest_avg'])/2
+    
     ivp['PCs'] = {}
     sc,si = inout.read_gifti_surface_both_hem(lh,rh,hcp=True)
     lhc,lhi = inout.read_gifti_surface(lh,hcp=True)
@@ -795,10 +797,9 @@ def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs
     return sm['within_subj_avg'], sm['across_subj_avg']
 '''
 
-def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
+def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts, sub, ses, i): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
     global mcvp
     begin_time = datetime.datetime.now()
-    interm_time = datetime.datetime.now()
     mcvp = {}
     mcvp['pairs'] = test_retest_rel_2v(pca, vecs, n_evecs, n_comp, True)
     mcvp['pca'] = pca
@@ -816,78 +817,38 @@ def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts): #takes MC (null) harmonics
             else:
                 mcvp[network]['pearsons'].append(pearsonr(n_vecs[:,ind], net_verts[network]['verts'])[0])
                 mcvp[network]['f_scores'].append(f1_score(mcvp['bn_vecs'][:,ind], net_verts[network]['verts']))
-        print(f'finished {network}. it took {datetime.datetime.now() - interm_time}')
         interm_time = datetime.datetime.now()
-    print(f'finished everything. in total it took {datetime.datetime.now() - begin_time}')
+    print(f'finished {sub} {ses} iteration {i}. in {datetime.datetime.now() - begin_time} h:m:s')
+    return mcvp
 #vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
+
+def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
+    subs = inout.get_subs(chap_dir)
+    global gd 
+    gd = {}
+    for network in net_verts:
+        gd[network] = {}
+        gd[network]['pearsons'], gd[network]['f_scores'] = [],[]
+    for sub in subs:
+        for ses in ['test','retest']:
+                iters=1 if mc==False else 2
+                for i in range(iters):
+                    if mc == True:
+                        vecs = randomize_tracts(np.load(f'{chap_dir}/sub-{sub}/{ses}-ses/struc_conn_mat.npz'),np.load(f'{chap_dir}/sub-{sub}/{ses}-ses/surf_mat.npz'),n_evecs,mask)[0]
+                    else:
+                        vecs = ivp[sub][ses]['vecs']
+                    mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
+                    for network in net_verts:
+                        gd[network]['pearsons'].append(mcvp[network]['pearsons'])
+                        gd[network]['f_scores'].append(mcvp[network]['f_scores'])
+        for network in net_verts:
+            gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons'])
+            gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores'])
+            
+            
 
        
     #vec_2 for each pc MI and f-score w/ each network
     #for each sub/ses (set of harmonics), list of 40 (MI), list of 40 (f-score) with each network.
     #so basically 40*2*n_networks
-
-
-
-    for sub in subs:
-        global hp
-        hp = {}
-        for ses in ['test','retest']:
-            hp[ses], hp[ses]['holy'] = {}, {}  
-            hp[ses]['corr_orig'] = np.empty((n_evecs,n_comp)) #init comparison matrix 
-            for evec_pca in range(0,n_comp): 
-                for evec_ses in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-                    hp[ses]['corr_orig'][evec_ses,evec_pca] = abs(pearsonr(ivp['pca_harms'][:,evec_pca], ivp[sub][ses]['vecs'][:,evec_ses])[0])
-            hp[ses]['corr_all'] = hp[ses]['corr_orig'].swapaxes(0,1)
-            hp[ses]['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp[ses]['corr_all'])}           
-            find_bcorrs_ivp(sub, ses, hp, 0, n_evecs)  
-    for sub in subs:
-        for ses in ['test','retest']:
-            for ev in range(n_comp):
-                ivp[sub][ses]['bcorrs'].append(ivp[sub][ses]['pairs'][ev]['bcorr'])
-                ivp[sub][ses]['inds'].append(ivp[sub][ses]['pairs'][ev][f'{ses}_ind'])
-    ivp['all_test_bcorrs'],ivp['all_retest_bcorrs'] = [],[]
-    for sub in subs:
-        for ses in ['test','retest']:
-            ivp[f'all_{ses}_bcorrs'].append(ivp[sub][ses]['bcorrs']) #list of lists
-    ivp['bcorr_test_avg'] = np.average(np.array(ivp['all_test_bcorrs']), axis = 0)
-    ivp['bcorr_retest_avg'] = np.average(np.array(ivp['all_retest_bcorrs']), axis = 0)
-    ivp['pca_to_match_avg'] = (ivp['bcorr_retest_avg']+ivp['bcorr_retest_avg'])/2
-    ivp['PCs'] = {}
-    sc,si = inout.read_gifti_surface_both_hem(lh,rh,hcp=True)
-    lhc,lhi = inout.read_gifti_surface(lh,hcp=True)
-    for pc in range(n_comp):
-        begin_time = datetime.datetime.now()
-        ivp['PCs'][pc] = {}
-        for sub in subs:
-            fig,ax = plt.subplots(3,4,subplot_kw={'projection': '3d'})
-            fig.subplots_adjust(left=0.12, right=.99, bottom=0.001, top=.877, wspace=.017, hspace=0.05)
-            fig.suptitle(f'PC{pc} sub-{sub}', fontsize=14)
-            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][0])
-            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][2])
-            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][3])
-            fig.text(.07,.71, f'PC{pc}',fontsize=13)
-            plotting.plot_surf_stat_map([lhc,lhi],ivp['unmasked_pca_harms'][:,pc][:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][1])
-            ivp['PCs'][pc][sub] = {}
-            for ses in ['test','retest']:
-                ivp['PCs'][pc][sub][ses] = ivp[sub][ses]['pairs'][pc][f'{ses}_ind'] #which vec to plot
-                ind = ivp['PCs'][pc][sub][ses]
-                row=1 if ses=='test' else 2    
-                if pearsonr(ivp['unmasked_pca_harms'][:,pc],ivp[sub][ses]['unmasked_vecs'][:,ind])[0] < 0:
-                    vec = np.negative(ivp[sub][ses]['unmasked_vecs'][:,ind])
-                else:
-                    vec = ivp[sub][ses]['unmasked_vecs'][:,ind]
-                plotting.plot_surf_stat_map([sc,si],vec,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][0])
-                plotting.plot_surf_stat_map([sc,si],vec,view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][2])
-                plotting.plot_surf_stat_map([sc,si],vec,view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][3])
-                height=.415 if ses=='test' else .115
-                xcord=.025 if ses=='test' else 0
-                fig.text(xcord,height, f'{ses} H{ind}',fontsize=13)
-                plotting.plot_surf_stat_map([lhc,lhi],vec[:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][1])
-            #fig.tight_layout()
-            fig.savefig(f'/Users/bwinston/Downloads/PC-{pc}_sub-{sub}.png',dpi=150)
-            fig.clf()
-            plt.close('all')
-        print(f'Finished PC{pc}. it took {datetime.datetime.now() - begin_time} h:m:s')   
-
-
 
