@@ -826,28 +826,50 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
     subs = inout.get_subs(chap_dir)
     global gd 
     gd = {}
+    gd['across_pearson_all'],gd['across_f_scores_all'] = [],[]
+    gd['within_pearson_all'],gd['within_f_scores_all'] = [],[]
     for network in net_verts:
         gd[network] = {}
-        gd[network]['pearsons'], gd[network]['f_scores'] = [],[]
-    for sub in subs:
+        gd[network]['pearsons'], gd[network]['within_pearson_avgs'] = [],[]
+        gd[network]['f_scores'], gd[network]['within_f_scores_avgs'] = [],[]
+    for sub in subs:        
+        for network in net_verts:
+            gd[network][sub] = {}
+            for ses in ['test','retest']:
+                gd[network][sub][ses] = {}
         for ses in ['test','retest']:
-                iters=1 if mc==False else 2
-                for i in range(iters):
-                    if mc == True:
-                        vecs = randomize_tracts(sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/struc_conn_mat.npz'),sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/surf_mat.npz'),n_evecs+1,mask)[0]
-                    else:
-                        vecs = ivp[sub][ses]['vecs']
-                    mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
-                    for network in net_verts:
-                        gd[network]['pearsons'].append(mcvp[network]['pearsons'])
-                        gd[network]['f_scores'].append(mcvp[network]['f_scores'])
+            iters=1 if mc==False else 2
+            for i in range(iters):
+                if mc == True:
+                    vecs = randomize_tracts(sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/struc_conn_mat.npz'),sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/surf_mat.npz'),n_evecs+1,mask)[0]
+                else:
+                    vecs = ivp[sub][ses]['vecs']
+                mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
+                for network in net_verts:
+                    gd[network]['pearsons'].append(mcvp[network]['pearsons'])
+                    gd[network]['f_scores'].append(mcvp[network]['f_scores'])
+                    if mc==False:
+                        gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
+                        gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
+                        if ses=='retest':
+                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
+                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
         for network in net_verts:
             gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons'])
             gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores'])
-            
-            
-
-       
+            gd[network]['within_pearson_avg'] = stats.mean(gd[network]['within_pearson_avgs'])
+            gd['within_pearson_all'].append(gd[network]['within_pearson_avg'])
+            gd[network]['within_f_score_avg'] = stats.mean(gd[network]['within_f_scores_avgs'])    
+            gd['within_f_scores_all'].append(gd[network]['within_f_score_avg'])
+    for network in net_verts:
+         inout.across_avg(subs, gd[network], inout.abs_pearson,'pearsons')
+         gd['across_pearson_all'].append(gd[network]['across_subj_avg_pearsons'])
+         inout.across_avg(subs, gd[network], inout.abs_pearson,'f_scores')
+         gd['across_f_scores_all'].append(gd[network]['across_subj_avg_f_scores'])
+    for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
+        gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
+    
+      
     #vec_2 for each pc MI and f-score w/ each network
     #for each sub/ses (set of harmonics), list of 40 (MI), list of 40 (f-score) with each network.
     #so basically 40*2*n_networks

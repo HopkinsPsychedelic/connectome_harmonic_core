@@ -17,6 +17,7 @@ from sklearn.preprocessing import MinMaxScaler,normalize
 import utility_functions as uts
 import os
 from glob import glob
+import statistics as stats
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -307,6 +308,23 @@ def get_subs(chap_dir):
 
 def mofl(list_of_lists):
     return np.mean(np.array(list_of_lists),axis=0)
+
+def across_avg(subs,dic,fxn,data): #dic doesn't have to be overall dict
+    dic[f'across_subj_all_{data}'] = []
+    for sub in subs:
+        dic[sub][f'c_sub_all_{data}'] = []
+        for c_sub in subs:
+            if c_sub != sub:
+                dic[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    dic[sub][c_sub][ses] = fxn(dic[sub][ses][f'{data}'],dic[c_sub][ses][f'{data}'])
+                dic[sub][f'c_sub_all_{data}'].append((dic[sub][c_sub]['test'] + dic[sub][c_sub]['retest'])/2)
+        dic[f'across_subj_all_{data}'].append(stats.mean(dic[sub][f'c_sub_all_{data}']))
+    dic[f'across_subj_avg_{data}'] = stats.mean(dic[sub][f'c_sub_all_{data}'])
+                
+def abs_pearson(x,y):
+    return abs(pearsonr(x,y)[0])
+    
 
 '''
 def read_gifti_surface(filename):
