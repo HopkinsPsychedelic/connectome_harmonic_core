@@ -411,7 +411,7 @@ def find_bcorrs_ivp(sub, ses, hp, run, n_evecs):
 
 '''2v shit'''
 
-def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca, vec_1 = pca
+def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca, vec_1 = pca, otherwise same as n_evecs
     global cd 
     cd = {} #for chap_data
     cd['bcorrs'] = []
@@ -484,17 +484,13 @@ def struc_metric_1(chap_dir, n_evecs):
     global sm 
     sm = {} #for chap_data
     sm['within_subj_all'], sm['across_subj_all'] = [],[]
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-    for sub in ['test_avg', 'retest_avg', 'total_avg']:
-        if os.path.exists(f'{chap_dir}/sub-{sub}'):
-            subs.remove(sub)
+    subs = inout.get_subs(chap_dir)
     for sub in subs:
         sm[sub] = {}
         for ses in ['test','retest']:
            sm[sub][ses] = {}
-           sm[sub][ses]['vecs'] = f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy'
-        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs))
+           sm[sub][ses]['vecs'] = ivp[sub][ses]['vecs']
+        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs,n_evecs, False))
         sm['within_subj_all'].append(sm[sub][sub])
         sm[sub]['c_sub_all'] = [] #where empty averages will go
     for sub in subs:
@@ -502,7 +498,7 @@ def struc_metric_1(chap_dir, n_evecs):
             if c_sub != sub:
                 sm[sub][c_sub] = {}
                 for ses in ['test','retest']:
-                    sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
+                    sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs, n_evecs, False))
                 sm[sub][c_sub]['avg'] = (sm[sub][c_sub]['test'] + sm[sub][c_sub]['retest']) / 2
                 sm[sub]['c_sub_all'].append(sm[sub][c_sub]['avg'])
         sm['across_subj_all'].append(stats.mean(sm[sub]['c_sub_all']))
@@ -869,8 +865,11 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
     for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
         gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
     
-      
-    #vec_2 for each pc MI and f-score w/ each network
-    #for each sub/ses (set of harmonics), list of 40 (MI), list of 40 (f-score) with each network.
-    #so basically 40*2*n_networks
-
+'''ICC stuff'''
+def icc_vtx(chap_dir,ivp,vec,vtx):
+    subs=inout.get_subs(chap_dir)
+    mat = np.empty((len(subs),2))
+    for i,sub in enumerate(subs):
+        mat[i,0] = ivp[sub]['test']['vecs'][:,vec][vtx]
+        mat[i,1] = ivp[sub]['retest']['vecs'][:,vec]
+    return mat

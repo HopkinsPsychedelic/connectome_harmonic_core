@@ -11,6 +11,7 @@ import time
 import numpy as np
 import os 
 from scipy import sparse
+import icc
 
 def unmask_medial_wall(masked_feature,medial_wall_mask):
     unmasked_feature=np.zeros(len(medial_wall_mask))
@@ -211,11 +212,9 @@ def procrustes_alignment(data, reference=None, n_iter=10, tol=1e-5,
 
     return (aligned, reference) if return_reference else aligned
 
-    import icc
-
-    def get_ICC(measures):
-    
-        return icc.icc(measures,model='twoway',type='consistency',unit='single')
+  
+def get_icc(measures):
+    return icc.icc(measures,model='twoway',type='consistency',unit='single')
             
     
     
