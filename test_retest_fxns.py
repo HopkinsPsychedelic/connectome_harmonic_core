@@ -13,18 +13,20 @@ import input_output as inout
 import decomp as dcp
 from scipy import sparse
 import numpy as np
-import utility_functions as ut
-from sklearn.metrics import pairwise_distances_chunked, pairwise
+import utility_functions as uts
+from sklearn.metrics import pairwise_distances_chunked, pairwise,f1_score
+from sklearn.feature_selection import mutual_info_regression
 import time
-from scipy.sparse import csgraph
 import matplotlib.pyplot as plt
 from scipy.stats.stats import pearsonr
 from scipy.stats import entropy
 from scipy.spatial import distance
-import statistics as stats  
-import pandas as pd   
+from sklearn.utils import shuffle
+import statistics as stats    
 from nilearn import plotting
-    
+from random import shuffle
+import datetime
+
 def get_key(my_dict, val):
     for key, value in my_dict.items():
          if val == value:
@@ -252,7 +254,7 @@ the most reliable components across subjects (maybe). Pick 20.
 Then, for each subject, find test-retest reliability of those particular harmonics
 (the ones that paired w/ the 20 best pcas) with their best pair from the retest session.
 '''
-def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
+def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
     n_evecs = n_evecs-1
     global ivp
     ivp, ivp['test'], ivp['retest'] = {}, {}, {}
@@ -269,16 +271,17 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
            ivp[sub][ses]['bcorrs'],ivp[sub][ses]['inds'] = [],[]
            ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
-           ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,n_evecs])
+           ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
            mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
+           #/data2/Brian/connectome_harmonics/mask.npy
            for ev in range(n_evecs):
-               ivp[sub][ses]['unmasked_vecs'][:,ev]=ut.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
+               ivp[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
-    ivp['pca_harms'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[0]
-    ivp['variance'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs)[1]
+    ivp['pca_harms'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs_for_pca)[0]
+    ivp['variance'] = dcp.get_group_pca_comp_brian(ivp['evlist'], n_comp, n_evecs_for_pca)[1]
     ivp['unmasked_pca_harms'] = np.empty([64984,n_comp])
     for ev in range(n_comp):
-        ivp['unmasked_pca_harms'][:,ev] = ut.unmask_medial_wall(ivp['pca_harms'][:,ev],mask)
+        ivp['unmasked_pca_harms'][:,ev] = uts.unmask_medial_wall(ivp['pca_harms'][:,ev],mask)
     for ev in range(n_evecs):
         ivp['unmasked_pca_harms']
     for sub in subs:
@@ -305,30 +308,43 @@ def ind_vs_pca(chap_dir, n_evecs, n_comp, mask, sc, si):
     ivp['bcorr_test_avg'] = np.average(np.array(ivp['all_test_bcorrs']), axis = 0)
     ivp['bcorr_retest_avg'] = np.average(np.array(ivp['all_retest_bcorrs']), axis = 0)
     ivp['pca_to_match_avg'] = (ivp['bcorr_retest_avg']+ivp['bcorr_retest_avg'])/2
+    
     ivp['PCs'] = {}
+    sc,si = inout.read_gifti_surface_both_hem(lh,rh,hcp=True)
+    lhc,lhi = inout.read_gifti_surface(lh,hcp=True)
     for pc in range(n_comp):
+        begin_time = datetime.datetime.now()
         ivp['PCs'][pc] = {}
-        display = plotting.plot_s0281urf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=True,title=f'PC{pc}',vmax=.005)
-        plotting.show()
-        plt.close(display)
-        fig,ax = plt.subplots(len(subs),2,subplot_kw={'projection': '3d'})
-        fig.suptitle(f'PC {pc}')
-        row = 0
         for sub in subs:
+            fig,ax = plt.subplots(3,4,subplot_kw={'projection': '3d'})
+            fig.subplots_adjust(left=0.12, right=.99, bottom=0.001, top=.877, wspace=.017, hspace=0.05)
+            fig.suptitle(f'PC{pc} sub-{sub}', fontsize=14)
+            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][0])
+            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][2])
+            plotting.plot_surf_stat_map([sc,si],ivp['unmasked_pca_harms'][:,pc],view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][3])
+            fig.text(.07,.71, f'PC{pc}',fontsize=13)
+            plotting.plot_surf_stat_map([lhc,lhi],ivp['unmasked_pca_harms'][:,pc][:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][1])
             ivp['PCs'][pc][sub] = {}
             for ses in ['test','retest']:
                 ivp['PCs'][pc][sub][ses] = ivp[sub][ses]['pairs'][pc][f'{ses}_ind'] #which vec to plot
                 ind = ivp['PCs'][pc][sub][ses]
-                col=0 if ses=='test' else 1    
+                row=1 if ses=='test' else 2    
                 if pearsonr(ivp['unmasked_pca_harms'][:,pc],ivp[sub][ses]['unmasked_vecs'][:,ind])[0] < 0:
                     vec = np.negative(ivp[sub][ses]['unmasked_vecs'][:,ind])
                 else:
                     vec = ivp[sub][ses]['unmasked_vecs'][:,ind]
-                display = plotting.plot_surf([sc,si],vec,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,vmin=-.005,axes=ax[row][col],figure=fig)
-                ax[row][col].set_title(f'{sub} {ses} harmonic {ind}', fontsize=10)
-            row = row+1
-        plotting.show()
-        plt.close(fig)
+                plotting.plot_surf_stat_map([sc,si],vec,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][0])
+                plotting.plot_surf_stat_map([sc,si],vec,view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][2])
+                plotting.plot_surf_stat_map([sc,si],vec,view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][3])
+                height=.415 if ses=='test' else .115
+                xcord=.025 if ses=='test' else 0
+                fig.text(xcord,height, f'{ses} H{ind}',fontsize=13)
+                plotting.plot_surf_stat_map([lhc,lhi],vec[:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[row][1])
+            #fig.tight_layout()
+            fig.savefig(f'/Users/bwinston/Downloads/PC-{pc}_sub-{sub}.png',dpi=150)
+            fig.clf()
+            plt.close('all')
+        print(f'Finished PC{pc}. it took {datetime.datetime.now() - begin_time} h:m:s')
 '''    
     bcorr_t_sort = -np.sort(-ivp['bcorr_test_avg'])[::1]
     bcorr_r_sort = -np.sort(-ivp['bcorr_retest_avg'])[::1]
@@ -395,8 +411,7 @@ def find_bcorrs_ivp(sub, ses, hp, run, n_evecs):
 
 '''2v shit'''
 
-def test_retest_rel_2v(vec_1, vec_2, n_evecs):
-    n_evecs = n_evecs-1
+def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca, vec_1 = pca, otherwise same as n_evecs
     global cd 
     cd = {} #for chap_data
     cd['bcorrs'] = []
@@ -408,20 +423,21 @@ def test_retest_rel_2v(vec_1, vec_2, n_evecs):
         cd['vec_2'] = np.load(vec_2)
     else:
         cd['vec_2'] = vec_2
-    for i in ['1', '2']:
-        cd[f'vec_{i}'] = np.delete(cd[f'vec_{i}'], 0, axis=1)
     global hp
     hp, hp['holy'] = {}, {} #dict for within these fxns
-    hp['corr_orig'] = np.empty((n_evecs,n_evecs))
-    for evec_1 in range(0,n_evecs): 
+    hp['corr_orig'] = np.empty((n_evecs,n_comp))
+    for evec_1 in range(0,n_comp): 
         for evec_2 in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-            hp['corr_orig'][evec_2,evec_1] = np.arctanh(abs(pearsonr(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2])[0])) #comparing column with column (ev with ev)
+            hp['corr_orig'][evec_2,evec_1] = abs(pearsonr(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2])[0]) #comparing column with column (ev with ev)
     hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
     hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
     find_bcorrs_2v(hp, 0, n_evecs) #run find bcorrs function, get best pairs
-    for ev in range(n_evecs):
+    for ev in range(n_comp):
         cd['bcorrs'].append(cd['pairs'][ev]['bcorr']) #all ideal corrs (w/ no repeats)
-    return cd['bcorrs']
+    if pairs == True:
+        return cd['pairs']
+    else:
+        return cd['bcorrs']
 
 def find_bcorrs_2v(hp, run, n_evecs): 
     while len(hp['corr_all']) > 0:
@@ -468,17 +484,13 @@ def struc_metric_1(chap_dir, n_evecs):
     global sm 
     sm = {} #for chap_data
     sm['within_subj_all'], sm['across_subj_all'] = [],[]
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-    for sub in ['test_avg', 'retest_avg', 'total_avg']:
-        if os.path.exists(f'{chap_dir}/sub-{sub}'):
-            subs.remove(sub)
+    subs = inout.get_subs(chap_dir)
     for sub in subs:
         sm[sub] = {}
         for ses in ['test','retest']:
            sm[sub][ses] = {}
-           sm[sub][ses]['vecs'] = f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy'
-        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs))
+           sm[sub][ses]['vecs'] = ivp[sub][ses]['vecs']
+        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs,n_evecs, False))
         sm['within_subj_all'].append(sm[sub][sub])
         sm[sub]['c_sub_all'] = [] #where empty averages will go
     for sub in subs:
@@ -486,7 +498,7 @@ def struc_metric_1(chap_dir, n_evecs):
             if c_sub != sub:
                 sm[sub][c_sub] = {}
                 for ses in ['test','retest']:
-                    sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
+                    sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs, n_evecs, False))
                 sm[sub][c_sub]['avg'] = (sm[sub][c_sub]['test'] + sm[sub][c_sub]['retest']) / 2
                 sm[sub]['c_sub_all'].append(sm[sub][c_sub]['avg'])
         sm['across_subj_all'].append(stats.mean(sm[sub]['c_sub_all']))
@@ -748,7 +760,29 @@ def vecs_vs_rsn(ivp,net_verts, chap_dir):
 
 #vecs_vs_rsn(ivp,net_verts,'/Users/bwinston/Downloads/chap_out_test')
 
+def binarize_harms(vecs):
+    b_vecs = np.empty((59412,len(vecs[0])))
+    for vec in range(len(vecs[0])): #1-99, e.g.
+        for vtx in range(len(vecs[:,vec])): #1-64k, e.g.
+                b_vecs[:,vec][vtx] = 1 if vecs[:,vec][vtx]>0 else 0
+    return b_vecs 
 
+def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs e.g. 100
+    indices = np.arange(struc_conn_mat.shape[0]) #gets the number of rows 
+    np.random.shuffle(indices) #shuffle cols?
+    shuffled_mat = struc_conn_mat[indices, :] 
+    ut = sparse.triu(shuffled_mat) #gets upper triangle
+    connectome = ut + ut.T + surf_mat #adj matrix is ut + transpose for lower triangle + surface matrix
+    connectome = uts.mask_connectivity_matrix(connectome,mask)
+    vals,vecs=dcp.lapDecomp(connectome, n_evecs)
+    vecs = np.delete(vecs, 0, axis=1)
+    unmasked_vecs = np.empty([64984,n_evecs-1])
+    for ev in range(n_evecs-1):
+        unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
+    return vecs,unmasked_vecs
+    
+    
+    
 '''                    
                         
                     sm[sub][c_sub][ses] = stats.mean(test_retest_rel_2v(sm[sub][ses]['vecs'], sm[c_sub][ses]['vecs'], n_evecs))
@@ -758,5 +792,89 @@ def vecs_vs_rsn(ivp,net_verts, chap_dir):
     sm['within_subj_avg'] = stats.mean(sm['within_subj_all']) 
     sm['across_subj_avg'] = stats.mean(sm['across_subj_all'])
     return sm['within_subj_avg'], sm['across_subj_avg']
-
 '''
+
+<<<<<<< HEAD
+'''
+=======
+def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts, sub, ses, i): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
+    global mcvp
+    begin_time = datetime.datetime.now()
+    mcvp = {}
+    mcvp['pairs'] = test_retest_rel_2v(pca, vecs, n_evecs, n_comp, True)
+    mcvp['pca'] = pca
+    mcvp['b_vecs'] = binarize_harms(vecs)
+    mcvp['bn_vecs'] = binarize_harms(np.negative(vecs))
+    n_vecs = np.negative(vecs)
+    for network in net_verts:
+        mcvp[network] = {}
+        mcvp[network]['pearsons'], mcvp[network]['f_scores'] = [],[]
+        for pc in range(n_comp):
+            ind = mcvp['pairs'][pc]['ret_ind']
+            if pearsonr(vecs[:,ind],net_verts[network]['verts'])[0] > 0:
+                mcvp[network]['pearsons'].append(pearsonr(vecs[:,ind], net_verts[network]['verts'])[0])
+                mcvp[network]['f_scores'].append(f1_score(mcvp['b_vecs'][:,ind], net_verts[network]['verts']))
+            else:
+                mcvp[network]['pearsons'].append(pearsonr(n_vecs[:,ind], net_verts[network]['verts'])[0])
+                mcvp[network]['f_scores'].append(f1_score(mcvp['bn_vecs'][:,ind], net_verts[network]['verts']))
+        interm_time = datetime.datetime.now()
+    print(f'finished {sub} {ses} iteration {i}. in {datetime.datetime.now() - begin_time} h:m:s')
+    return mcvp
+#vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
+
+def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
+    subs = inout.get_subs(chap_dir)
+    global gd 
+    gd = {}
+    gd['across_pearson_all'],gd['across_f_scores_all'] = [],[]
+    gd['within_pearson_all'],gd['within_f_scores_all'] = [],[]
+    for network in net_verts:
+        gd[network] = {}
+        gd[network]['pearsons'], gd[network]['within_pearson_avgs'] = [],[]
+        gd[network]['f_scores'], gd[network]['within_f_scores_avgs'] = [],[]
+    for sub in subs:        
+        for network in net_verts:
+            gd[network][sub] = {}
+            for ses in ['test','retest']:
+                gd[network][sub][ses] = {}
+        for ses in ['test','retest']:
+            iters=1 if mc==False else 2
+            for i in range(iters):
+                if mc == True:
+                    vecs = randomize_tracts(sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/struc_conn_mat.npz'),sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/surf_mat.npz'),n_evecs+1,mask)[0]
+                else:
+                    vecs = ivp[sub][ses]['vecs']
+                mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
+                for network in net_verts:
+                    gd[network]['pearsons'].append(mcvp[network]['pearsons'])
+                    gd[network]['f_scores'].append(mcvp[network]['f_scores'])
+                    if mc==False:
+                        gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
+                        gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
+                        if ses=='retest':
+                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
+                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
+        for network in net_verts:
+            gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons'])
+            gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores'])
+            gd[network]['within_pearson_avg'] = stats.mean(gd[network]['within_pearson_avgs'])
+            gd['within_pearson_all'].append(gd[network]['within_pearson_avg'])
+            gd[network]['within_f_score_avg'] = stats.mean(gd[network]['within_f_scores_avgs'])    
+            gd['within_f_scores_all'].append(gd[network]['within_f_score_avg'])
+    for network in net_verts:
+         inout.across_avg(subs, gd[network], inout.abs_pearson,'pearsons')
+         gd['across_pearson_all'].append(gd[network]['across_subj_avg_pearsons'])
+         inout.across_avg(subs, gd[network], inout.abs_pearson,'f_scores')
+         gd['across_f_scores_all'].append(gd[network]['across_subj_avg_f_scores'])
+    for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
+        gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
+    
+'''ICC stuff'''
+def icc_vtx(chap_dir,ivp,vec,vtx):
+    subs=inout.get_subs(chap_dir)
+    mat = np.empty((len(subs),2))
+    for i,sub in enumerate(subs):
+        mat[i,0] = ivp[sub]['test']['vecs'][:,vec][vtx]
+        mat[i,1] = ivp[sub]['retest']['vecs'][:,vec]
+    return mat
+>>>>>>> af9f4a9d462705e48660ed8932af09015aec2d50

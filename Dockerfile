@@ -151,6 +151,9 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda install -c mrtrix3 mrtrix3 \
     && sync && conda clean -y --all && sync \
     && pip3 install vtk matplotlib pandas numpy \
+    && pip3 install vtk \
+    && pip3 install matplotlib \
+    && pip3 install nilearn \
     && rm -rf ~/.cache/pip* \
     && sync
 
@@ -183,4 +186,4 @@ RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/r
 
 WORKDIR /home/neuro
 
-#ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
+ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]

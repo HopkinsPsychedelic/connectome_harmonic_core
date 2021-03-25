@@ -14,6 +14,10 @@ import test_retest_fxns as t_rt
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler,normalize
+import utility_functions as uts
+import os
+from glob import glob
+import statistics as stats
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -268,6 +272,19 @@ def network_verts(network, parcel_csv, dtseries):
     return np.array(network_verts)
 
 '''
+#NET VERTS workstation
+parcel_csv = pd.read_csv('/data2/Brian/connectome_harmonics/Parcels/Parcels.csv')
+dtseries = np.array(np.loadtxt('/data2/Brian/connectome_harmonics/Gordon_Parcels_LR.dtseries.txt'))
+dtseries = np.expand_dims(dtseries,1)
+masked_vecs = np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-114823/ses-test/vecs.npy')
+masked_vecs = np.delete(masked_vecs,0,axis=1)
+net_verts = {}
+for network in list(set(parcel_csv['Community'])):
+    net_verts[network] = {} 
+    net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
+    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/data2/Brian/connectome_harmonics/mask.npy'))
+
+#NET VERTS mac
 parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
 dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
 dtseries = np.expand_dims(dtseries,1)
@@ -277,13 +294,39 @@ net_verts = {}
 for network in list(set(parcel_csv['Community'])):
     net_verts[network] = {} 
     net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
-    net_verts[network]['corrs'] = []
-    for i in range(0,99):
-       net_verts[network]['corrs'].append(abs(pearsonr(net_verts[network]['verts'],masked_vecs[:,i])[0])) 
-    
-    
+    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
+
+
+'''
+def get_subs(chap_dir):
+   subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
+   subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+   for sub in ['test_avg', 'retest_avg', 'total_avg']:
+        if os.path.exists(f'{chap_dir}/sub-{sub}'):
+            subs.remove(sub)
+   return subs
+
+def mofl(list_of_lists):
+    return np.mean(np.array(list_of_lists),axis=0)
+
+def across_avg(subs,dic,fxn,data): #dic doesn't have to be overall dict
+    dic[f'across_subj_all_{data}'] = []
+    for sub in subs:
+        dic[sub][f'c_sub_all_{data}'] = []
+        for c_sub in subs:
+            if c_sub != sub:
+                dic[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    dic[sub][c_sub][ses] = fxn(dic[sub][ses][f'{data}'],dic[c_sub][ses][f'{data}'])
+                dic[sub][f'c_sub_all_{data}'].append((dic[sub][c_sub]['test'] + dic[sub][c_sub]['retest'])/2)
+        dic[f'across_subj_all_{data}'].append(stats.mean(dic[sub][f'c_sub_all_{data}']))
+    dic[f'across_subj_avg_{data}'] = stats.mean(dic[sub][f'c_sub_all_{data}'])
+                
+def abs_pearson(x,y):
+    return abs(pearsonr(x,y)[0])
     
 
+'''
 def read_gifti_surface(filename):
     data=nib.load(filename)
     points=data.darrays[1].data
