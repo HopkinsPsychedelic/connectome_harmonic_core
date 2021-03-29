@@ -45,7 +45,7 @@ def qsi_chap(u, args, sub):
                     for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/{ses}/func'): #look for preprocessed images in fmriprep dir 
                         if 'space-T1w_desc-preproc_bold.nii.gz' in file:
                             u[f'{sub}_info'][ses]['func'].append(file)  
-            cs.prep_harmonics_bids(args, sub, u, multises, ses)                                  
+            prep_harmonics_bids(args, sub, u, multises, ses)                                  
     else: #if sub has just one session
         print('[CHAP] Detected only one session')
         multises = False
@@ -57,47 +57,56 @@ def qsi_chap(u, args, sub):
             for file in os.listdir(f'{args.fprep_dir}/sub-{sub}/func'):
                 if 'space-T1w_desc-preproc_bold.nii.gz' in file: 
                     u[f'{sub}_info']['func'].append(file)   
-        cs.prep_harmonics_bids(args, sub, u, multises, ses = '')
+        prep_harmonics_bids(args, sub, u, multises, ses = '')
 
 def prep_harmonics_bids(args, sub, u, multises, ses):
-    tck_name = u[f'{sub}_info'][ses]['streamlines'].split('/')[-1][:-4]
-    print('[CHAP] Saving streamline endpoints and converting to vtk...')
-    subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
-    u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk' #save endpoints to u
-    for file in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}'):
-        if '_endpoints.tck' in file:
-            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
-    print('[CHAP] Finished MRtrix commands')
-    #save output of surface reconstruction to u
-    u[f'{sub}_info'][ses]['surfs']['lh'] = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
-    u[f'{sub}_info'][ses]['surfs']['rh'] = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
-    #run chcs function
-    construct_harmonics_calculate_spectra(args, sub, ses, u, multises)
+    if(ses == ''):
+        tck_name = u[f'{sub}_info']['streamlines'].split('/')[-1][:-4]
+        print('[CHAP] Saving streamline endpoints and converting to vtk...')
+        #for local testing, TODO: comment out 
+        subprocess.check_call("/home/quintin_frerichs/connectome_harmonic_core/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}sub-{sub}/dwi', tck_name, f'{args.output_dir}chap/sub-{sub}'), shell=True) #run mrtrix bash script
+        #for dcoker version
+        #subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'), shell=True) #run mrtrix bash script
+        u[f'{sub}_info']['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{tck_name}_endpoints.vtk' #save endpoints to u
+        for file in os.listdir(f'{args.output_dir}chap/sub-{sub}/'):
+            if '_endpoints.tck' in file:
+                os.remove(f'{args.output_dir}/chap/sub-{sub}/{file}') #remove endpoints tck
+        print('[CHAP] Finished MRtrix commands')
+        #save output of surface reconstruction to u
+        u[f'{sub}_info']['surfs'] = {}
+        u[f'{sub}_info']['surfs']['lh'] = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
+        u[f'{sub}_info']['surfs']['rh'] = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
+        #run chcs function
+        construct_harmonics_calculate_spectra(args, sub, ses, u, multises)    
+    else:
+        pass
 
 def construct_harmonics_calculate_spectra(args, sub, ses, u, multises): 
-    if 'vtk' in u[f'{sub}_info'][ses]['surfs']['lh']: #probably used bids method, expects vtk surfaces
-        sc,si=inout.read_vtk_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh']) #generate sc and si (see top of file) 
+    #TODO - implementation for multises, removed [ses]
+    if 'vtk' in u[f'{sub}_info']['surfs']['lh']: #probably used bids method, expects vtk surfaces
+        print(u[f'{sub}_info']['surfs']['lh'])
+        sc,si=inout.read_vtk_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh']) #generate sc and si (see top of file) 
     else: #probably used hcp method, expects gii surfaces
-        sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
-        sc_inf,si_inf = inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh_inf'], u[f'{sub}_info'][ses]['surfs']['rh_inf'], hcp = True)
+        sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh'], hcp = True)
+        sc_inf,si_inf = inout.read_gifti_surface_both_hem(u[f'{sub}_info']['surfs']['lh_inf'], u[f'{sub}_info']['surfs']['rh_inf'], hcp = True)
     print('[CHAP] Saved surface coordinates and surface indices')
-    ec=inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
+    ec=inout.read_streamline_endpoints(u[f'{sub}_info']['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
     print('[CHAP] Saved endpoint coordinates')
     surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si    
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/surf_mat', surf_mat) #save out surface matrix
     print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
     connectome = struc_conn_mat + surf_mat #sum connections and surface
     if args.hcp_dir:
         connectome = uts.mask_connectivity_matrix(connectome, u['mask']) #mask medial wall
         print('[CHAP] Masked out medial wall vertices; computing harmonics...')
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
     vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvectors (see decomp.py)
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
-    np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
+    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/vis') #create visualization output directory
+    np.save(f'{args.output_dir}/chap/sub-{sub}/vals',vals) #save np array eigenvals
+    np.save(f'{args.output_dir}/chap/sub-{sub}/vecs',vecs) #save np array eigenvecs
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) #harmonics.vtk
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
