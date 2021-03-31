@@ -130,11 +130,13 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     np.save(f'{args.output_dir}/chap/sub-{sub}/vecs',vecs) #save np array eigenvecs
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) #harmonics.vtk
+        inout.visualize_harmonics(sub, ses, si, sc, vecs, f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/')
         if is_hcp:
             inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
     else:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
+        inout.visualize_harmonics(sub, 'single', si, sc, vecs, f'{args.output_dir}/chap/sub-{sub}/vis/')
         if is_hcp:
             inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_infl_harmonics.vtk',sc_inf,si_inf,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')

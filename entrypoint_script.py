@@ -45,6 +45,7 @@ parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3mm')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. True or False')
 args = parser.parse_args() 
+print(args)
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
     shutil.copyfile(args.fs_license_file, '/opt/freesurfer-6.0.0/license.txt')

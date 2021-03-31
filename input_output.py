@@ -14,7 +14,8 @@ import test_retest_fxns as t_rt
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler,normalize
-
+from nilearn import plotting
+import matplotlib.pyplot as plt
 '''
 def save_surface(filename,points,edges,feature=None):
     mesh = tvtk.PolyData(points=points, polys=edges)
@@ -266,6 +267,17 @@ def network_verts(network, parcel_csv, dtseries):
         else:
             network_verts.append(0)
     return np.array(network_verts)
+#usage: if only one session, input 'ses' as 'single', if multises, use session number
+def visualize_harmonics(sub, ses, si, sc, vecs, output_dir):   
+    for i in range(vecs[0].shape):
+        vec = vecs[:,i]
+        fig,ax = plt.subplots(2, 2, subplot_kw={'projection': '3d'})
+        plt.title(f'ev_{i} {sub} {ses}')
+        plot = plotting.plot_surf_stat_map([sc,si],vec,view='dorsal',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, vmin=-.005, axes=ax[0][0], figure=fig)
+        plot = plotting.plot_surf_stat_map([sc,si],vec,view='medial',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, vmin=-.005, axes=ax[0][1], figure=fig)
+        plot = plotting.plot_surf_stat_map([sc,si],vec,view='lateral',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, vmin=-.005, axes=ax[1][0], figure=fig)
+        plt.close(fig)
+
 
 '''
 parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
