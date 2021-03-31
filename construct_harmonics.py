@@ -25,7 +25,10 @@ from itertools import product
 def qsi_chap(u, args, sub):
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
     print(f'[CHAP] Reconstructing surfaces for {sub}...')
-    os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer output
+    #for local testing, TODO: comment out/remove for production
+    os.system(f'bash /home/quintin_frerichs/connectome_harmonic_core/surface_resample.sh {args.surf_dir}sub-{sub}/surf /home/quintin_frerichs/connectome_harmonic_core') #run surface reconstruction script on freesurfer output
+    #os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer output
+    print(f'[CHAP] Reconstructing surfaces for {sub} complete...')
     if args.fprep_dir:
         u[f'{sub}_info']['func'] = [] #where functional files will go
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
@@ -74,21 +77,39 @@ def prep_harmonics_bids(args, sub, u, multises, ses):
         print('[CHAP] Finished MRtrix commands')
         #save output of surface reconstruction to u
         u[f'{sub}_info']['surfs'] = {}
-        u[f'{sub}_info']['surfs']['lh'] = f'{args.surf_dir}/sub-{sub}/surf/lh.white.corresponded.vtk'
-        u[f'{sub}_info']['surfs']['rh'] = f'{args.surf_dir}/sub-{sub}/surf/rh.white.corresponded.vtk'
+        u[f'{sub}_info']['surfs']['lh'] = f'{args.surf_dir}sub-{sub}/surf/lh.white.corresponded.vtk'
+        u[f'{sub}_info']['surfs']['rh'] = f'{args.surf_dir}sub-{sub}/surf/rh.white.corresponded.vtk'
         #run chcs function
         construct_harmonics_calculate_spectra(args, sub, ses, u, multises)    
     else:
-        pass
+        tck_name = u[f'{sub}_info']['streamlines'].split('/')[-1][:-4]
+        print('[CHAP] Saving streamline endpoints and converting to vtk...')
+        #for local testing, TODO: comment out 
+        subprocess.check_call("/home/quintin_frerichs/connectome_harmonic_core/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
+        #for dcoker version
+        #subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/'), shell=True) #run mrtrix bash script
+        u[f'{sub}_info']['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk' #save endpoints to u
+        for file in os.listdir(f'{args.output_dir}chap/sub-{sub}/{ses}'):
+            if '_endpoints.tck' in file:
+                os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
+        print('[CHAP] Finished MRtrix commands')
+        #save output of surface reconstruction to u
+        u[f'{sub}_info']['surfs'] = {}
+        u[f'{sub}_info']['surfs']['lh'] = f'{args.surf_dir}sub-{sub}/surf/lh.white.corresponded.vtk'
+        u[f'{sub}_info']['surfs']['rh'] = f'{args.surf_dir}sub-{sub}/surf/rh.white.corresponded.vtk'
+        #run chcs function
+        construct_harmonics_calculate_spectra(args, sub, ses, u, multises)
 
 def construct_harmonics_calculate_spectra(args, sub, ses, u, multises): 
     #TODO - implementation for multises, removed [ses]
+    is_hcp = False
     if 'vtk' in u[f'{sub}_info']['surfs']['lh']: #probably used bids method, expects vtk surfaces
         print(u[f'{sub}_info']['surfs']['lh'])
-        sc,si=inout.read_vtk_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh']) #generate sc and si (see top of file) 
+        sc,si=inout.read_vtk_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh']) #generate sc and si (see top of file)
     else: #probably used hcp method, expects gii surfaces
         sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh'], hcp = True)
         sc_inf,si_inf = inout.read_gifti_surface_both_hem(u[f'{sub}_info']['surfs']['lh_inf'], u[f'{sub}_info']['surfs']['rh_inf'], hcp = True)
+        is_hcp  = True
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(u[f'{sub}_info']['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
     print('[CHAP] Saved endpoint coordinates')
@@ -109,11 +130,13 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     np.save(f'{args.output_dir}/chap/sub-{sub}/vecs',vecs) #save np array eigenvecs
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,vecs) #harmonics.vtk
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
+        if is_hcp:
+            inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_infl_harmonics.vtk',sc_inf,si_inf,vecs) #inflated harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
     else:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,vecs)
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_infl_harmonics.vtk',sc_inf,si_inf,vecs)
+        if is_hcp:
+            inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_infl_harmonics.vtk',sc_inf,si_inf,vecs)
         print(f'[CHAP] Saved harmonics for {sub}')
     if args.fprep_dir: #if functional images are specified (BIDS method)
         inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
@@ -135,24 +158,25 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
             os.system(f'bash /home/neuro/repo/volume_to_surface_map_fMRI.sh {args.surf_dir}/sub-{sub}/surf {args.fprep_dir}/sub-{sub}/{ses}/func/{vol} {full_path_lh} {full_path_rh}')
             bids_stuff = inout.get_bids_stuff(full_path_lh) #part of filename
             func_spectra(args, sub, ses, full_path_lh, full_path_rh, bids_stuff, vecs, vals)
-    elif any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #functional stuff, HCP method
-        func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'    
-        inout.if_not_exist_make(func_dir)
-        if 'rest1_lr' in u[f'{sub}_info'][ses]: #if rest1 data, assuming also rest2
-            for n in ['1','2']:
-                for dire in ['lr', 'rl']:
-                    scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
-                    bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
-                    print('[CHAP] Extracting timecourse from HCP surface files...')
-                    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
-                    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
-                    u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
-                    u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
-                print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
-                u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
-                func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
-            for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
-                os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
+    if is_hcp:        
+        if any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #functional stuff, HCP method
+            func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'    
+            inout.if_not_exist_make(func_dir)
+            if 'rest1_lr' in u[f'{sub}_info'][ses]: #if rest1 data, assuming also rest2
+                for n in ['1','2']:
+                    for dire in ['lr', 'rl']:
+                        scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
+                        bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
+                        print('[CHAP] Extracting timecourse from HCP surface files...')
+                        os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
+                        os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
+                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
+                    print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
+                    u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
+                    func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
+                for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
+                    os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
     print(f'[CHAP] Finished session: {ses}')
 
 def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
