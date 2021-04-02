@@ -269,13 +269,13 @@ def network_verts(network, parcel_csv, dtseries):
     return np.array(network_verts)
 #usage: if only one session, input 'ses' as 'single', if multises, use session number
 def visualize_harmonics(sub, ses, si, sc, vecs, output_dir):   
-    for i in range(vecs[0].shape):
-        vec = vecs[:,i]
-        fig,ax = plt.subplots(2, 2, subplot_kw={'projection': '3d'})
-        plt.title(f'ev_{i} {sub} {ses}')
-        plot = plotting.plot_surf_stat_map([sc,si],vec,view='dorsal',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, vmin=-.005, axes=ax[0][0], figure=fig)
-        plot = plotting.plot_surf_stat_map([sc,si],vec,view='medial',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, vmin=-.005, axes=ax[0][1], figure=fig)
-        plot = plotting.plot_surf_stat_map([sc,si],vec,view='lateral',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, vmin=-.005, axes=ax[1][0], figure=fig)
+    for i in range(vecs[0].shape[0]):
+        fig,ax = plt.subplots(2, 2, subplot_kw={'projection': '3d'}, dpi=1000)
+        fig.suptitle(f'ev_{i} {sub} {ses}')
+        plot = plotting.plot_surf_stat_map([sc,si],vecs[:,i],view='dorsal',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, axes=ax[0][0], figure=fig)
+        plot = plotting.plot_surf_stat_map([sc,si],vecs[:,i],view='medial',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, axes=ax[0][1], figure=fig)
+        plot = plotting.plot_surf_stat_map([sc[:int(sc.shape[0]/2)],si[:int(si.shape[0]/2)]],vecs[:int(vecs.shape[0]/2),i],view='medial',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, axes=ax[1][0], figure=fig)
+        plot = plotting.plot_surf_stat_map([sc,si],vecs[:,i],view='lateral',cmap='RdBu',output_file=f'{output_dir}ev_{i}_ses_{ses}.png', colorbar=False,vmax=.005, axes=ax[1][1], figure=fig)
         plt.close(fig)
 
 
