@@ -794,9 +794,7 @@ def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs e.g. 1
     return sm['within_subj_avg'], sm['across_subj_avg']
 '''
 
-<<<<<<< HEAD
-'''
-=======
+
 def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts, sub, ses, i): #takes MC (null) harmonics, matches to real pca, returns MI and f-score
     global mcvp
     begin_time = datetime.datetime.now()
@@ -877,4 +875,4 @@ def icc_vtx(chap_dir,ivp,vec,vtx):
         mat[i,0] = ivp[sub]['test']['vecs'][:,vec][vtx]
         mat[i,1] = ivp[sub]['retest']['vecs'][:,vec]
     return mat
->>>>>>> af9f4a9d462705e48660ed8932af09015aec2d50
+
