@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -26,9 +27,10 @@ def qsi_chap(u, args, sub):
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
     print(f'[CHAP] Reconstructing surfaces for {sub}...')
     #for local testing, TODO: comment out/remove for production
-    os.system(f'bash /home/quintin_frerichs/connectome_harmonic_core/surface_resample.sh {args.surf_dir}sub-{sub}/surf /home/quintin_frerichs/connectome_harmonic_core') #run surface reconstruction script on freesurfer output
+    #Tring to remove volume to surface reconstruction for fsLR space 
+    #os.system(f'bash /home/quintin_frerichs/connectome_harmonic_core/surface_resample.sh {args.surf_dir}sub-{sub}/surf /home/quintin_frerichs/connectome_harmonic_core') #run surface reconstruction script on freesurfer output
     #os.system(f'bash /home/neuro/repo/surface_resample.sh {args.surf_dir}/sub-{sub}/surf /home/neuro/repo') #run surface reconstruction script on freesurfer output
-    print(f'[CHAP] Reconstructing surfaces for {sub} complete...')
+    #print(f'[CHAP] Reconstructing surfaces for {sub} complete...')
     if args.fprep_dir:
         u[f'{sub}_info']['func'] = [] #where functional files will go
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
@@ -92,7 +94,7 @@ def prep_harmonics_bids(args, sub, u, multises, ses):
         for file in os.listdir(f'{args.output_dir}chap/sub-{sub}/{ses}'):
             if '_endpoints.tck' in file:
                 os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
-        print('[CHAP] Finished MRtrix commands')
+        print('[CHAP] Finished MRtrix commands' + f'{args.surf_dir}')
         #save output of surface reconstruction to u
         u[f'{sub}_info']['surfs'] = {}
         u[f'{sub}_info']['surfs']['lh'] = f'{args.surf_dir}sub-{sub}/surf/lh.white.corresponded.vtk'
@@ -104,7 +106,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     #TODO - implementation for multises, removed [ses]
     is_hcp = False
     if 'vtk' in u[f'{sub}_info']['surfs']['lh']: #probably used bids method, expects vtk surfaces
-        print(u[f'{sub}_info']['surfs']['lh'])
+        print("Surfaces:" + u[f'{sub}_info']['surfs']['lh'])
         sc,si=inout.read_vtk_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh']) #generate sc and si (see top of file)
     else: #probably used hcp method, expects gii surfaces
         sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info']['surfs']['lh'], u[f'{sub}_info']['surfs']['rh'], hcp = True)
