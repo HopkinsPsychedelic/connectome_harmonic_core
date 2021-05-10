@@ -12,7 +12,6 @@ import matrix_methods as mm
 import input_output as inout
 import decomp as dcp
 from scipy import sparse
-import numpy as np
 import utility_functions as uts
 from sklearn.metrics import pairwise_distances_chunked, pairwise,f1_score
 from sklearn.feature_selection import mutual_info_regression
@@ -26,6 +25,7 @@ import statistics as stats
 from nilearn import plotting
 from random import shuffle
 import datetime
+import random
 
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -272,8 +272,8 @@ def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
            ivp[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
            ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
-           mask = np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy')
-           #/data2/Brian/connectome_harmonics/mask.npy
+           mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
+           #
            for ev in range(n_evecs):
                ivp[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
@@ -769,8 +769,8 @@ def binarize_harms(vecs):
 
 def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs e.g. 100
     indices = np.arange(struc_conn_mat.shape[0]) #gets the number of rows 
-    np.random.shuffle(indices) #shuffle cols?
-    shuffled_mat = struc_conn_mat[indices, :] 
+    np.random.shuffle(indices) 
+    shuffled_mat = struc_conn_mat[indices, :] #shuffle rows (change)
     ut = sparse.triu(shuffled_mat) #gets upper triangle
     connectome = ut + ut.T + surf_mat #adj matrix is ut + transpose for lower triangle + surface matrix
     connectome = uts.mask_connectivity_matrix(connectome,mask)
@@ -780,7 +780,30 @@ def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs e.g. 1
     for ev in range(n_evecs-1):
         unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
     return vecs,unmasked_vecs
-    
+
+
+mask_mtx = np.ones([10,10]) #all ones
+mask_mtx = np.tril(mask_mtx,-1) #lower triangle ones
+mask_mtx = sparse.csr_matrix(mask_mtx)
+mask = sparse.find(mask_mtx) #indices of ones
+np.save('struc_conn_mat_mask.npy',mask)
+#mask = np.argwhere(mask_mtx) #all indices of lower triangle (possible spots for 1s)
+len_mask = len(mask[0]) #how many indices there are 
+
+mtx = sparse.random(10,10,format='csr',density=0.1) #struc_conn_mat
+#mtx = sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/struc_conn_mat.npz')
+lmtx = sparse.tril(mtx,-1,format='csr') #lower triangle
+tmp_mtx = np.zeros((10,10)) #empty lower triangle to set (change)
+lvals = sparse.csr_matrix.count_nonzero(lmtx) #how many 1s in lmtx?
+coordinate_indices = random.sample(range(len_mask),lvals) #choose n=lvals random indices to fill with ones
+for idx in coordinate_indices:
+    tmp_mtx[mask[0][idx]][mask[1][idx]] = 1 #at randomly chosen index from mask, put a 1
+tmp_mtx = sparse.csr_matrix(tmp_mtx)
+mtx = tmp_mtx + tmp_mtx.T
+
+
+
+#r_vecs,r_uv = randomize_tracts(sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/struc_conn_mat.npz'),sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/surf_mat.npz'),100,np.load('/data2/Brian/connectome_harmonics/mask.npy'))    
     
     
 '''                    
