@@ -298,18 +298,21 @@ for network in list(set(parcel_csv['Community'])):
 
 
 '''
-def get_subs(chap_dir):
+def get_subs(chap_dir,functional=False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
    for sub in ['test_avg', 'retest_avg', 'total_avg']:
         if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
+   if functional == True:
+        subs.remove('341834')
+        subs.remove('627549')
    return subs
 
 def mofl(list_of_lists):
     return np.mean(np.array(list_of_lists),axis=0)
 
-def across_avg(subs,dic,fxn,data): #dic doesn't have to be overall dict
+def across_avg(subs,dic,fxn,data): #dic doesn't have to be overall dict #data is just name
     dic[f'across_subj_all_{data}'] = []
     for sub in subs:
         dic[sub][f'c_sub_all_{data}'] = []

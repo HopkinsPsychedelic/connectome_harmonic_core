@@ -258,11 +258,7 @@ def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
     n_evecs = n_evecs-1
     global ivp
     ivp, ivp['test'], ivp['retest'] = {}, {}, {}
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*"))
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
-    for sub in ['test_avg', 'retest_avg', 'total_avg']:
-        if os.path.exists(f'{chap_dir}/sub-{sub}'):
-            subs.remove(sub)
+    subs = inout.get_subs(chap_dir)
     ivp['evlist'] = []
     for sub in subs:
         ivp[sub] = {}    
@@ -273,7 +269,6 @@ def ind_vs_pca(chap_dir, n_evecs, n_evecs_for_pca, n_comp, mask, lh, rh):
            ivp[sub][ses]['vecs'] = np.delete(ivp[sub][ses]['vecs'], 0, axis=1)
            ivp[sub][ses]['unmasked_vecs'] = np.empty([64984,len(ivp[sub][ses]['vecs'][0])])
            mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
-           #
            for ev in range(n_evecs):
                ivp[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(ivp[sub][ses]['vecs'][:,ev],mask)
            ivp['evlist'].append(ivp[sub][ses]['vecs'][:,0:n_evecs])
@@ -592,13 +587,11 @@ spectra/functional shit
 
 def zero_crossings(ts):
     return ((ts[:-1] * ts[1:]) < 0).sum()        
-        
-def ev_freq(chap_dir, n_evecs):
+
+def load_spectra(chap_dir):
     global s
     s = {}
-    s['freq_avg'] = []
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    subs = inout.get_subs(chap_dir,functional=True)
     for sub in subs:
         s[sub] = {}
         for ses in ['test','retest']:
@@ -614,9 +607,14 @@ def ev_freq(chap_dir, n_evecs):
                         s[sub][ses][scan][spec][t] = np.delete(s[sub][ses][scan][spec][t], 0, axis=0)
                 s[sub][ses][scan]['power']['normalized'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/powerspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_normalized_power_spectrum.npy')
                 s[sub][ses][scan]['power']['normalized'] = np.delete(s[sub][ses][scan]['power']['normalized'], 0, axis=0)
+     
+def ev_freq(chap_dir, n_evecs): #n_evecs = 99 #looks at frequency at each EV across subjects
+    load_spectra(chap_dir)
+    s['freq_avg'] = []
+    subs = inout.get_subs(chap_dir,functional=True)
     for sub in subs:
         s[sub]['freq'] = []
-        for ev in range(n_evecs-1):
+        for ev in range(n_evecs):
             s[sub][ev] = []
             for ses in ['test','retest']:
                 for scan in ['REST1', 'REST2']:
@@ -627,32 +625,15 @@ def ev_freq(chap_dir, n_evecs):
     plt.plot(s['freq_avg'])
     
 def freq_comp(chap_dir, n_evecs):
-    global s
-    s = {}
+    load_spectra(chap_dir)
     s['freq_avg'] = []
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-    for sub in subs:
-        s[sub] = {}
-        for ses in ['test','retest']:
-            s[sub][ses] = {}
-            for scan in ['REST1', 'REST2']:
-                s[sub][ses][scan] = {}
-                s[sub][ses][scan]['power'], s[sub][ses][scan]['energy'] = {}, {}
-                s[sub][ses][scan]['recon'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/reconspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_dynamic_reconstruction_spectrum.npy')
-                s[sub][ses][scan]['recon'] = np.delete(s[sub][ses][scan]['recon'], 0, axis=0)
-                for spec in ['power', 'energy']:
-                    for t in ['mean', 'dynamic']:
-                        s[sub][ses][scan][spec][t] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/{spec}spectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_{t}_{spec}_spectrum.npy')
-                        s[sub][ses][scan][spec][t] = np.delete(s[sub][ses][scan][spec][t], 0, axis=0)
-                s[sub][ses][scan]['power']['normalized'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/func/{scan}/powerspectra/sub-{sub}_ses-{ses}_task-{scan.lower()}_normalized_power_spectrum.npy')
-                s[sub][ses][scan]['power']['normalized'] = np.delete(s[sub][ses][scan]['power']['normalized'], 0, axis=0)  
     s['within_subj_all'] = []
     s['across_subj_all'] = []
+    subs = inout.get_subs(chap_dir,functional=True)
     for sub in subs:
         for ses in ['test','retest']:
             s[sub][ses]['freq'] = []
-            for ev in range(n_evecs-1):
+            for ev in range(n_evecs):
                 s[sub][ses][ev] = []
                 for scan in ['REST1', 'REST2']:
                     s[sub][ses][ev].append(zero_crossings(s[sub][ses][scan]['recon'][ev]))
@@ -767,41 +748,52 @@ def binarize_harms(vecs):
                 b_vecs[:,vec][vtx] = 1 if vecs[:,vec][vtx]>0 else 0
     return b_vecs 
 
-def randomize_tracts(struc_conn_mat,surf_mat,n_evecs,mask): #full n_evecs e.g. 100
-    indices = np.arange(struc_conn_mat.shape[0]) #gets the number of rows 
-    np.random.shuffle(indices) 
-    shuffled_mat = struc_conn_mat[indices, :] #shuffle rows (change)
-    ut = sparse.triu(shuffled_mat) #gets upper triangle
-    connectome = ut + ut.T + surf_mat #adj matrix is ut + transpose for lower triangle + surface matrix
-    connectome = uts.mask_connectivity_matrix(connectome,mask)
-    vals,vecs=dcp.lapDecomp(connectome, n_evecs)
-    vecs = np.delete(vecs, 0, axis=1)
+'''
     unmasked_vecs = np.empty([64984,n_evecs-1])
     for ev in range(n_evecs-1):
         unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
     return vecs,unmasked_vecs
-
-
+'''
+'''
 mask_mtx = np.ones([10,10]) #all ones
+ind = np.tril_indices(60,-1)
 mask_mtx = np.tril(mask_mtx,-1) #lower triangle ones
 mask_mtx = sparse.csr_matrix(mask_mtx)
 mask = sparse.find(mask_mtx) #indices of ones
 np.save('struc_conn_mat_mask.npy',mask)
 #mask = np.argwhere(mask_mtx) #all indices of lower triangle (possible spots for 1s)
-len_mask = len(mask[0]) #how many indices there are 
-
-mtx = sparse.random(10,10,format='csr',density=0.1) #struc_conn_mat
-#mtx = sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/struc_conn_mat.npz')
-lmtx = sparse.tril(mtx,-1,format='csr') #lower triangle
-tmp_mtx = np.zeros((10,10)) #empty lower triangle to set (change)
-lvals = sparse.csr_matrix.count_nonzero(lmtx) #how many 1s in lmtx?
-coordinate_indices = random.sample(range(len_mask),lvals) #choose n=lvals random indices to fill with ones
-for idx in coordinate_indices:
-    tmp_mtx[mask[0][idx]][mask[1][idx]] = 1 #at randomly chosen index from mask, put a 1
-tmp_mtx = sparse.csr_matrix(tmp_mtx)
-mtx = tmp_mtx + tmp_mtx.T
+'''
+def load_mask():
+    mask_zero = np.load('/data2/Brian/connectome_harmonics/mask_zero.npy')
+    mask_one = np.load('/data2/Brian/connectome_harmonics/mask_one.npy')
+    len_mask = len(mask_zero) #how many indices there are
+    return mask_zero,mask_one,len_mask
 
 
+#mtx = sparse.random(10,10,format='csr',density=0.1) #struc_conn_mat
+    #once per sub/ses
+def load_struc_conn_mat(chap_dir,sub,ses):
+    mtx = sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/struc_conn_mat.npz')
+    lmtx = sparse.tril(mtx,-1,format='csr') #lower triangle
+    lvals = sparse.csr_matrix.count_nonzero(lmtx) #how many 1s in lmtx?
+    surf_mat = sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/surf_mat.npz')
+    return lvals,surf_mat
+
+#once per harmonics
+def null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy')):
+    tmp_mtx = np.zeros((64984,64984)) #empty lower triangle to set
+    coordinate_indices = random.sample(range(len_mask),lvals) #choose n=lvals random indices to fill with ones
+    for idx in coordinate_indices:
+        tmp_mtx[mask_zero[idx]][mask_one[idx]] = 1 #at randomly chosen index from mask, put a 1      
+    tmp_mtx = sparse.csr_matrix(tmp_mtx) #38 seconds
+    connectome = tmp_mtx + tmp_mtx.T + surf_mat
+    connectome = uts.mask_connectivity_matrix(connectome,mask)
+    vals,vecs=dcp.lapDecomp(connectome, 100)
+    vecs = np.delete(vecs, 0, axis=1)
+    unmasked_vecs = np.empty([64984,99])
+    for ev in range(99):
+        unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
+    return vecs,unmasked_vecs
 
 #r_vecs,r_uv = randomize_tracts(sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/struc_conn_mat.npz'),sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/surf_mat.npz'),100,np.load('/data2/Brian/connectome_harmonics/mask.npy'))    
     
@@ -843,8 +835,9 @@ def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts, sub, ses, i): #takes MC (nu
     return mcvp
 #vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
 
-def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
+def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc):
     subs = inout.get_subs(chap_dir)
+    mask_zero,mask_one,len_mask=load_mask()
     global gd 
     gd = {}
     gd['across_pearson_all'],gd['across_f_scores_all'] = [],[]
@@ -859,22 +852,23 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mask,mc):
             for ses in ['test','retest']:
                 gd[network][sub][ses] = {}
         for ses in ['test','retest']:
-            iters=1 if mc==False else 2
+            lvals,surf_mat = load_struc_conn_mat(chap_dir,sub,ses)
+            iters=1 if mc==False else 3
             for i in range(iters):
                 if mc == True:
-                    vecs = randomize_tracts(sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/struc_conn_mat.npz'),sparse.load_npz(f'{chap_dir}/sub-{sub}/ses-{ses}/surf_mat.npz'),n_evecs+1,mask)[0]
+                    vecs,unmasked_vecs = null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy'))
                 else:
                     vecs = ivp[sub][ses]['vecs']
                 mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
                 for network in net_verts:
                     gd[network]['pearsons'].append(mcvp[network]['pearsons'])
                     gd[network]['f_scores'].append(mcvp[network]['f_scores'])
-                    if mc==False:
-                        gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
-                        gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
-                        if ses=='retest':
-                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
-                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
+                    #if mc==False: #why tho
+                    gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
+                    gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
+                    if ses=='retest':
+                        gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
+                        gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
         for network in net_verts:
             gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons'])
             gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores'])
