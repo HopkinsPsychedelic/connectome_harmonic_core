@@ -44,6 +44,7 @@ parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring 
 parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3mm')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. True or False')
+parser.add_argument('--skip_func', type = bool, help= 'just find structural harmonics')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:
@@ -57,6 +58,9 @@ if not args.tol:
 #read nnum number, set default to 20
 if not args.nnum:
     args.nnum = 20
+#
+if not args.skip_func:
+    args.skip_func = False
 #create CHAP output directory
 inout.if_not_exist_make(f"{args.output_dir}/chap")
 #set empty u dict

@@ -134,23 +134,24 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
             bids_stuff = inout.get_bids_stuff(full_path_lh) #part of filename
             func_spectra(args, sub, ses, full_path_lh, full_path_rh, bids_stuff, vecs, vals)
     elif any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #functional stuff, HCP method
-        func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'    
-        inout.if_not_exist_make(func_dir)
-        if 'rest1_lr' in u[f'{sub}_info'][ses]: #if rest1 data, assuming also rest2
-            for n in ['1','2']:
-                for dire in ['lr', 'rl']:
-                    scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
-                    bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
-                    print('[CHAP] Extracting timecourse from HCP surface files...')
-                    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
-                    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
-                    u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
-                    u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
-                print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
-                u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
-                func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
-            for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
-                os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
+        if args.skip_func == False:
+            func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'    
+            inout.if_not_exist_make(func_dir)
+            if 'rest1_lr' in u[f'{sub}_info'][ses]: #if rest1 data, assuming also rest2
+                for n in ['1','2']:
+                    for dire in ['lr', 'rl']:
+                        scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
+                        bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
+                        print('[CHAP] Extracting timecourse from HCP surface files...')
+                        os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
+                        os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
+                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
+                    print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
+                    u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
+                    func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
+                for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
+                    os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
     print(f'[CHAP] Finished session: {ses}')
 
 def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
