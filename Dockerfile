@@ -148,10 +148,12 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set auto_update_conda false \    
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
-    && conda install -yq scikit-learn scipy meshio nibabel \ 
+    && conda create -n chap-env \
+    && conda activate chap-env \
+    && conda install -yq scikit-learn scipy \ 
     && conda install -c mrtrix3 mrtrix3 \
+    && pip install vtk matplotlib pandas numpy nilearn icc nibabel meshio \
     && sync && conda clean -y --all && sync \
-    && pip install vtk matplotlib pandas numpy nilearn icc \
     && rm -rf ~/.cache/pip* \
     && sync
 
@@ -184,4 +186,6 @@ RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/r
 
 WORKDIR /home/neuro
 
-ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
+
+
+ENTRYPOINT ["conda", "run", "-n", "chap-env", "python","/home/neuro/repo/entrypoint_script.py"]
