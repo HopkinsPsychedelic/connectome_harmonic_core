@@ -136,6 +136,7 @@ WORKDIR /home/neuro
 
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
+SHELL ["/bin/bash", "-c"] 
 RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && export PATH="/home/neuro/.local/bin:$PATH" \
     && echo "Downloading Miniconda installer ..." \
