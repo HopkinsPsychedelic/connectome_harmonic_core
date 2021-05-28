@@ -884,7 +884,8 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc):
     for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
         gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
     
-'''ICC stuff'''
+#ICC
+'''
 def icc_vtx(chap_dir,ivp,vec,vtx):
     subs=inout.get_subs(chap_dir)
     mat = np.empty((len(subs),2))
@@ -892,4 +893,4 @@ def icc_vtx(chap_dir,ivp,vec,vtx):
         mat[i,0] = ivp[sub]['test']['vecs'][:,vec][vtx]
         mat[i,1] = ivp[sub]['retest']['vecs'][:,vec]
     return mat
-
+'''
