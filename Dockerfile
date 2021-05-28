@@ -156,9 +156,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda install -yq scikit-learn scipy \ 
     && conda install -c mrtrix3 mrtrix3 \
     && conda install pip \
-    && which pip \
-    && which anaconda \
-    && /anaconda/envs/chap-env/bin/pip install vtk matplotlib pandas numpy nilearn icc nibabel meshio \
+    && pip install vtk matplotlib pandas numpy nilearn icc nibabel meshio \
     && sync && conda clean -y --all && sync \
     && rm -rf ~/.cache/pip* \
     && sync
