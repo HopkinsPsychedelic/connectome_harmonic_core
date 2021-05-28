@@ -780,7 +780,7 @@ def load_struc_conn_mat(chap_dir,sub,ses):
     return lvals,surf_mat
 
 #once per harmonics
-def null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy')):
+def null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask):
     tmp_mtx = np.zeros((64984,64984)) #empty lower triangle to set
     coordinate_indices = random.sample(range(len_mask),lvals) #choose n=lvals random indices to fill with ones
     for idx in coordinate_indices:
