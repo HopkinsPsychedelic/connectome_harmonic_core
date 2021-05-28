@@ -148,6 +148,8 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set auto_update_conda false \    
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
+    && conda init bash \
+    && source ~/.bashrc
     && conda create -n chap-env \
     && conda activate chap-env \
     && conda install -yq scikit-learn scipy \ 
