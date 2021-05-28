@@ -152,10 +152,11 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda init bash \
     && source ~/.bashrc \
     && conda create -n chap-env \
-    && conda activate chap-env \
+    && source activate chap-env \
     && conda install -yq scikit-learn scipy \ 
     && conda install -c mrtrix3 mrtrix3 \
-    && pip install vtk matplotlib pandas numpy nilearn icc nibabel meshio \
+    && conda install pip \
+    && /anaconda/envs/chap-env/bin/pip install vtk matplotlib pandas numpy nilearn icc nibabel meshio \
     && sync && conda clean -y --all && sync \
     && rm -rf ~/.cache/pip* \
     && sync
