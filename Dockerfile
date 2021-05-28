@@ -7,13 +7,9 @@
 # pull request on our GitHub repository:
 # 
 #     https://github.com/ReproNim/neurodocker
-
 FROM debian:buster
-
 USER root
-
 ARG DEBIAN_FRONTEND="noninteractive"
-
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
@@ -51,9 +47,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
-
 ENTRYPOINT ["/neurodocker/startup.sh"]
-
 ENV FSLDIR="/opt/fsl-6.0.3" \
     PATH="/opt/fsl-6.0.3/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
@@ -96,7 +90,6 @@ RUN apt-get update -qq \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT \
     && echo "Installing FSL conda environment ..." \
     && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
-
 ENV FREESURFER_HOME="/opt/freesurfer-6.0.0" \
     PATH="/opt/freesurfer-6.0.0/bin:$PATH"
 RUN apt-get update -qq \
@@ -127,18 +120,13 @@ RUN apt-get update -qq \
          --exclude='freesurfer/subjects/fsaverage_sym' \
          --exclude='freesurfer/trctrain' \
     && sed -i '$isource "/opt/freesurfer-6.0.0/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
-
 #COPY ["license.txt", "/opt/freesurfer-6.0.0"]
-
 RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
 USER neuro
 WORKDIR /home/neuro
-
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
-SHELL ["/bin/bash", "-c"] 
 RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
-    && export PATH="/home/neuro/.local/bin:$PATH" \
     && echo "Downloading Miniconda installer ..." \
     && conda_installer="/tmp/miniconda.sh" \
     && curl -fsSL --retry 5 -o "$conda_installer" https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
@@ -149,35 +137,22 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set auto_update_conda false \    
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
-    && conda init bash \
-    && source ~/.bashrc \
-    && conda create -n chap-env \
-    && source activate chap-env \
-    && conda install -yq scikit-learn scipy \ 
+    && conda install -yq scikit-learn scipy meshio nibabel \ 
     && conda install -c mrtrix3 mrtrix3 \
-    && conda install pip vtk \
-    && pip install matplotlib pandas numpy nilearn icc nibabel meshio \
+    && conda install vtk matplotlib pandas numpy nilearn icc \
     && sync && conda clean -y --all && sync \
     && rm -rf ~/.cache/pip* \
     && sync
 
 USER root
-
 RUN mkdir /data && chmod 777 /data && chmod a+s /data
-
 RUN mkdir /output && chmod 777 /output && chmod a+s /output
-
 RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
-
 RUN chmod 777 /opt/freesurfer-6.0.0
-
 RUN rm -rf /opt/conda/pkgs/*
-
 USER neuro 
-
 #https://github.com/moby/moby/issues/22832
 ARG CACHE_DATE
-
 ARG SSH_KEY
 ENV SSH_KEY=$SSH_KEY
 RUN mkdir /home/neuro/.ssh/
@@ -185,11 +160,6 @@ RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_ed25519
 RUN chmod 600 /home/neuro/.ssh/id_ed25519
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
-
 RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
-
 WORKDIR /home/neuro
-
-
-
-ENTRYPOINT ["conda", "run", "-n", "chap-env", "python","/home/neuro/repo/entrypoint_script.py"]
+ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
