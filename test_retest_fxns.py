@@ -883,6 +883,7 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc):
          gd['across_f_scores_all'].append(gd[network]['across_subj_avg_f_scores'])
     for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
         gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
+    return gd
     
 #ICC
 '''
