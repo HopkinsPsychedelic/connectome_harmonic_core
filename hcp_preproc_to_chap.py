@@ -19,13 +19,13 @@ def hcp_chapper(args, sub, u):
     if os.path.exists(f'{args.hcp_dir}/ses-test') == False: #if regular HCP (one session)
          ses = '' #pass ses as empty parameter to next fxn
          multises = False
-         prep_for_cs(args, sub, u, multises, ses)
+         hcp_prep_for_cs(args, sub, u, multises, ses)
     else:
          for ses in ['ses-test', 'ses-retest']: #test-retest subjects
              multises = True
-             prep_for_cs(args, sub, u, multises, ses)
+             hcp_prep_for_cs(args, sub, u, multises, ses)
             
-def prep_for_cs(args, sub, u, multises, ses):   
+def hcp_prep_for_idk(args, sub, u, multises, ses):   
     u[f'{sub}_info'][ses], u[f'{sub}_info'][ses]['surfs'] = {}, {} #where hcp surface files will go
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #intermediate ses folder
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
@@ -41,13 +41,14 @@ def prep_for_cs(args, sub, u, multises, ses):
                 if bids_type in zipdir:
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
                         print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
-                        zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')      
+                        zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')   
+
+def idk(args, sub, u, multises, ses):
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
     struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
     u[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii' #hcp left hem
     u[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii' #hcp right hem
-    u[f'{sub}_info'][ses]['surfs']['lh_inf'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.very_inflated.32k_fs_LR.surf.gii' #hcp left hem inflated
-    u[f'{sub}_info'][ses]['surfs']['rh_inf'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.very_inflated.32k_fs_LR.surf.gii' #hcp right hem inflated
+    #resting state stuff
     for n in ['1','2']:
         u[f'{sub}_info'][ses][f'rest{n}_lr'] = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/REST{n}/{sub}/MNINonLinear/Results/rfMRI_REST{n}_LR/rfMRI_REST{n}_LR_Atlas_hp2000_clean.dtseries.nii'
         u[f'{sub}_info'][ses][f'rest{n}_rl'] = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/REST{n}/{sub}/MNINonLinear/Results/rfMRI_REST{n}_RL/rfMRI_REST{n}_RL_Atlas_hp2000_clean.dtseries.nii'
@@ -62,10 +63,6 @@ def prep_for_cs(args, sub, u, multises, ses):
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #streamline endpoints
     ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
-    
-#/Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc/
-
-
 
 
 
