@@ -319,8 +319,8 @@ def across_avg(subs,dic,fxn,data): #dic doesn't have to be overall dict #data is
         for c_sub in subs:
             if c_sub != sub:
                 dic[sub][c_sub] = {}
-                for ses in ['test','retest']:
-                    dic[sub][c_sub][ses] = fxn(dic[sub][ses][f'{data}'],dic[c_sub][ses][f'{data}'])
+                for ses in ['test','retest']: #take mofl out of below if isn't mofl
+                    dic[sub][c_sub][ses] = fxn(mofl(dic[sub][ses][f'{data}']),mofl(dic[c_sub][ses][f'{data}']))
                 dic[sub][f'c_sub_all_{data}'].append((dic[sub][c_sub]['test'] + dic[sub][c_sub]['retest'])/2)
         dic[f'across_subj_all_{data}'].append(stats.mean(dic[sub][f'c_sub_all_{data}']))
     dic[f'across_subj_avg_{data}'] = stats.mean(dic[sub][f'c_sub_all_{data}'])

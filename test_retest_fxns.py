@@ -26,6 +26,8 @@ from nilearn import plotting
 from random import shuffle
 import datetime
 import random
+import sys
+import pickle
 
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -787,13 +789,16 @@ def null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask):
         tmp_mtx[mask_zero[idx]][mask_one[idx]] = 1 #at randomly chosen index from mask, put a 1      
     tmp_mtx = sparse.csr_matrix(tmp_mtx) #38 seconds
     connectome = tmp_mtx + tmp_mtx.T + surf_mat
+    del tmp_mtx
     connectome = uts.mask_connectivity_matrix(connectome,mask)
     vals,vecs=dcp.lapDecomp(connectome, 100)
+    del connectome
     vecs = np.delete(vecs, 0, axis=1)
     unmasked_vecs = np.empty([64984,99])
     for ev in range(99):
         unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
     return vecs,unmasked_vecs
+    del vecs,unmasked_vecs
 
 #r_vecs,r_uv = randomize_tracts(sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/struc_conn_mat.npz'),sparse.load_npz('/data/hcp_test_retest_pp/derivatives/chap/sub-103818/ses-test/surf_mat.npz'),100,np.load('/data2/Brian/connectome_harmonics/mask.npy'))    
     
@@ -831,11 +836,10 @@ def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts, sub, ses, i): #takes MC (nu
                 mcvp[network]['pearsons'].append(pearsonr(n_vecs[:,ind], net_verts[network]['verts'])[0])
                 mcvp[network]['f_scores'].append(f1_score(mcvp['bn_vecs'][:,ind], net_verts[network]['verts']))
         interm_time = datetime.datetime.now()
-    print(f'finished {sub} {ses} iteration {i}. in {datetime.datetime.now() - begin_time} h:m:s')
     return mcvp
 #vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
 
-def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc):
+def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc,out_filepath): #path should end in .pkl
     subs = inout.get_subs(chap_dir)
     mask_zero,mask_one,len_mask=load_mask()
     global gd 
@@ -846,29 +850,45 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc):
         gd[network] = {}
         gd[network]['pearsons'], gd[network]['within_pearson_avgs'] = [],[]
         gd[network]['f_scores'], gd[network]['within_f_scores_avgs'] = [],[]
-    for sub in subs:        
+    for count,sub in enumerate(subs):  
+        begin_time = datetime.datetime.now()
+        print(f'starting {sub}')
         for network in net_verts:
             gd[network][sub] = {}
             for ses in ['test','retest']:
                 gd[network][sub][ses] = {}
+                if mc == True:
+                    gd[network][sub][ses]['pearsons'] = []
+                    gd[network][sub][ses]['f_scores'] = []
         for ses in ['test','retest']:
             lvals,surf_mat = load_struc_conn_mat(chap_dir,sub,ses)
-            iters=1 if mc==False else 3
+            iters=1 if mc==False else 20
             for i in range(iters):
                 if mc == True:
                     vecs,unmasked_vecs = null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy'))
+                    gd[network]['pearsons'][i] = [] #list of lists for that iteration
                 else:
                     vecs = ivp[sub][ses]['vecs']
                 mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
                 for network in net_verts:
-                    gd[network]['pearsons'].append(mcvp[network]['pearsons'])
+                    gd[network]['pearsons'].append(mcvp[network]['pearsons']) #big one
                     gd[network]['f_scores'].append(mcvp[network]['f_scores'])
-                    #if mc==False: #why tho
-                    gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
-                    gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
+                    gd[network]['pearsons'][i].append(mcvp[network]['pearsons']) #iteration specific one
+                    gd[network]['f_scores'][i].append(mcvp[network]['f_scores'])
+                    if mc==False: #bc only one iteration, don't really need this
+                        gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
+                        gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
+                    else:
+                        gd[network][sub][ses]['pearsons'].append(mcvp[network]['pearsons'])
+                        gd[network][sub][ses]['f_scores'].append(mcvp[network]['f_scores'])
                     if ses=='retest':
-                        gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
-                        gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
+                        if mc==False:
+                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
+                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
+                        if mc==True:
+                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(inout.mofl(gd[network][sub]['test']['pearsons']),inout.mofl(gd[network][sub]['retest']['pearsons']))[0]))
+                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(inout.mofl(gd[network][sub]['test']['f_scores']),inout.mofl(gd[network][sub]['retest']['f_scores']))[0]))
+        print(f'sub {sub} finished in {datetime.datetime.now() - begin_time} h:m:s. you have finished {count + 1} subs')
         for network in net_verts:
             gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons'])
             gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores'])
@@ -881,8 +901,14 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc):
          gd['across_pearson_all'].append(gd[network]['across_subj_avg_pearsons'])
          inout.across_avg(subs, gd[network], inout.abs_pearson,'f_scores')
          gd['across_f_scores_all'].append(gd[network]['across_subj_avg_f_scores'])
+         for i in range(iters):
+             gd[network]['pearsons'][i] = inout.mofl(gd[network]['pearsons'][i]) #get average for each null iteration
+             gd[network]['f_scores'][i] = inout.mofl(gd[network]['f_scores'][i])
     for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
         gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
+    f = open(out_filepath,"wb")
+    pickle.dump(gd,f)
+    f.close()
     return gd
     
 #ICC
@@ -895,3 +921,92 @@ def icc_vtx(chap_dir,ivp,vec,vtx):
         mat[i,1] = ivp[sub]['retest']['vecs'][:,vec]
     return mat
 '''
+
+'''DWI vs. surface responsibility thing'''
+def gen_harms(surf_mat,struc_conn_mat,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy')):
+    connectome = surf_mat + struc_conn_mat
+    connectome = uts.mask_connectivity_matrix(connectome,mask)
+    vals,vecs=dcp.lapDecomp(connectome, 100)
+    vecs = np.delete(vecs, 0, axis=1)
+    unmasked_vecs = np.empty([64984,99])
+    for ev in range(99):
+        unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],mask)    
+    return vecs,unmasked_vecs
+
+'''
+    surf_t_dwi_t.vecs = tt
+    surf_t_dwi_r.vecs = tr
+    surf_r_dwi_t.vecs = rt
+'''
+def load_vecs(chap_dir,functional,n_evecs): #probs want 99
+    all_vecs, all_vecs['test'], all_vecs['retest'] = {}, {}, {}
+    subs = inout.get_subs(chap_dir,functional)
+    for sub in subs:
+        print(sub)
+        all_vecs[sub] = {}    
+        for ses in ['test','retest']:
+           all_vecs[sub][ses] = {}
+           all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
+           all_vecs[sub][ses]['vecs'] = np.delete(all_vecs[sub][ses]['vecs'], 0, axis=1)
+           all_vecs[sub][ses]['unmasked_vecs'] = np.empty([64984,len(all_vecs[sub][ses]['vecs'][0])])
+           mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
+           for ev in range(n_evecs):
+               all_vecs[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(all_vecs[sub][ses]['vecs'][:,ev],mask)
+    return all_vecs
+
+def get_mat(sub,surf,ses): #surf is boolean True for surface matrix false for struc conn
+    if surf==True:
+        mat = sparse.load_npz(f'/data/hcp_test_retest_pp/derivatives/chap/sub-{sub}/ses-{ses}/surf_mat.npz')
+    else:
+        mat = sparse.load_npz(f'/data/hcp_test_retest_pp/derivatives/chap/sub-{sub}/ses-{ses}/struc_conn_mat.npz')
+    return mat
+
+#makes tr and rt harms
+def make_resp_harms(chap_dir):
+    subs = inout.get_subs(chap_dir,False)
+    for sub in subs:
+        inout.if_not_exist_make(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}')
+        #tr (i know this is inefficient)
+        tr_vecs,tr_unmasked_vecs = gen_harms(get_mat(sub,True,'test'),get_mat(sub,False,'retest'))
+        np.save(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}/tr_vecs',tr_vecs)
+        np.save(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}/tr_unmasked_vecs',tr_unmasked_vecs)
+        print(f'saved tr vecs for {sub}')
+        #rt
+        rt_vecs,rt_unmasked_vecs = gen_harms(get_mat(sub,True,'retest'),get_mat(sub,False,'test'))
+        np.save(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}/rt_vecs',rt_vecs)
+        np.save(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}/rt_unmasked_vecs',rt_unmasked_vecs)
+        print(f'saved rt vecs for {sub}')
+
+def load_tr_and_rt_dicts(chap_dir):
+    tr = {}
+    subs = inout.get_subs(chap_dir,False)
+    for sub in subs:
+        tr[sub] = np.load(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}/tr_vecs.npy')
+    rt = {}
+    subs = inout.get_subs(chap_dir,False)
+    for sub in subs:
+        rt[sub] = np.load(f'/data/hcp_test_retest_pp/derivatives/chap_analysis/responsibility/sub-{sub}/rt_vecs.npy')
+    return tr,rt 
+
+#compare tt with tr and rt 
+def compare_resp(chap_dir,all_vecs,tr,rt):
+    comp = {}
+    subs=inout.get_subs(chap_dir,False)
+    comp['tr_avg_all'],comp['rt_avg_all'] = [],[]
+    for sub in subs:
+        comp[sub] = {}
+        comp[sub]['tt_vs_tr'] = test_retest_rel_2v(all_vecs[sub]['test']['vecs'],tr[sub],99,99,False)
+        comp['tr_avg_all'].append(comp[sub]['tt_vs_tr'])
+        comp[sub]['tt_vs_rt'] = test_retest_rel_2v(all_vecs[sub]['test']['vecs'],rt[sub],99,99,False)
+        comp['rt_avg_all'].append(comp[sub]['tt_vs_rt'])
+    comp['tr_avg'] = stats.mean(inout.mofl(comp['tr_avg_all']))
+    comp['rt_avg'] = stats.mean(inout.mofl(comp['rt_avg_all']))
+    return comp
+
+'''memory'''
+def check_mem():
+    from guppy import hpy
+    h = hpy()
+    x = h.heap()
+    print(x[0].byvia)
+
