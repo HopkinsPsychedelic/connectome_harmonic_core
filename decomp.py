@@ -9,6 +9,7 @@ import scipy.sparse.linalg
 from scipy.sparse import csgraph
 import time
 import numpy as np
+from scipy import sparse 
 
 from sklearn.decomposition import PCA
 
@@ -148,3 +149,77 @@ def subspace_distance_eff(v1,v2):
     end=time.time()
     print(f'{end-start} seconds taken for dimension {np.shape(v1)}')
     return singular_values[0]
+
+def projection_matrix(basis):
+    a=np.einsum('ij,jk->ik', basis.T, basis)
+    a=np.linalg.inv(a)
+    a=np.einsum('ij,jk->ik', a, basis.T)
+    a=np.einsum('ij,jk->ik', basis, a)
+    return a
+
+def truncate_top_k(x, k, inplace=False):
+    m, n = x.shape
+    # get (unsorted) indices of top-k values
+    topk_indices = np.argpartition(x, -k, axis=1)[:, -k:]
+    # get k-th value
+    rows, _ = np.indices((m, k))
+    kth_vals = x[rows, topk_indices].min(axis=1)
+    # get boolean mask of values smaller than k-th
+    is_smaller_than_kth = x < kth_vals[:, None]
+    # replace mask by 0
+    if not inplace:
+        return np.where(is_smaller_than_kth, 0, x)
+    x[is_smaller_than_kth] = 0
+    return x
+
+
+def matmul_sparsify_percent(a,b,threshold=0.01,chunk_size=1000):
+    keep_num=int(np.round(a.shape[0]*threshold))
+    print(keep_num, 'elements per row retained')
+    sparse_chunck_list=[]
+    for i in range(0, int(a.shape[0]), chunk_size):
+        # portion of connectivity
+        pcon = (np.matmul(a[i:i + chunk_size,: ], b))
+        
+        # sparsified connectivity portion
+        spcon = sparse.csr_matrix(truncate_top_k(pcon,keep_num,inplace=True))
+        
+        
+        
+        sparse_chunck_list.append(spcon)
+        
+        #print(f'rows {i}:{i+chunk_size} done')
+        
+    scon = sparse.vstack(sparse_chunck_list)
+    
+    #scon=scon.tolil()
+    #scon[scon<0]=0
+    scon=scon.tocsr()
+    return scon
+
+def projection_matrix_sparsify(basis,threshold=0.01):
+    #basis=basis
+    #a=matmul_sparsify_percent(basis.T,basis,threshold)
+    #print(a)
+    #a=sparse.linalg.inv(a.tocsc()).tocsr()
+    a=np.matmul(basis.T,basis)
+    a=np.linalg.inv(a)
+    #a=matmul_sparsify_percent( a, basis.T,threshold)
+    #print(a.shape)
+    #a=a.dot(sparse.csr_matrix(basis.T))
+    a=np.matmul(a,basis.T)
+    #a=sparse.csr_matrix(basis).dot(a)
+    a=matmul_sparsify_percent(basis,a,threshold)
+    #a=matmul_sparsify_percent(basis, a,threshold)
+    
+    return a
+    
+    
+def subspace_distance_projection(v1,v2,threshold=0.01):
+    start=time.time()
+    p1=projection_matrix_sparsify(v1,threshold)
+    p2=projection_matrix_sparsify(v2,threshold)
+    dif=p1-p2
+    end=time.time()
+    print(f'{end-start} seconds taken')
+    return sparse.linalg.norm(dif)
