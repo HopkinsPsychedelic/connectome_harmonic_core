@@ -228,12 +228,18 @@ def get_task(fname):
     x = fname[taskstart:]
     task = x.split('_')[0]
     return task
+
+def add_bids_thing_to_fname(bids_thing,vol,full_path_lh,full_path_rh):
+    if bids_thing in vol:
+        func = 'get_{bids_thing}'
+        thing = eval(func+'(vol)')
+        full_path_lh = full_path_lh[:-11] + f'{bids_thing}-{thing}_' + full_path_lh[-11:]
+        full_path_rh = full_path_rh[:-11] + f'{bids_thing}-{thing}_' + full_path_rh[-11:]
+        return full_path_lh,full_path_rh
     
-def get_bids_stuff(lh_full_path):
-    stuff_start = lh_full_path.find('vol_') + 4
-    x = lh_full_path[stuff_start:]
-    bids_stuff = x.split('lh')[0][:-1]
-    return(bids_stuff)
+def get_bids_stuff(dts):
+    stuff_end = dts.find('desc') - 1 
+    return(dts[:stuff_end])
 
 def if_not_exist_make(path):
     import os
@@ -377,6 +383,8 @@ def combine_hemis(lhc,rhc,lhi,rhi):
     return coords, si
 '''
     
-    
+def dts_to_func_gii(dts,out):
+    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {dts} COLUMN -metric CORTEX_LEFT {out}_hem-l.func.gii')
+    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {dts} COLUMN -metric CORTEX_RIGHT {out}_hem-r.func.gii') 
     
     

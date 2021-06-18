@@ -84,4 +84,14 @@ def read_functional_timeseries(lhfunc,rhfunc):
         rt = np.array(r[i].data)
         tp = np.concatenate((lt, rt))
         timeseries[:, i] = tp
-    return timeseries    
+    return timeseries   
+
+    
+def dts_to_ts(wb_cmd_path='/home/neuro/repo/workbench-2/bin_rh_linux64/wb_command',dtseries):
+    os.system(f'bash {wb_cmd_path} -cifti-separate {dtseries} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
+    os.system(f'bash {wb_cmd_path} -cifti-separate {dtseries} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
+    
+    
+    
+    
+    
