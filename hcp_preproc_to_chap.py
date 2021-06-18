@@ -11,7 +11,6 @@ import os
 import input_output as inout
 import construct_harmonics as ch
 import shutil
-import numpy as np
 
 def hcp_chapper(args, sub, u):
     print(f'[CHAP] Creating directories for HCP subject {sub}') 
@@ -19,39 +18,49 @@ def hcp_chapper(args, sub, u):
     if os.path.exists(f'{args.hcp_dir}/ses-test') == False: #if regular HCP (one session)
          ses = '' #pass ses as empty parameter to next fxn
          multises = False
-         hcp_prep_for_cs(args, sub, u, multises, ses)
+         hcp_prep_for_ch(args, sub, u, multises, ses)
     else:
          for ses in ['ses-test', 'ses-retest']: #test-retest subjects
              multises = True
-             hcp_prep_for_cs(args, sub, u, multises, ses)
+             hcp_prep_for_ch(args, sub, u, multises, ses)
             
-def hcp_prep_for_idk(args, sub, u, multises, ses):   
+def hcp_prep_for_ch(args, sub, u, multises, ses):  
+    #create directories/dicts
     u[f'{sub}_info'][ses], u[f'{sub}_info'][ses]['surfs'] = {}, {} #where hcp surface files will go
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #intermediate ses folder
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
-    if any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if rsfc data is there
-        inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
-    hcp_types = ['Structural', 'Diffusion', 'REST1', 'REST2', 'WM'] #etc.
+    #check if there's HCP functional data
+    hcp_types = ['REST1', 'REST2', 'WM','MOTOR'] #etc. just the functional stuff for now
     for hcp_type in hcp_types:
-        if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data was unzipped before
-            hcp_types.remove(hcp_type)       
+        if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
+            inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
+            u[f'{sub}_info'][ses]['is_func'] = 'hcp'
+        else:
+            hcp_types.remove(hcp_type)
+    hcp_types.extend('Structural','Diffusion')
+    for hcp_type in hcp_types: #check if there are prev. data computed
+        if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data were unzipped before
+            hcp_types.remove(hcp_type) 
+    #now hcp_types has just the types they need to unzip
+    #unzip HCP data
     for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
         if sub in zipdir and 'md5' not in zipdir:
-            for bids_type in hcp_types:
-                if bids_type in zipdir:
+            for hcp_type in hcp_types:
+                if hcp_type in zipdir:
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
-                        print(f'[CHAP] Unzipping {sub} {ses} session {bids_type} directory')
-                        zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{bids_type}')   
-
-def idk(args, sub, u, multises, ses):
+                        print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
+                        zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}') #extract to intermediate
+    #define paths
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
     struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
+    #save hcp surfaces in dict
     u[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii' #hcp left hem
     u[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii' #hcp right hem
-    #resting state stuff
-    for n in ['1','2']:
+    #resting state prep stuff
+    for n in ['1','2']:  
         u[f'{sub}_info'][ses][f'rest{n}_lr'] = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/REST{n}/{sub}/MNINonLinear/Results/rfMRI_REST{n}_LR/rfMRI_REST{n}_LR_Atlas_hp2000_clean.dtseries.nii'
         u[f'{sub}_info'][ses][f'rest{n}_rl'] = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/REST{n}/{sub}/MNINonLinear/Results/rfMRI_REST{n}_RL/rfMRI_REST{n}_RL_Atlas_hp2000_clean.dtseries.nii'
+    #check if endpoints already computed, if not run diffusion pipeline
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
         print('[CHAP] Endpoints already detected')
     else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
@@ -60,7 +69,8 @@ def idk(args, sub, u, multises, ses):
         print('[CHAP] Removing intermediate files...')
         for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck', '10000000.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
-    u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #streamline endpoints
+    u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #define streamline endpoints in dict
+    #send to chcs fxn
     ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
 

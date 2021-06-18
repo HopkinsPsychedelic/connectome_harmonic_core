@@ -25,9 +25,10 @@ import os, shutil
 from glob import glob
 import input_output as inout
 import argparse
-import construct_harmonics as cs
+import construct_harmonics as ch
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
+import ciftify_qsi_to_ch as cift
 #user inputs cl arguments separated by spaces. args without dashes are required
 #for hcp, hcp_dir is required
 #for bids pipeline, qsi_dir, surf_dir, and fs_license_file are required
@@ -42,7 +43,7 @@ parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data
 parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir')
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3mm')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. True or False')
-parser.add_argument('--skip_func', type = bool, help= 'just find structural harmonics')
+parser.add_argument('--skip_func', type = bool, help= 'just find structural harmonics, no spectra')
 args = parser.parse_args() 
 #read evecs number, set default to 100
 if not args.evecs:
@@ -89,7 +90,7 @@ for sub in subs:
         hcp_prep.hcp_chapper(args, sub, u)
     #else, run BIDS/qsi method
     else:      
-        cs.qsi_chap(u, args, sub)
+        cift.qsi_chap(u, args, sub)
     print(f'[CHAP] Finished {sub}')
 print('''
   /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$                                                    /$$             /$$                     /$$

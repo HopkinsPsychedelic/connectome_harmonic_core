@@ -3,7 +3,6 @@
 """
 Created on Fri Oct  9 16:01:27 2020
 @author: bwinston
-used in CHAP entrypoint_script
 
     sc - array of cortical surface coordinates of size (N_vertices, 3 ) where SC[i]=x_i,y_i,z_i
     si - array of surface indices of size (N_verts*2, 3) where each row defines indices of triange in surface mesh 
@@ -14,13 +13,13 @@ used in CHAP entrypoint_script
 import decomp as dcp
 import input_output as inout
 import utility_functions as uts
-import subprocess
 import numpy as np
 import os
 import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
 from itertools import product
+import cift_qsi_to_ch as cift
 
 def construct_harmonics_calculate_spectra(args, sub, ses, u, multises): 
     sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
@@ -39,52 +38,58 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + connections)')
     print('[CHAP] Computing harmonics...')
-    vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvectors (see decomp.py)
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
+    vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvecs (see decomp.py)
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
-    if args.mask_med_wall==True:
+    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
+    if args.mask_med_wall==True: #save unmasked vecs for visualization purposes
         unmasked_vecs = np.empty([64984,args.evecs])
         for ev in range(args.evecs):
             unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],u['mask'])
     else:
         unmasked_vecs = vecs
     if multises:
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,unmasked_vecs) #harmonics.vtk
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,unmasked_vecs) #save out harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
     else:
-        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,unmasked_vecs)
+        inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_harmonics.vtk',sc,si,unmasked_vecs) #save out harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub}')
-    if u[f'{sub}_info'][ses]['is_func']: #if functional images are specified (and BIDS method)
-        inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
-        for dts in u[f'{sub}_info'][ses]['func']: #each functional volume
-            bids_stuff = f'sub-{sub}_{inout.get_bids_stuff(dts)}' #e.g. sub-{sub}_ses-{ses}_task-{task}
-            inout.dts_to_func_gii(dts, f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}') #extract cortex timeseries with connectome workbench
-            u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii') #func.gii to timeseries
-            u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], u['mask'])
-            func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], inout.get_task(dts), bids_stuff, vecs, vals)
-    elif any('REST' in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #functional stuff, HCP method
-        if args.skip_func == False:
-            func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'    
-            inout.if_not_exist_make(func_dir)
-            if 'rest1_lr' in u[f'{sub}_info'][ses]: #if rest1 data, assuming also rest2
-                for n in ['1','2']:
-                    for dire in ['lr', 'rl']:
-                        scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
-                        bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
-                        print('[CHAP] Extracting timecourse from HCP surface files...')
-                        os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
-                        os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
-                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
-                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
-                    print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
-                    u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
-                    func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
-                for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
-                    os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
+    if args.skip_func == False:
+        if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
+            if u[f'{sub}_info'][ses]['is_func'] == 'cift': #bids method
+                cift.cift_spectra_prep(args,sub,ses,u,vecs,vals)
+            else:  #functional stuff, HCP method
+                hcp_spectra_prep(args,sub,ses,u,vecs,vals)    
     print(f'[CHAP] Finished session: {ses}')
 
-def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
+def hcp_spectra_prep(args,sub,ses,u,vecs,vals):  
+    func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'    
+    inout.if_not_exist_make(func_dir)
+    if 'rest1_lr' in u[f'{sub}_info'][ses]: #if rest1 data, assuming also rest2
+        for n in ['1','2']:
+            for dire in ['lr', 'rl']:
+                scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
+                bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
+                print('[CHAP] Extracting timecourse from HCP surface files...')
+                os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
+                os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
+                u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+                u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
+            print(f'[CHAP] Combining LR and RL PE direction scans for REST{n}...')
+            u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
+            func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
+        for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
+            os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
+   
+    
+
+
+   
+
+   
+    
+
+def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for each timeseries
     #read functional timeseries
     task_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{task}'
     if os.path.exists(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum.npy'):

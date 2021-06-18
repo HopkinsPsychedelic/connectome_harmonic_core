@@ -61,20 +61,26 @@ def ciftify_chap(u, args, sub, multises, ses):
     print(f'[CHAP] Found ciftify surfaces for {sub}')
     #for each ses, sub_info[ses][func] is a list of the dtseries files
     if os.path.exists(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results'):
-        u[f'{sub}_info'][ses]['is_func'] == True
+        u[f'{sub}_info'][ses]['is_func'] = 'cift'
         u[f'{sub}_info'][ses]['func'] = []
-        for func_dir in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results'):
-            if ses in func_dir:
-                for file in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results/{func_dir}'):
+        for func_dir in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results'): 
+            if ses in func_dir: #ses can be empty, remember
+                for file in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results/{func_dir}'): #ciftify functional timeseries directories
                     if 'dtseries' in file:
                         u[f'{sub}_info'][ses]['func'].append(file)
-                        print(f'[CHAP] Found ciftify timeseries: {file}')
-    else:
-       u[f'{sub}_info'][ses]['is_func'] == False 
+                        print(f'[CHAP] Found ciftify timeseries: {file}') 
     ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) 
 
-
-
+def cift_spectra_prep(args,sub,ses,u,vecs,vals):
+    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
+    for dts in u[f'{sub}_info'][ses]['func']: #each functional volume
+        bids_stuff = f'sub-{sub}_{inout.get_bids_stuff(dts)}' #e.g. sub-{sub}_ses-{ses}_task-{task}
+        inout.dts_to_func_gii(dts, f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}') #extract cortical timeseries with connectome workbench
+        u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii') #func.gii to timeseries
+        u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], u['mask']) #mask timeseries
+        ch.func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], inout.get_task(dts), bids_stuff, vecs, vals)
+   
+    
 
 
 
