@@ -83,6 +83,7 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
 
 RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
+WORKDIR /home/neuro
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
 RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
@@ -108,7 +109,7 @@ RUN mkdir /data && chmod 777 /data && chmod a+s /data
 RUN mkdir /output && chmod 777 /output && chmod a+s /output
 RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
 RUN rm -rf /opt/conda/pkgs/*
-USER neuro 
+#USER neuro 
 #https://github.com/moby/moby/issues/22832
 ARG CACHE_DATE
 ARG SSH_KEY
