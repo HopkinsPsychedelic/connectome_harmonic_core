@@ -72,7 +72,6 @@ def ciftify_chap(u, args, sub, multises, ses):
     ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) 
 
 def cift_spectra_prep(args,sub,ses,u,vecs,vals):
-    inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
     for dts in u[f'{sub}_info'][ses]['func']: #each functional volume
         bids_stuff = f'sub-{sub}_{inout.get_bids_stuff(dts)}' #e.g. sub-{sub}_ses-{ses}_task-{task}
         inout.dts_to_func_gii(dts, f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}') #extract cortical timeseries with connectome workbench
