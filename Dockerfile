@@ -83,8 +83,6 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
 
 RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
-USER neuro
-WORKDIR /home/neuro
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
 RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
