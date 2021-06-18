@@ -839,17 +839,22 @@ def mc_vs_pca(vecs, n_evecs, n_comp, pca, net_verts, sub, ses, i): #takes MC (nu
     return mcvp
 #vecs is fake or real harmonics, n_evecs 99, n_comp=40, pca is ivp['pca_harms'], net_verts check inout
 
-def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc,out_filepath): #path should end in .pkl
+def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc,out_filepath,iters=1): #path should end in .pkl
     subs = inout.get_subs(chap_dir)
-    mask_zero,mask_one,len_mask=load_mask()
+    #subs = ['105923','103818'] #for troubleshooting
+    if mc == True:
+        mask_zero,mask_one,len_mask=load_mask()
     global gd 
     gd = {}
     gd['across_pearson_all'],gd['across_f_scores_all'] = [],[]
     gd['within_pearson_all'],gd['within_f_scores_all'] = [],[]
     for network in net_verts:
         gd[network] = {}
-        gd[network]['pearsons'], gd[network]['within_pearson_avgs'] = [],[]
-        gd[network]['f_scores'], gd[network]['within_f_scores_avgs'] = [],[]
+        gd[network]['pearsons'], gd[network]['f_scores'] = {},{}
+        gd[network]['within_pearson_avgs'], gd[network]['within_f_scores_avgs'],gd[network]['pearsons']['big_one'],gd[network]['f_scores']['big_one'] = [],[],[],[]
+    for i in range(iters):
+        for network in net_verts:
+            gd[network]['pearsons'][f'iter_{i}'], gd[network]['f_scores'][f'iter_{i}'] = [],[] #list of lists for that iteration
     for count,sub in enumerate(subs):  
         begin_time = datetime.datetime.now()
         print(f'starting {sub}')
@@ -860,25 +865,23 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc,out_filepath): #path shou
                 if mc == True:
                     gd[network][sub][ses]['pearsons'] = []
                     gd[network][sub][ses]['f_scores'] = []
-        for ses in ['test','retest']:
-            lvals,surf_mat = load_struc_conn_mat(chap_dir,sub,ses)
-            iters=1 if mc==False else 20
-            for i in range(iters):
+        for i in range(iters):
+            for ses in ['test','retest']:
                 if mc == True:
+                    lvals,surf_mat = load_struc_conn_mat(chap_dir,sub,ses)           
                     vecs,unmasked_vecs = null_harmonics(len_mask,lvals,surf_mat,mask_zero,mask_one,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy'))
-                    gd[network]['pearsons'][i] = [] #list of lists for that iteration
                 else:
                     vecs = ivp[sub][ses]['vecs']
                 mcvp = mc_vs_pca(vecs,n_evecs,n_comp,ivp['pca_harms'],net_verts, sub, ses, i)
                 for network in net_verts:
-                    gd[network]['pearsons'].append(mcvp[network]['pearsons']) #big one
-                    gd[network]['f_scores'].append(mcvp[network]['f_scores'])
-                    gd[network]['pearsons'][i].append(mcvp[network]['pearsons']) #iteration specific one
-                    gd[network]['f_scores'][i].append(mcvp[network]['f_scores'])
-                    if mc==False: #bc only one iteration, don't really need this
+                    gd[network]['pearsons']['big_one'].append(mcvp[network]['pearsons']) #big one with everything
+                    gd[network]['f_scores']['big_one'].append(mcvp[network]['f_scores']) #mcvp thing is values of harms vs. rsn
+                    gd[network]['pearsons'][f'iter_{i}'].append(mcvp[network]['pearsons']) #iteration specific list (getting stuff from test and retest)
+                    gd[network]['f_scores'][f'iter_{i}'].append(mcvp[network]['f_scores'])
+                    if mc==False: #this is for within vs. across purposes
                         gd[network][sub][ses]['pearsons'] = mcvp[network]['pearsons']
                         gd[network][sub][ses]['f_scores'] = mcvp[network]['f_scores']
-                    else:
+                    else: #this is for within vs. across purposes
                         gd[network][sub][ses]['pearsons'].append(mcvp[network]['pearsons'])
                         gd[network][sub][ses]['f_scores'].append(mcvp[network]['f_scores'])
                     if ses=='retest':
@@ -886,31 +889,56 @@ def grandaddy(chap_dir,n_evecs,n_comp,ivp,net_verts,mc,out_filepath): #path shou
                             gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'],gd[network][sub]['retest']['pearsons'])[0]))
                             gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'],gd[network][sub]['retest']['f_scores'])[0]))
                         if mc==True:
-                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(inout.mofl(gd[network][sub]['test']['pearsons']),inout.mofl(gd[network][sub]['retest']['pearsons']))[0]))
-                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(inout.mofl(gd[network][sub]['test']['f_scores']),inout.mofl(gd[network][sub]['retest']['f_scores']))[0]))
+                            gd[network]['within_pearson_avgs'].append(abs(pearsonr(gd[network][sub]['test']['pearsons'][i],gd[network][sub]['retest']['pearsons'][i])[0]))
+                            gd[network]['within_f_scores_avgs'].append(abs(pearsonr(gd[network][sub]['test']['f_scores'][i],gd[network][sub]['retest']['f_scores'][i])[0]))
         print(f'sub {sub} finished in {datetime.datetime.now() - begin_time} h:m:s. you have finished {count + 1} subs')
         for network in net_verts:
-            gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons'])
-            gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores'])
+            gd[network]['pearson_avg'] = inout.mofl(gd[network]['pearsons']['big_one'])
+            gd[network]['fscore_avg'] = inout.mofl(gd[network]['f_scores']['big_one'])
             gd[network]['within_pearson_avg'] = stats.mean(gd[network]['within_pearson_avgs'])
             gd['within_pearson_all'].append(gd[network]['within_pearson_avg'])
             gd[network]['within_f_score_avg'] = stats.mean(gd[network]['within_f_scores_avgs'])    
             gd['within_f_scores_all'].append(gd[network]['within_f_score_avg'])
     for network in net_verts:
-         inout.across_avg(subs, gd[network], inout.abs_pearson,'pearsons')
+         inout.across_avg(subs, gd[network], inout.abs_pearson,'pearsons',True)
          gd['across_pearson_all'].append(gd[network]['across_subj_avg_pearsons'])
-         inout.across_avg(subs, gd[network], inout.abs_pearson,'f_scores')
+         inout.across_avg(subs, gd[network], inout.abs_pearson,'f_scores',True)
          gd['across_f_scores_all'].append(gd[network]['across_subj_avg_f_scores'])
          for i in range(iters):
-             gd[network]['pearsons'][i] = inout.mofl(gd[network]['pearsons'][i]) #get average for each null iteration
-             gd[network]['f_scores'][i] = inout.mofl(gd[network]['f_scores'][i])
+             gd[network]['pearsons'][f'iter_{i}'] = inout.mofl(gd[network]['pearsons'][f'iter_{i}']) #get average for each null iteration
+             gd[network]['f_scores'][f'iter_{i}'] = inout.mofl(gd[network]['f_scores'][f'iter_{i}'])
     for thing in ['across_pearson','within_pearson','across_f_scores','within_f_scores']:
         gd[f'{thing}_avg'] = stats.mean(gd[f'{thing}_all'])
     f = open(out_filepath,"wb")
     pickle.dump(gd,f)
     f.close()
     return gd
-    
+
+#post gd stats
+def null_testing(gd,veridical,iters,net_verts):
+    nt = {}
+    for network in net_verts:
+        nt[network] = {}
+        nt[network]['ranks'] = []
+        for pc in range(40):
+            nt[network][f'pc{pc}'] = {}
+            nt[network][f'pc{pc}']['veridical'] = veridical[network]['pearson_avg'][pc] #real value
+            nt[network][f'pc{pc}']['nulls'] = []
+    for i in range(iters):
+        for network in net_verts:
+            for pc in range(40):
+                nt[network][f'pc{pc}']['nulls'].append(gd[network]['pearsons'][f'iter_{i}'][pc]) #append avg from that iteration              
+    for network in net_verts:
+        for pc in range(40):
+            nt[network][f'pc{pc}']['nulls'].append(nt[network][f'pc{pc}']['veridical']) #add veridical to distro
+            nt[network][f'pc{pc}']['nulls'].sort(reverse=True) #sort distro descending
+            nt[network][f'pc{pc}']['rank'] = np.where(nt[network][f'pc{pc}']['nulls'] == nt[network][f'pc{pc}']['veridical'])[0][0] #find where veridical falls on the sorted distro
+            nt[network]['ranks'].append(nt[network][f'pc{pc}']['rank'])
+    return nt
+
+#need to put rank my friend^^^ and significance maybe
+#rank/iterations+1 = p             
+
 #ICC
 '''
 def icc_vtx(chap_dir,ivp,vec,vtx):
@@ -942,7 +970,6 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
     all_vecs, all_vecs['test'], all_vecs['retest'] = {}, {}, {}
     subs = inout.get_subs(chap_dir,functional)
     for sub in subs:
-        print(sub)
         all_vecs[sub] = {}    
         for ses in ['test','retest']:
            all_vecs[sub][ses] = {}
@@ -950,6 +977,7 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
            all_vecs[sub][ses]['vecs'] = np.delete(all_vecs[sub][ses]['vecs'], 0, axis=1)
            all_vecs[sub][ses]['unmasked_vecs'] = np.empty([64984,len(all_vecs[sub][ses]['vecs'][0])])
            mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
+           all_vecs[sub][ses]['vecs'] = all_vecs[sub][ses]['vecs'][:,0:n_evecs]
            for ev in range(n_evecs):
                all_vecs[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(all_vecs[sub][ses]['vecs'][:,ev],mask)
     return all_vecs
@@ -1010,3 +1038,18 @@ def check_mem():
     x = h.heap()
     print(x[0].byvia)
 
+'''new struc metric 2: subspace distance'''
+def subsp_dist_chap(chap_dir='/data/hcp_test_retest_pp/derivatives/chap'):
+    av = load_vecs(chap_dir,False,99)
+    subs = inout.get_subs(chap_dir,False)
+    #subs = ['105923','103818','111312']
+    sdc = {}
+    sdc['within_dist_all'] = []
+    for sub in subs:
+        sdc[sub] = {}
+        sdc[sub]['within_dist'] = dcp.subspace_distance_projection(av[sub]['test']['vecs'], av[sub]['retest']['vecs'])
+        sdc['within_dist_all'].append(sdc[sub]['within_dist'])
+    sdc['within_dist_avg'] = stats.mean(sdc['within_dist_all'])
+    inout.across_avg(subs,av,sdc,dcp.subspace_distance_projection,'dist',False)
+    return sdc
+       
