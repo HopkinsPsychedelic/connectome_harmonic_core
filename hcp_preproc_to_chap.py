@@ -14,6 +14,7 @@ import compute_spectra as cs
 import shutil
 from itertools import product
 import utility_functions as uts
+import numpy as np
 
 def hcp_chapper(args, sub, u):
     print(f'[CHAP] Creating directories for HCP subject {sub}') 
