@@ -120,6 +120,6 @@ RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_ed25519
 RUN chmod 600 /home/neuro/.ssh/id_ed25519
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
-RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo
+RUN git clone -b ciftify git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
 WORKDIR /home/neuro
 ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
