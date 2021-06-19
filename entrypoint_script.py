@@ -69,13 +69,16 @@ u = {}
 if args.hcp_dir: 
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
 #load mask
-u['mask'] = np.load(f'{args.hcp_dir}/hcp_mask.npy')
+u['mask'] = np.load('/home/neuro/repo/hcp_mask.npy')
 #find subjects
 subs = []
 if args.participant_label: #user input subjects
     subs = [str(sub) for sub in args.participant_label]
 elif args.hcp_dir: #get list of hcp subs from data downloaded
-    sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
+    if os.path.exists(f'{args.hcp_dir}/ses-test'):
+        sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
+    else: 
+        sub_list = os.listdir(args.hcp_dir)
     subs = [sub[:6] for sub in sub_list]
     subs = list(dict.fromkeys(subs))    
 else: #all subjects from qsi output
