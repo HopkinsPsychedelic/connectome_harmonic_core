@@ -92,7 +92,7 @@ RUN apt-get update -qq \
            perl \
            tcsh \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FSL ..." \
     && mkdir -p /opt/fsl-6.0.3 \
     && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.3-centos6_64.tar.gz \
