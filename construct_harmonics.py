@@ -56,7 +56,7 @@ def construct_harmonics_calculate_spectra(args, sub, ses, u, multises):
         print(f'[CHAP] Saved harmonics for {sub}')
     check_func(args,sub,ses,u,vecs,vals)
 
-def check_func(args,sub,ses,u,vecs,vals)    
+def check_func(args,sub,ses,u,vecs,vals):
     if args.skip_func == False:
         if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
