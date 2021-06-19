@@ -68,6 +68,9 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
         print('[CHAP] Removing intermediate files...')
         for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck', '10000000.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
+        for item in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/'):
+            if 'dwi2response' in item:
+                shutil.rmtree(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{item}')
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #define streamline endpoints in dict
     #send to chcs fxn
     ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
@@ -80,6 +83,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
     u[f'{sub}_info'][ses]['hcp_types'] = [i for i in u[f'{sub}_info'][ses]['hcp_types'] if i not in ('Structural', 'Diffusion')]
     if 'REST1' in u[f'{sub}_info'][ses]['hcp_types']:
         u[f'{sub}_info'][ses]['hcp_types'].remove('REST2') #don't need to run below twice
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     #now hcp_types is just the tasks
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
         #rest stuff
