@@ -73,14 +73,20 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
                 shutil.rmtree(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{item}')
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #define streamline endpoints in dict
     #send to chcs fxn
-    ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
+    if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
+        print('[CHAP] Harmonics already detected. Checking for spectra...')
+        ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy')
+    else:
+        ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
 
 
 def hcp_spectra_prep(args,sub,ses,u,vecs,vals):  
     func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'  
     #resting state prep stuff
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     u[f'{sub}_info'][ses]['hcp_types'] = [i for i in u[f'{sub}_info'][ses]['hcp_types'] if i not in ('Structural', 'Diffusion')]
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     if 'REST1' in u[f'{sub}_info'][ses]['hcp_types']:
         u[f'{sub}_info'][ses]['hcp_types'].remove('REST2') #don't need to run below twice
     print(u[f'{sub}_info'][ses]['hcp_types'])

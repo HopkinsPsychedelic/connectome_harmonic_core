@@ -4,6 +4,8 @@
 Created on Thu Jun  3 21:10:09 2021
 
 @author: bwinston
+
+TODO: IF WE SKIP HARMONIC CREATION
 """
 import decomp as dcp
 import input_output as inout
