@@ -80,9 +80,10 @@ RUN apt-get update -qq \
            perl \
            tcsh \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
+#RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
+RUN useradd -ms /bin/bash neuro
 WORKDIR /home/neuro
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
@@ -109,7 +110,7 @@ RUN mkdir /data && chmod 777 /data && chmod a+s /data
 RUN mkdir /output && chmod 777 /output && chmod a+s /output
 RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
 RUN rm -rf /opt/conda/pkgs/*
-#USER neuro 
+USER neuro 
 #https://github.com/moby/moby/issues/22832
 ARG CACHE_DATE
 ARG SSH_KEY
@@ -119,6 +120,6 @@ RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_ed25519
 RUN chmod 600 /home/neuro/.ssh/id_ed25519
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
-RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
+RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo
 WORKDIR /home/neuro
 ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]
