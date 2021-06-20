@@ -34,10 +34,12 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
     #check if there's HCP functional data
     u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR','LANGUAGE'] #etc. just the functional stuff for now   
-    if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
+    for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
+        if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
         inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
         u[f'{sub}_info'][ses]['is_func'] = 'hcp'
-    else:
+        break
+    if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
         u[f'{sub}_info'][ses]['hcp_types'].clear()
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion'])
     add_back = [] 
