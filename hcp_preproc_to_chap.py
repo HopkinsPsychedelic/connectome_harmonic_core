@@ -53,14 +53,15 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
             add_back.append(hcp_type)
         else:
             print(f'didnt find {args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}')
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     print(add_back)
     u[f'{sub}_info'][ses]['hcp_types'] = hcp_types
+    print(hcp_types)
     #now hcp_types has just the types they need to unzip
     #unzip HCP data
     for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
         if sub in zipdir and 'md5' not in zipdir:
             for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
+                print(hcp_type)
                 if hcp_type in zipdir:
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
                         print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
