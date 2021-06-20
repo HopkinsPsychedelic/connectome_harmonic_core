@@ -58,13 +58,10 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
                         print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
                         zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}') #extract to intermediate
-    print('enzymes')
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: 
-        print(hcp_type)
         if not os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #if they don't have a task downloaded
-            u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type)
-            print(f'didnt find {hcp_type}')
+            hcp_types.remove(hcp_type)
+    u[f'{sub}_info'][ses]['hcp_types'] = hcp_types
     u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that have already been unzipped
     #define paths
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
