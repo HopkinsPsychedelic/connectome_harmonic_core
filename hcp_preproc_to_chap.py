@@ -42,11 +42,14 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
         u[f'{sub}_info'][ses]['hcp_types'].clear()
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion'])
+    print(u[f'{sub}_info'][ses]['hcp_types')
     add_back = [] 
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #check if there are prev. data computed
         if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data were unzipped before
+            print(f'found previous {hcp_type} data')
             u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) 
             add_back.append(hcp_type)
+    print(u[f'{sub}_info'][ses]['hcp_types')
     print(add_back)
     #now hcp_types has just the types they need to unzip
     #unzip HCP data
@@ -61,6 +64,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
                     print(f'removing {hcp_type}')
                     u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) #this is not prev. downloaded or in source, so they don't have these data
     u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that have already been unzipped
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     #define paths
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
     struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
