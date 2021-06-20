@@ -17,7 +17,6 @@ import utility_functions as uts
 import numpy as np
 
 def hcp_chapper(args, sub, u):
-    print(f'[CHAP] Creating directories for HCP subject {sub}') 
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}') #intermediate sub folder
     if os.path.exists(f'{args.hcp_dir}/ses-test') == False: #if regular HCP (one session)
          ses = '' #pass ses as empty parameter to next fxn
@@ -79,7 +78,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     #send to chcs fxn
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
-        ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy')
+        ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy')
     else:
         ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
@@ -88,12 +87,9 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
 def hcp_spectra_prep(args,sub,ses,u,vecs,vals):  
     func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'  
     #resting state prep stuff
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     u[f'{sub}_info'][ses]['hcp_types'] = [i for i in u[f'{sub}_info'][ses]['hcp_types'] if i not in ('Structural', 'Diffusion')]
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     if 'REST1' in u[f'{sub}_info'][ses]['hcp_types']:
         u[f'{sub}_info'][ses]['hcp_types'].remove('REST2') #don't need to run below twice
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     #now hcp_types is just the tasks
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
         #rest stuff
@@ -104,11 +100,12 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
                 for dire in ['lr', 'rl']:
                     scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
                     bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
-                    print('[CHAP] Extracting timecourse from HCP surface files...')
+                    print(f'[CHAP] Extracting timeseries from REST{n} {dire} direction dtseries...')
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
                     u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
-                    u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
+                    if args.mask_med_wall:
+                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
                 print(f'[CHAP] Concatenating LR and RL PE direction scans for REST{n}...')
                 u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
                 ch.func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
