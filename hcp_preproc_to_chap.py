@@ -42,14 +42,14 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
         u[f'{sub}_info'][ses]['hcp_types'].clear()
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion'])
-    print(u[f'{sub}_info'][ses]['hcp_types')
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     add_back = [] 
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #check if there are prev. data computed
         if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data were unzipped before
             print(f'found previous {hcp_type} data')
             u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) 
             add_back.append(hcp_type)
-    print(u[f'{sub}_info'][ses]['hcp_types')
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     print(add_back)
     #now hcp_types has just the types they need to unzip
     #unzip HCP data
