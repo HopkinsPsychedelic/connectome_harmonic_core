@@ -33,7 +33,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #intermediate ses folder
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
     #check if there's HCP functional data
-    u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR'] #etc. just the functional stuff for now
+    u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR','LANGUAGE'] #etc. just the functional stuff for now
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
         if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
             inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
@@ -55,7 +55,9 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
                         print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
                         zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}') #extract to intermediate
-    u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that we removed for unzipping
+                else:
+                    u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) #this is not prev. downloaded or in source, so they don't have these data
+    u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that have already been unzipped
     #define paths
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
     struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
@@ -119,11 +121,14 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             inout.if_not_exist_make(f'{func_dir}/{hcp_type}/movement_regressors')
             for dire in ['LR','RL']:
                 #save behavioral files
-                shutil.copytree(f'{results_dir}/tfMRI_{hcp_type}_{dire}/EVs',f'{func_dir}/{hcp_type}/{dire}_EVs')
+                if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_EVs'):
+                    shutil.copytree(f'{results_dir}/tfMRI_{hcp_type}_{dire}/EVs',f'{func_dir}/{hcp_type}/{dire}_EVs')
                 if dire == 'LR':
-                    shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run2_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt')
+                    if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt'):
+                        shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run2_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt')
                 else:
-                    shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run1_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt')
+                    if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt'):
+                        shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run1_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt')
                 for reg_file in os.listdir(results_dir):
                     if 'Movement' in reg_file:
                         shutil.copyfile(f'{results_dir}/{reg_file}',f'{func_dir}/{hcp_type}/movement_regressors/{dire}_reg_file')
