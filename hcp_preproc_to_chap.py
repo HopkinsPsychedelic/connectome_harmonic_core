@@ -42,32 +42,27 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
         u[f'{sub}_info'][ses]['hcp_types'].clear()
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion'])
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     add_back = [] 
     hcp_types = u[f'{sub}_info'][ses]['hcp_types'].copy()
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #check if there are prev. data computed
-        print(hcp_type)
         if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data were unzipped before
-            print(f'found previous {hcp_type} data in {args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}')
             hcp_types.remove(hcp_type) 
             add_back.append(hcp_type)
-        else:
-            print(f'didnt find {args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}')
-    print(add_back)
     u[f'{sub}_info'][ses]['hcp_types'] = hcp_types
-    #now hcp_types has just the types they need to unzip
+    #already unzipped ones are gone from hcp_types
     #unzip HCP data
     for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
         if sub in zipdir and 'md5' not in zipdir:
             for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
-                print(hcp_type)
                 if hcp_type in zipdir:
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
                         print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
                         zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}') #extract to intermediate
-    for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
-        if not os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'):
+    for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: 
+        print(hcp_type)
+        if not os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #if they don't have a task downloaded
             u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type)
+            print(f'didnt find {hcp_type}')
     u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that have already been unzipped
     #define paths
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
