@@ -33,19 +33,19 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #intermediate ses folder
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
     #check if there's HCP functional data
-    u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR','LANGUAGE'] #etc. just the functional stuff for now
-    for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
-        if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
-            inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
-            u[f'{sub}_info'][ses]['is_func'] = 'hcp'
-        else:
-            u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type)
+    u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR','LANGUAGE'] #etc. just the functional stuff for now   
+    if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
+        inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
+        u[f'{sub}_info'][ses]['is_func'] = 'hcp'
+    else:
+        u[f'{sub}_info'][ses]['hcp_types'].clear()
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion'])
     add_back = [] 
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #check if there are prev. data computed
         if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data were unzipped before
             u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) 
             add_back.append(hcp_type)
+    print(add_back)
     #now hcp_types has just the types they need to unzip
     #unzip HCP data
     for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
@@ -56,6 +56,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
                         print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
                         zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}') #extract to intermediate
                 else:
+                    print(f'removing {hcp_type}')
                     u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) #this is not prev. downloaded or in source, so they don't have these data
     u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that have already been unzipped
     #define paths
