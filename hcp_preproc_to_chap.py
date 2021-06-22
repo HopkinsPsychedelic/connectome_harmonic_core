@@ -14,9 +14,9 @@ import compute_spectra as cs
 import shutil
 from itertools import product
 import utility_functions as uts
+import numpy as np
 
 def hcp_chapper(args, sub, u):
-    print(f'[CHAP] Creating directories for HCP subject {sub}') 
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}') #intermediate sub folder
     if os.path.exists(f'{args.hcp_dir}/ses-test') == False: #if regular HCP (one session)
          ses = '' #pass ses as empty parameter to next fxn
@@ -33,18 +33,23 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #intermediate ses folder
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #chap output ses folder
     #check if there's HCP functional data
-    u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR'] #etc. just the functional stuff for now
+    u[f'{sub}_info'][ses]['hcp_types'] = ['REST1', 'REST2', 'WM','MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL'] #etc. just the functional stuff for now   
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']:
         if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
             inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/func') #hcp func folder
             u[f'{sub}_info'][ses]['is_func'] = 'hcp'
-        else:
-            u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type)
+            break
+    if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
+        u[f'{sub}_info'][ses]['hcp_types'].clear()
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion'])
+    add_back = [] 
+    hcp_types = u[f'{sub}_info'][ses]['hcp_types'].copy()
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #check if there are prev. data computed
         if os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #data were unzipped before
-            u[f'{sub}_info'][ses]['hcp_types'].remove(hcp_type) 
-    #now hcp_types has just the types they need to unzip
+            hcp_types.remove(hcp_type) 
+            add_back.append(hcp_type)
+    u[f'{sub}_info'][ses]['hcp_types'] = hcp_types
+    #already unzipped ones are gone from hcp_types
     #unzip HCP data
     for zipdir in os.listdir(f'{args.hcp_dir}/{ses}'):
         if sub in zipdir and 'md5' not in zipdir:
@@ -53,6 +58,12 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
                     with ZipFile(f'{args.hcp_dir}/{ses}/{zipdir}', 'r') as zipObj:
                         print(f'[CHAP] Unzipping {sub} {ses} session {hcp_type} directory')
                         zipObj.extractall(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}') #extract to intermediate
+    hcp_types = u[f'{sub}_info'][ses]['hcp_types'].copy()
+    for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: 
+        if not os.path.exists(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/{hcp_type}'): #if they don't have a task downloaded
+            hcp_types.remove(hcp_type)
+    u[f'{sub}_info'][ses]['hcp_types'] = hcp_types
+    u[f'{sub}_info'][ses]['hcp_types'].extend(add_back) #add stuff back to hcp_types that have already been unzipped
     #define paths
     diffusion_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
     struc_dir = f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
@@ -68,9 +79,16 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
         print('[CHAP] Removing intermediate files...')
         for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', '10000000_endpoints.tck', '10000000.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
+        for item in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/'):
+            if 'dwi2response' in item:
+                shutil.rmtree(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{item}')
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/10000000_endpoints.vtk' #define streamline endpoints in dict
     #send to chcs fxn
-    ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
+    if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
+        print('[CHAP] Harmonics already detected. Checking for spectra...')
+        ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy'))
+    else:
+        ch.construct_harmonics(args, sub, ses, u, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
 
 
@@ -90,11 +108,12 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
                 for dire in ['lr', 'rl']:
                     scan = u[f'{sub}_info'][ses][f'rest{n}_{dire}']
                     bids_stuff = f'sub-{sub}_{ses}_task-rest{n}_acq-{dire}'
-                    print('[CHAP] Extracting timecourse from HCP surface files...')
+                    print(f'[CHAP] Extracting timeseries from REST{n} {dire} direction dtseries...')
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
                     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {scan} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
                     u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
-                    u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
+                    if args.mask_med_wall:
+                        u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'timeseries_rest{n}_{dire}'], u['mask'])
                 print(f'[CHAP] Concatenating LR and RL PE direction scans for REST{n}...')
                 u[f'{sub}_info'][ses][f'rest{n}_comb'] = inout.combine_pe(u[f'{sub}_info'][ses][f'timeseries_rest{n}_lr'], u[f'{sub}_info'][ses][f'timeseries_rest{n}_rl'])  
                 ch.func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'rest{n}_comb'], f'REST{n}', bids_stuff, vecs, vals)
@@ -108,11 +127,14 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             inout.if_not_exist_make(f'{func_dir}/{hcp_type}/movement_regressors')
             for dire in ['LR','RL']:
                 #save behavioral files
-                shutil.copytree(f'{results_dir}/tfMRI_{hcp_type}_{dire}/EVs',f'{func_dir}/{hcp_type}/{dire}_EVs')
+                if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_EVs'):
+                    shutil.copytree(f'{results_dir}/tfMRI_{hcp_type}_{dire}/EVs',f'{func_dir}/{hcp_type}/{dire}_EVs')
                 if dire == 'LR':
-                    shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run2_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt')
+                    if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt'):
+                        shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run2_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt')
                 else:
-                    shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run1_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt')
+                    if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt'):
+                        shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run1_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt')
                 for reg_file in os.listdir(results_dir):
                     if 'Movement' in reg_file:
                         shutil.copyfile(f'{results_dir}/{reg_file}',f'{func_dir}/{hcp_type}/movement_regressors/{dire}_reg_file')
@@ -127,7 +149,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             #concatenate PE directions
             print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {hcp_type} scan...')
             u[f'{sub}_info'][ses][hcp_type]['ts'] = inout.combine_pe(u[f'{sub}_info'][ses][hcp_type]['LR'],u[f'{sub}_info'][ses][hcp_type]['RL'])  
-            ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][hcp_type]['ts'],hcp_type,vecs,vals)
+            ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][hcp_type]['ts'],hcp_type,bids_stuff,vecs,vals)
             
                     
                 

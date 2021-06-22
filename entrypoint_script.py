@@ -28,7 +28,7 @@ import argparse
 import construct_harmonics as ch
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
-import ciftify_qsi_to_ch as cift
+import cift_qsi_to_ch as cift
 #user inputs cl arguments separated by spaces. args without dashes are required
 #for hcp, hcp_dir is required
 #for bids pipeline, qsi_dir, surf_dir, and fs_license_file are required
@@ -69,13 +69,16 @@ u = {}
 if args.hcp_dir: 
     inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
 #load mask
-u['mask'] = np.load(f'{args.hcp_dir}/hcp_mask.npy')
+u['mask'] = np.load('/home/neuro/repo/hcp_mask.npy')
 #find subjects
 subs = []
 if args.participant_label: #user input subjects
     subs = [str(sub) for sub in args.participant_label]
 elif args.hcp_dir: #get list of hcp subs from data downloaded
-    sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
+    if os.path.exists(f'{args.hcp_dir}/ses-test'):
+        sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
+    else: 
+        sub_list = os.listdir(args.hcp_dir)
     subs = [sub[:6] for sub in sub_list]
     subs = list(dict.fromkeys(subs))    
 else: #all subjects from qsi output
@@ -90,7 +93,7 @@ for sub in subs:
         hcp_prep.hcp_chapper(args, sub, u)
     #else, run BIDS/qsi method
     else:      
-        cift.qsi_chap(u, args, sub)
+        cift.bids_chapper(u, args, sub)
     print(f'[CHAP] Finished {sub}')
 print('''
   /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$                                                    /$$             /$$                     /$$

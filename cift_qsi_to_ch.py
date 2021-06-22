@@ -4,6 +4,8 @@
 Created on Thu Jun  3 21:10:09 2021
 
 @author: bwinston
+
+TODO: IF WE SKIP HARMONIC CREATION
 """
 import decomp as dcp
 import input_output as inout
@@ -17,7 +19,7 @@ from scipy import sparse
 from itertools import product
 import construct_harmonics as ch
 
-def qsi_chap(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; passes off to ciftify_chap
+def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; passes off to ciftify_chap
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
         multises = True
@@ -69,9 +71,9 @@ def ciftify_chap(u, args, sub, multises, ses):
                     if 'dtseries' in file:
                         u[f'{sub}_info'][ses]['func'].append(file)
                         print(f'[CHAP] Found ciftify timeseries: {file}') 
-    ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) 
+    ch.construct_harmonics(args, sub, ses, u, multises) 
 
-def cift_spectra_prep(args,sub,ses,u,vecs,vals):
+def bids_spectra_prep(args,sub,ses,u,vecs,vals):
     for dts in u[f'{sub}_info'][ses]['func']: #each functional volume
         bids_stuff = f'sub-{sub}_{inout.get_bids_stuff(dts)}' #e.g. sub-{sub}_ses-{ses}_task-{task}
         inout.dts_to_func_gii(dts, f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}') #extract cortical timeseries with connectome workbench
