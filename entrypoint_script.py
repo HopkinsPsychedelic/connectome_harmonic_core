@@ -31,19 +31,20 @@ import numpy as np
 import cift_qsi_to_ch as cift
 #user inputs cl arguments separated by spaces. args without dashes are required
 #for hcp, hcp_dir is required
-#for bids pipeline, qsi_dir, surf_dir, and fs_license_file are required
+#for bids pipeline, qsi_dir and ciftify_dir are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory (path)')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode')
 parser.add_argument('--participant_label', nargs='+', help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
-parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for BIDS pipeline')
+parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for CHAP-BIDS pipeline')
+parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders OR if one session just downloads. If test-retest, downloads go in respective session folders. Required for CHAP-HCP pipeline.')
+parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir (required for CHAP-BIDS)')
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 20' )
-parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders, downloads go in respective session folders. Required for HCP pipeline.')
-parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir')
-parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3mm')
-parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. True or False')
-parser.add_argument('--skip_func', type = bool, help= 'just find structural harmonics, no spectra')
+parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3')
+parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
+parser.add_arugment('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen (CHAP-HCP only)')
+parser.add_argument('--skip_func', type = bool, help= 'Just find structural harmonics, no spectra.')
 args = parser.parse_args() 
 #read evecs number, set default to 100
 if not args.evecs:
@@ -60,14 +61,17 @@ if not args.skip_func:
 #
 if not args.mask_med_wall:
     args.mask_med_wall = True
+#num streamlines default 10 million
+if not args.streamlines:
+    args.streamlines = 10000000
 #create CHAP output directory
-inout.if_not_exist_make(f"{args.output_dir}/chap")
+inout.if_not_exist_make(f'{args.output_dir}/chap')
 #set empty u dict
 global u
 u = {}
 #make hcp intermediate dir, load mask
 if args.hcp_dir: 
-    inout.if_not_exist_make(f'{args.output_dir}/hcp_preproc')
+    inout.if_not_exist_make(f'{args.output_dir}/chap_work')
 #load mask
 u['mask'] = np.load('/home/neuro/repo/hcp_mask.npy')
 #find subjects
@@ -75,10 +79,10 @@ subs = []
 if args.participant_label: #user input subjects
     subs = [str(sub) for sub in args.participant_label]
 elif args.hcp_dir: #get list of hcp subs from data downloaded
-    if os.path.exists(f'{args.hcp_dir}/ses-test'):
+    if os.path.exists(f'{args.hcp_dir}/ses-test'): #test-retest data
         sub_list = os.listdir(f'{args.hcp_dir}/ses-test')
     else: 
-        sub_list = os.listdir(args.hcp_dir)
+        sub_list = os.listdir(args.hcp_dir) #one session
     subs = [sub[:6] for sub in sub_list]
     subs = list(dict.fromkeys(subs))    
 else: #all subjects from qsi output
@@ -112,10 +116,4 @@ Have a pleasant afternoon.
 ''')                                                                                                                                    
                                                                                                                                       
                                                                                                                                       
-
-'''
-/Users/bwinston/Documents/fMRI/BIDS/hcp_prep_output participant --hcp_dir /Users/bwinston/Documents/fMRI/BIDS/HCP_Preproc  
-
-'''
-
 

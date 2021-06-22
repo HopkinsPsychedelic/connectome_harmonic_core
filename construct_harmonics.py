@@ -23,21 +23,17 @@ import hcp_preproc_to_chap as hcp_prep
 
 def construct_harmonics(args, sub, ses, u, multises): 
     sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
-    print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
-    print('[CHAP] Saved endpoint coordinates')
     surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si    
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
-    print('[CHAP] Constructing structural connectivity matrix...')
     struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
     connectome = struc_conn_mat + surf_mat #sum connections and surface
     if args.mask_med_wall==True:
         connectome = uts.mask_connectivity_matrix(connectome, u['mask']) #mask medial wall
-        print('[CHAP] Masked out medial wall vertices; computing harmonics...')
+        print('[CHAP] Masked out medial wall vertices')
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
-    print('[CHAP] Saved connectome (surface + connections)')
-    print('[CHAP] Computing harmonics...')
+    print('[CHAP] Saved connectome (surface + long-range connections)')
     vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvecs (see decomp.py)
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
@@ -62,7 +58,7 @@ def check_func(args,sub,ses,u,vecs,vals):
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
             if u[f'{sub}_info'][ses]['is_func'] == 'cift': #bids method
                 cift.bids_spectra_prep(args,sub,ses,u,vecs,vals)
-            else:  #functional stuff, HCP method
+            else:  #functional stuff, HCP method (it saves is_func elsewhere)
                 hcp_prep.hcp_spectra_prep(args,sub,ses,u,vecs,vals)    
     print(f'[CHAP] Finished session: {ses}')
 
