@@ -4,6 +4,7 @@
 
 import numpy as np
 import nibabel as nib
+import os 
 
 
 def dynamic_energy_spectrum(timeseries,vecs,vals):
@@ -86,6 +87,12 @@ def read_functional_timeseries(lhfunc,rhfunc):
         timeseries[:, i] = tp
     return timeseries   
 
+    
+def dts_to_ts(dtseries,wb_cmd_path='/home/neuro/repo/workbench-2/bin_rh_linux64/wb_command'):
+    os.system(f'bash {wb_cmd_path} -cifti-separate {dtseries} COLUMN -metric CORTEX_LEFT {func_dir}/{bids_stuff}_hem-l.func.gii')
+    os.system(f'bash {wb_cmd_path} -cifti-separate {dtseries} COLUMN -metric CORTEX_RIGHT {func_dir}/{bids_stuff}_hem-r.func.gii')
+    
+    
     
     
     

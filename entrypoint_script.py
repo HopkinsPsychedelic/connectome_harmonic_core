@@ -93,7 +93,7 @@ for sub in subs:
         hcp_prep.hcp_chapper(args, sub, u)
     #else, run BIDS/qsi method
     else:      
-        cift.qsi_chap(u, args, sub)
+        cift.bids_chapper(u, args, sub)
     print(f'[CHAP] Finished {sub}')
 print('''
   /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$                                                    /$$             /$$                     /$$

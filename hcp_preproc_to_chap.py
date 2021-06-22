@@ -88,7 +88,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
         ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy'))
     else:
-        ch.construct_harmonics_calculate_spectra(args, sub, ses, u, multises) #run chcs function
+        ch.construct_harmonics(args, sub, ses, u, multises) #run chcs function
     shutil.rmtree(f'{args.output_dir}/hcp_preproc/sub-{sub}/{ses}') #remove intermediate ses folder recursively
 
 

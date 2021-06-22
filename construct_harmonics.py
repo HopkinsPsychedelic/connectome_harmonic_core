@@ -21,7 +21,7 @@ from scipy import sparse
 import cift_qsi_to_ch as cift
 import hcp_preproc_to_chap as hcp_prep
 
-def construct_harmonics_calculate_spectra(args, sub, ses, u, multises): 
+def construct_harmonics(args, sub, ses, u, multises): 
     sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
     print('[CHAP] Saved surface coordinates and surface indices')
     ec=inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
@@ -61,7 +61,7 @@ def check_func(args,sub,ses,u,vecs,vals):
         if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
             if u[f'{sub}_info'][ses]['is_func'] == 'cift': #bids method
-                cift.cift_spectra_prep(args,sub,ses,u,vecs,vals)
+                cift.bids_spectra_prep(args,sub,ses,u,vecs,vals)
             else:  #functional stuff, HCP method
                 hcp_prep.hcp_spectra_prep(args,sub,ses,u,vecs,vals)    
     print(f'[CHAP] Finished session: {ses}')
