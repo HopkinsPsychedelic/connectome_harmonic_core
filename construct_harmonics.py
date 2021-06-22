@@ -81,13 +81,14 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
         normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
-        print(f'[CHAP] Saved power spectra for {bids_stuff} scan')
+        print(f'[CHAP] Saved power spectra')
         #energy spectra
+        print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff}...')
         mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals) #average energy over the whole scan (average of dynamic for each harmonic)
         np.save(f'{task_dir}/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
         dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals) #energy at each TR
         np.save(f'{task_dir}/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
-        print(f'[CHAP] Saved energy spectra for {bids_stuff} scan')
+        print(f'[CHAP] Saved energy spectra')
         #reconstruction spectrum
         dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals) #takes on negative values
         np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
