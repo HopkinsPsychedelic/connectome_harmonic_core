@@ -99,6 +99,11 @@ def read_functional_timeseries(lhfunc,rhfunc):
         timeseries[:, i] = tp
     return timeseries
 
+def read_cifti_timeseries_masked(file):
+    time_series=nib.load(file)
+    time_series=np.array(time_series.dataobj)[:,:59412]
+    return time_series.T
+
 def plot_spectrum(spectrum, spectrum_type):
     #TODO: replace with args.evecs
     ax = plt.figure().gca()

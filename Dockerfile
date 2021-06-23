@@ -122,7 +122,8 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && sync && conda clean -y --all && sync \
     && conda install -yq scikit-learn scipy meshio nibabel \ 
     && conda install -c mrtrix3 mrtrix3 \
-    && conda install vtk matplotlib pandas numpy nilearn \
+    && conda install vtk matplotlib pandas numpy nilearn powerlaw Cython \
+    && conda install plfit \
     && sync && conda clean -y --all && sync \
     && rm -rf ~/.cache/pip* \
     && sync
