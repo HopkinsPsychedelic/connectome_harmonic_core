@@ -42,9 +42,9 @@ parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir (required f
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 20' )
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3')
-parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_arugment('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen (CHAP-HCP only)')
 parser.add_argument('--skip_func', type = bool, help= 'Just find structural harmonics, no spectra.')
+parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
 
 args = parser.parse_args() 
