@@ -48,6 +48,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
 ENTRYPOINT ["/neurodocker/startup.sh"]
+
 ENV FSLDIR="/opt/fsl-6.0.3" \
     PATH="/opt/fsl-6.0.3/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
@@ -58,6 +59,7 @@ ENV FSLDIR="/opt/fsl-6.0.3" \
     FSLMACHINELIST="" \
     FSLREMOTECALL="" \
     FSLGECUDAQ="cuda.q"
+
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            bc \
@@ -79,6 +81,17 @@ RUN apt-get update -qq \
            sudo \
            wget \
     && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
+    
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc \
+           libgomp1 \
+           libxmu6 \
+           libxt6 \
+           perl \
+           tcsh \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FSL ..." \
     && mkdir -p /opt/fsl-6.0.3 \
@@ -90,39 +103,9 @@ RUN apt-get update -qq \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT \
     && echo "Installing FSL conda environment ..." \
     && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
-ENV FREESURFER_HOME="/opt/freesurfer-6.0.0" \
-    PATH="/opt/freesurfer-6.0.0/bin:$PATH"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           bc \
-           libgomp1 \
-           libxmu6 \
-           libxt6 \
-           perl \
-           tcsh \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Downloading FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer-6.0.0 \
-    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz \
-    | tar -xz -C /opt/freesurfer-6.0.0 --strip-components 1 \
-         --exclude='freesurfer/average/mult-comp-cor' \
-         --exclude='freesurfer/lib/cuda' \
-         --exclude='freesurfer/lib/qt' \
-         --exclude='freesurfer/subjects/V1_average' \
-         --exclude='freesurfer/subjects/bert' \
-         --exclude='freesurfer/subjects/cvs_avg35' \
-         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-         --exclude='freesurfer/subjects/fsaverage3' \
-         --exclude='freesurfer/subjects/fsaverage4' \
-         --exclude='freesurfer/subjects/fsaverage5' \
-         --exclude='freesurfer/subjects/fsaverage6' \
-         --exclude='freesurfer/subjects/fsaverage_sym' \
-         --exclude='freesurfer/trctrain' \
-    && sed -i '$isource "/opt/freesurfer-6.0.0/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
-#COPY ["license.txt", "/opt/freesurfer-6.0.0"]
-RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
-USER neuro
+
+#RUN test "$(getent passwd neuro)" || useradd --no-user-group --create-home --shell /bin/bash neuro
+RUN useradd -ms /bin/bash neuro
 WORKDIR /home/neuro
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
@@ -148,7 +131,6 @@ USER root
 RUN mkdir /data && chmod 777 /data && chmod a+s /data
 RUN mkdir /output && chmod 777 /output && chmod a+s /output
 RUN mkdir /home/neuro/repo && chmod 777 /home/neuro/repo && chmod a+s /home/neuro/repo
-RUN chmod 777 /opt/freesurfer-6.0.0
 RUN rm -rf /opt/conda/pkgs/*
 USER neuro 
 #https://github.com/moby/moby/issues/22832
@@ -160,6 +142,6 @@ RUN echo "$SSH_KEY" > /home/neuro/.ssh/id_ed25519
 RUN chmod 600 /home/neuro/.ssh/id_ed25519
 RUN touch /home/neuro/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/neuro/.ssh/known_hosts
-RUN git clone git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
+RUN git clone -b ciftify git@github.com:hptaylor/connectome_harmonic_core.git /home/neuro/repo ;'bash'
 WORKDIR /home/neuro
 ENTRYPOINT ["python","/home/neuro/repo/entrypoint_script.py"]

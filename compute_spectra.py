@@ -4,6 +4,7 @@
 
 import numpy as np
 import nibabel as nib
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from matplotlib.ticker import MaxNLocator
@@ -16,6 +17,9 @@ import plfit
 import math
 from sklearn.metrics import mean_squared_error
 import pandas as pd
+=======
+import os 
+>>>>>>> 5845aa3343f792600355d928364e9cf6f8249658
 
 
 def dynamic_energy_spectrum(timeseries,vecs,vals):
@@ -96,6 +100,7 @@ def read_functional_timeseries(lhfunc,rhfunc):
         rt = np.array(r[i].data)
         tp = np.concatenate((lt, rt))
         timeseries[:, i] = tp
+<<<<<<< HEAD
     return timeseries
 
 def plot_spectrum(spectrum, spectrum_type):
@@ -168,3 +173,12 @@ def plot_rmse_criticality(mean_spectrum, dynamic_spectrum, spectrum_type):
     line = mlines.Line2D(log_wavenumbers, pred_best_fit_max, color='red')
     axs[2].add_line(line)
     print("RSME Max powerlaw fit: "+str(math.sqrt(mean_squared_error(max_spectrum, pred_best_fit_max))))   
+=======
+    return timeseries   
+
+    
+
+    
+    
+    
+>>>>>>> 5845aa3343f792600355d928364e9cf6f8249658

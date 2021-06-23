@@ -18,6 +18,7 @@ import utility_functions as uts
 import os
 from glob import glob
 import statistics as stats
+import pickle
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -227,12 +228,18 @@ def get_task(fname):
     x = fname[taskstart:]
     task = x.split('_')[0]
     return task
+
+def add_bids_thing_to_fname(bids_thing,vol,full_path_lh,full_path_rh):
+    if bids_thing in vol:
+        func = 'get_{bids_thing}'
+        thing = eval(func+'(vol)')
+        full_path_lh = full_path_lh[:-11] + f'{bids_thing}-{thing}_' + full_path_lh[-11:]
+        full_path_rh = full_path_rh[:-11] + f'{bids_thing}-{thing}_' + full_path_rh[-11:]
+        return full_path_lh,full_path_rh
     
-def get_bids_stuff(lh_full_path):
-    stuff_start = lh_full_path.find('vol_') + 4
-    x = lh_full_path[stuff_start:]
-    bids_stuff = x.split('lh')[0][:-1]
-    return(bids_stuff)
+def get_bids_stuff(dts):
+    stuff_end = dts.find('desc') - 1 
+    return(dts[:stuff_end])
 
 def if_not_exist_make(path):
     import os
@@ -271,19 +278,20 @@ def network_verts(network, parcel_csv, dtseries):
             network_verts.append(0)
     return np.array(network_verts)
 
-'''
-#NET VERTS workstation
-parcel_csv = pd.read_csv('/data2/Brian/connectome_harmonics/Parcels/Parcels.csv')
-dtseries = np.array(np.loadtxt('/data2/Brian/connectome_harmonics/Gordon_Parcels_LR.dtseries.txt'))
-dtseries = np.expand_dims(dtseries,1)
-masked_vecs = np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-114823/ses-test/vecs.npy')
-masked_vecs = np.delete(masked_vecs,0,axis=1)
-net_verts = {}
-for network in list(set(parcel_csv['Community'])):
-    net_verts[network] = {} 
-    net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
-    net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/data2/Brian/connectome_harmonics/mask.npy'))
 
+def net_verts():
+    parcel_csv = pd.read_csv('/data2/Brian/connectome_harmonics/Parcels/Parcels.csv')
+    dtseries = np.array(np.loadtxt('/data2/Brian/connectome_harmonics/Gordon_Parcels_LR.dtseries.txt'))
+    dtseries = np.expand_dims(dtseries,1)
+    masked_vecs = np.load('/data/hcp_test_retest_pp/derivatives/chap/sub-114823/ses-test/vecs.npy')
+    masked_vecs = np.delete(masked_vecs,0,axis=1)
+    net_verts = {}
+    for network in list(set(parcel_csv['Community'])):
+        net_verts[network] = {} 
+        net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
+        net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/data2/Brian/connectome_harmonics/mask.npy'))
+    return net_verts
+'''
 #NET VERTS mac
 parcel_csv = pd.read_csv('/Users/bwinston/Downloads/Parcels/Parcels.csv')
 dtseries = np.array(np.loadtxt('/Users/bwinston/Downloads/Gordon_Parcels_LR.dtseries.txt'))
@@ -295,8 +303,6 @@ for network in list(set(parcel_csv['Community'])):
     net_verts[network] = {} 
     net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
     net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
-
-
 '''
 def get_subs(chap_dir,functional=False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
@@ -312,22 +318,50 @@ def get_subs(chap_dir,functional=False):
 def mofl(list_of_lists):
     return np.mean(np.array(list_of_lists),axis=0)
 
-def across_avg(subs,dic,fxn,data): #dic doesn't have to be overall dict #data is just name
+'''
+def across_avg(subs,av,dic,fxn,data,mofl=True): #dic doesn't have to be overall dict #data is just name
     dic[f'across_subj_all_{data}'] = []
     for sub in subs:
         dic[sub][f'c_sub_all_{data}'] = []
         for c_sub in subs:
             if c_sub != sub:
+                if sub not in dic[c_sub]:
                 dic[sub][c_sub] = {}
-                for ses in ['test','retest']: #take mofl out of below if isn't mofl
-                    dic[sub][c_sub][ses] = fxn(mofl(dic[sub][ses][f'{data}']),mofl(dic[c_sub][ses][f'{data}']))
+                for ses in ['test','retest']: #take mofl out of below if isn't mofl #gd needs mofl
+                    if mofl:
+                        dic[sub][c_sub][ses] = fxn(mofl(dic[sub][ses][f'{data}']),mofl(dic[c_sub][ses][f'{data}']))
+                    else:
+                        dic[sub][c_sub][ses] = fxn(av[sub][ses]['vecs'],av[c_sub][ses]['vecs'],)
                 dic[sub][f'c_sub_all_{data}'].append((dic[sub][c_sub]['test'] + dic[sub][c_sub]['retest'])/2)
         dic[f'across_subj_all_{data}'].append(stats.mean(dic[sub][f'c_sub_all_{data}']))
+        dic[f'across_subj_all_{data}'] = list(set(dic[f'across_subj_all_{data}']))
     dic[f'across_subj_avg_{data}'] = stats.mean(dic[sub][f'c_sub_all_{data}'])
+'''
+def across_avg(subs,av,dic,fxn,data,mofl=True): #dic doesn't have to be overall dict #data is just name
+    dic[f'across_subj_all_{data}'] = []
+    for sub in subs:
+        dic[sub][f'c_sub_all_{data}'] = []
+        for c_sub in subs:
+            if c_sub != sub:
+                if sub not in dic[c_sub]:
+                    dic[sub][c_sub] = {}
+                    for ses in ['test','retest']: #take mofl out of below if isn't mofl #gd needs mofl
+                        if mofl:
+                            dic[sub][c_sub][ses] = fxn(mofl(dic[sub][ses][f'{data}']),mofl(dic[c_sub][ses][f'{data}']))
+                        else:
+                            dic[sub][c_sub][ses] = fxn(av[sub][ses]['vecs'],av[c_sub][ses]['vecs'],)
+                    dic[sub][f'c_sub_all_{data}'].append((dic[sub][c_sub]['test'] + dic[sub][c_sub]['retest'])/2)
+        dic[f'across_subj_all_{data}'].append(dic[sub][f'c_sub_all_{data}'])
+    dic[f'across_subj_avg_{data}'] = stats.mean(sum(dic[f'across_subj_all_{data}'],[]))
+
                 
 def abs_pearson(x,y):
     return abs(pearsonr(x,y)[0])
     
+def load_pkl(file): #file should end in .pkl
+    file_to_read = open(file,"rb")
+    loaded_dic = pickle.load(file_to_read)
+    return loaded_dic
 
 '''
 def read_gifti_surface(filename):
@@ -349,6 +383,7 @@ def combine_hemis(lhc,rhc,lhi,rhi):
     return coords, si
 '''
     
-    
-    
+def dts_to_func_gii(dts,out):
+    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {dts} COLUMN -metric CORTEX_LEFT {out}_hem-l.func.gii')
+    os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {dts} COLUMN -metric CORTEX_RIGHT {out}_hem-r.func.gii') 
     
