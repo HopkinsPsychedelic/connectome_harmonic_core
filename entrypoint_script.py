@@ -65,7 +65,9 @@ if not args.mask_med_wall:
     args.mask_med_wall = True
 #num streamlines default 10 million
 if not args.streamlines:
-    args.streamlines = 10000000
+    args.streamlines = '10000000'
+else:
+    args.streamlines = str(args.streamlines)
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
 #set empty u dict
