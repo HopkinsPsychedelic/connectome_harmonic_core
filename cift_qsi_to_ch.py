@@ -45,7 +45,7 @@ def get_endpoints(args, sub, u, multises, ses):
     for file in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}'):
         if '_endpoints.tck' in file:
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
-    ciftify_chap(u, args, sub, multises) 
+    ciftify_chap(u, args, sub, multises, ses) 
         
 def ciftify_chap(u, args, sub, multises, ses):
     #get ciftify surfs
