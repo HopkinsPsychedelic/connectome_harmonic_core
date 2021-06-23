@@ -30,11 +30,13 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
     else: #if sub has just one session
         print(f'[CHAP] Detected only one session for {sub}')
         multises = False
+        ses = '' 
+        u[f'{sub}_info'][ses] = {}
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
-                u[f'{sub}_info']['streamlines'] = file
+                u[f'{sub}_info'][ses]['streamlines'] = file
                 print(f'[CHAP] Located streamline endpoints for sub-{sub}')
-        get_endpoints(args, sub, u, multises, ses = '')
+        get_endpoints(args, sub, u, multises, ses)
 
 def get_endpoints(args, sub, u, multises, ses):
     tck_name = u[f'{sub}_info'][ses]['streamlines'].split('/')[-1][:-4]
