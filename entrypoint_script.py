@@ -45,6 +45,7 @@ parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3mm')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. True or False')
 parser.add_argument('--skip_func', type = bool, help= 'just find structural harmonics')
+parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
 args = parser.parse_args() 
 #place Freesurfer license file in freesurfer home dir
 if args.fs_license_file:

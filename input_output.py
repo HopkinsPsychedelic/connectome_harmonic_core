@@ -10,7 +10,7 @@ import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
-import test_retest_fxns as t_rt
+#import test_retest_fxns as t_rt
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler,normalize

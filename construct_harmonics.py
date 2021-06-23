@@ -163,7 +163,9 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
         inout.if_not_exist_make(f'{task_dir}')
         bids_stuff = bids_stuff[:-7]
         for spec in ['powerspectra', 'energyspectra','reconspectra']:
-            inout.if_not_exist_make(f'{task_dir}/{spec}') 
+            inout.if_not_exist_make(f'{task_dir}/{spec}')
+            inout.if_not_exist_make(f'{task_dir}/criticality/{spec}')
+
         #power spectra
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff} scan...')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
@@ -183,6 +185,15 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals):
         dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals) #takes on negative values
         np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
         print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
+        #criticality
+        inout.if_not_exist_make(f'{task_dir}/criticality/')
+        power_criticality = cs.criticality(mean_power_spectrum, dynamic_power_spectrum, 'power')
+        power_criticality.to_csv(f'{task_dir}/criticality/power/power_criticality.csv', index=False)
+        energy_criticality = cs.criticality(mean_energy_spectrum, dynamic_energy_spectrum, 'energy')
+        energy_criticality.to_csv(f'{task_dir}/criticality/power/energy_criticality.csv', index=False)
+        #TODO: reconstruction spectrum has no 'mean_recon_spectra' - should we still be calcluating criticality for this spectrum
+        #recon_criticality = cs.criticality(mean_reconstruction_spectrum, dynamic_reconstruction_spectrum, 'reconstruction')
+        #recon_criticality.to_csv(f'{task_dir}/criticality/power/reconstruction_criticality.csv', index=False)
 
                 
 '''
