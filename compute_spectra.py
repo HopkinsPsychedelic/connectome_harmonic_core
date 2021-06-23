@@ -12,7 +12,6 @@ import matplotlib.lines as mlines
 import matplotlib.transforms as mtransforms
 from powerlaw import plot_pdf, Fit, pdf
 import powerlaw
-import plfit
 import math
 from sklearn.metrics import mean_squared_error
 import pandas as pd
