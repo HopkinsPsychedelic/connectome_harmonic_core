@@ -32,6 +32,7 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
         multises = False
         ses = '' 
         u[f'{sub}_info'][ses] = {}
+        print(u[f'{sub}_info'][''])
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
                 u[f'{sub}_info'][ses]['streamlines'] = file
