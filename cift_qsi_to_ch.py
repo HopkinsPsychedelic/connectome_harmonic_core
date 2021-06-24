@@ -25,7 +25,7 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
                 for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'): #look in qsirecon output dir for tck
                     if 'tck' in file:
                         u[f'{sub}_info'][ses]['streamlines'] = file #streamlines list with each session's .tck
-                        print(f'[CHAP] Located streamline endpoints for sub-{sub} {ses}')
+                        print(f'[CHAP] Located tractography for sub-{sub} {ses}')
             get_endpoints(args, sub, u, multises, ses) 
     else: #if sub has just one session
         print(f'[CHAP] Detected only one session for {sub}')
@@ -35,12 +35,13 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
         for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
             if 'tck' in file:
                 u[f'{sub}_info'][ses]['streamlines'] = file
-                print(f'[CHAP] Located streamline endpoints for sub-{sub}')
+                print(f'[CHAP] Located tractography for sub-{sub}')
         get_endpoints(args, sub, u, multises, ses)
 
 def get_endpoints(args, sub, u, multises, ses):
     tck_name = u[f'{sub}_info'][ses]['streamlines'].split('/')[-1][:-4]
-    subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
+    if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'):
+        subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk' #save endpoints to u
     for file in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}'):
         if '_endpoints.tck' in file:
