@@ -50,6 +50,7 @@ def get_endpoints(args, sub, u, multises, ses):
         
 def ciftify_chap(u, args, sub, multises, ses):
     #get ciftify surfs
+    u[f'{sub}_info'][ses]['surfs'] = {}
     u[f'{sub}_info'][ses]['surfs']['lh'] = f'{args.ciftify_dir}/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.L.white.32k_fs_LR.surf.gii'
     u[f'{sub}_info'][ses]['surfs']['rh'] = f'{args.ciftify_dir}/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii'
     if multises == True:
