@@ -64,7 +64,7 @@ def ciftify_chap(u, args, sub, multises, ses):
             if ses in func_dir: #ses can be empty, remember
                 for file in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results/{func_dir}'): #ciftify functional timeseries directories
                     if 'dtseries' in file:
-                        u[f'{sub}_info'][ses]['func'].append(file)
+                        u[f'{sub}_info'][ses]['func'].append(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results/{func_dir}/{file}')
                         print(f'[CHAP] Found ciftify timeseries: {file}') 
     ch.construct_harmonics(args, sub, ses, u, multises) 
 
