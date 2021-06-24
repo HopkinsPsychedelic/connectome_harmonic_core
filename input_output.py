@@ -240,7 +240,7 @@ def add_bids_thing_to_fname(bids_thing,vol,full_path_lh,full_path_rh):
     
 def get_bids_stuff(dts):
     dts = dts.split('/')[-1] #get just filename not path
-    stuff_end = dts.split('desc') - 1 #get everything before desc
+    stuff_end = dts.find('desc') - 1 #get everything before desc
     return(dts[:stuff_end])
 
 def if_not_exist_make(path):
