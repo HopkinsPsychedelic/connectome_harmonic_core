@@ -952,6 +952,9 @@ def icc_vtx(chap_dir,ivp,vec,vtx):
 
 '''DWI vs. surface responsibility thing'''
 def gen_harms(surf_mat,struc_conn_mat,mask=np.load('/data2/Brian/connectome_harmonics/mask.npy')):
+    if type(surf_mat) == str:
+        surf_mat = sparse.load_npz(surf_mat)
+        struc_conn_mat = sparse.load_npz(struc_conn_mat)
     connectome = surf_mat + struc_conn_mat
     connectome = uts.mask_connectivity_matrix(connectome,mask)
     vals,vecs=dcp.lapDecomp(connectome, 100)
@@ -966,6 +969,7 @@ def gen_harms(surf_mat,struc_conn_mat,mask=np.load('/data2/Brian/connectome_harm
     surf_t_dwi_r.vecs = tr
     surf_r_dwi_t.vecs = rt
 '''
+#TODO: make this fxn work for single session
 def load_vecs(chap_dir,functional,n_evecs): #probs want 99
     all_vecs, all_vecs['test'], all_vecs['retest'] = {}, {}, {}
     subs = inout.get_subs(chap_dir,functional)

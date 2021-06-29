@@ -47,11 +47,8 @@ def neighbors(searchedset,queryset,num):
     computes num nearest neighbors of queryset in searchedset and returns numpy arrays size (len(queryset),num) 
     of indices of searched set and distances between neighbors
     '''
-    start=time.time()
     nbrs = skn.NearestNeighbors(n_neighbors=num, algorithm='auto').fit(searchedset)
     distances, indices = nbrs.kneighbors(queryset)
-    end=time.time()
-    print('[CHAP] Neighbors time =',(end-start))
     return indices,distances
 
 def unmask_medial_wall(masked_feature,medial_wall_mask):
