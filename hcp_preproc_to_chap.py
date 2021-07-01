@@ -15,6 +15,7 @@ import shutil
 from itertools import product
 import utility_functions as uts
 import numpy as np
+from nipype.interfaces omport afni as afni
 
 def hcp_chapper(args, sub, u):
     inout.if_not_exist_make(f'{args.output_dir}/chap_work/sub-{sub}') #intermediate sub folder
@@ -150,8 +151,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {hcp_type} scan...')
             u[f'{sub}_info'][ses][hcp_type]['ts'] = inout.combine_pe(u[f'{sub}_info'][ses][hcp_type]['LR'],u[f'{sub}_info'][ses][hcp_type]['RL'])  
             ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][hcp_type]['ts'],hcp_type,bids_stuff,vecs,vals)
-            
-                    
+                  
                 
                 
                 
