@@ -15,7 +15,6 @@ import shutil
 from itertools import product
 import utility_functions as uts
 import numpy as np
-from nipype.interfaces omport afni as afni
 
 def hcp_chapper(args, sub, u):
     inout.if_not_exist_make(f'{args.output_dir}/chap_work/sub-{sub}') #intermediate sub folder
@@ -76,7 +75,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
         print('[CHAP] Endpoints already detected')
     else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
         print('[CHAP] Running MRtrix commands to generate streamline endpoints...')
-        os.system(f'bash /home/neuro/repo/run_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix {args.streamlines}')
+        os.system(f'bash /home/neuro/repo/msmt_5tt_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix {args.streamlines}')
         print('[CHAP] Removing intermediate files...')
         for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', f'{args.streamlines}_endpoints.tck', f'{args.streamlines}.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
             os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')

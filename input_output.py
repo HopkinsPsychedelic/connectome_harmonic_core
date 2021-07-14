@@ -389,3 +389,8 @@ def dts_to_func_gii(dts,out):
     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {dts} COLUMN -metric CORTEX_LEFT {out}_hem-l.func.gii')
     os.system(f'bash /home/neuro/repo/workbench-2/bin_rh_linux64/wb_command -cifti-separate {dts} COLUMN -metric CORTEX_RIGHT {out}_hem-r.func.gii') 
     
+def get_rdists(rdist,how_many):
+    rdist_dic = {}
+    for x in range(how_many):
+        rdist_dic[x] = rdist[:,x]
+    return rdist_dic
