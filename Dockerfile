@@ -20,7 +20,10 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            bzip2 \
            ca-certificates \
            curl \
-           locales \           
+           locales \
+           devtoolset-3-gcc-c++ \
+           make \
+           zlib-devel \           
            unzip \
            git \
            python3-pip \
@@ -47,6 +50,25 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
+    && curl -fsSL https://cmake.org/files/v3.12/cmake-3.12.2.tar.gz | tar -xz \
+    && cd cmake-3.12.2 \
+    && source /opt/rh/devtoolset-3/enable \
+    && ./bootstrap --parallel=$NPROC -- -DCMAKE_BUILD_TYPE:STRING=Release \
+    && make -j$NPROC \
+    && make install \
+    && cd .. \
+    && rm -rf *
+
+RUN echo "Compiling ANTs version 2.2.0" \
+    && git clone git://github.com/stnava/ANTs.git ants \
+    && cd ants \
+    && git fetch origin --tags \
+    && git checkout 2.2.0 \
+    && mkdir build \
+    && cd build \
+    && source /opt/rh/devtoolset-3/enable \
+    
+
 ENTRYPOINT ["/neurodocker/startup.sh"]
 
 ENV FSLDIR="/opt/fsl-6.0.3" \
