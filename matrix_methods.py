@@ -90,7 +90,7 @@ def construct_structural_connectivity_matrix(SC,EC,tol=3,NNnum=45):
     M[x,x]=0 #remove self connections?
     print(M.nnz/2) #nonzero elements/2 (connections)
     M=M.tocsr()
-    return M.tocsr()
+    return M.tocsr(),Rdist
 
 def diffusion_matrix(A,t=0):
     Lap,D_sqrt_vec=csgraph.laplacian(A,normed=True,return_diag=True)
