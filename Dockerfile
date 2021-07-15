@@ -22,13 +22,13 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            ca-certificates \
            curl \
            locales \
-           devtoolset-3-gcc-c++ \
            make \
-           zlib-devel \           
+           zlib1g-dev \           
            unzip \
            git \
            python3-pip \
            gcc \
+           g++ \
            vim \
            nano \
            ssh-client \
@@ -50,10 +50,10 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     &&   echo 'export USER="${USER:=`whoami`}"' >> "$ND_ENTRYPOINT" \
     &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
     fi \
-    && chmod -R 777 /neurodocker && chmod a+s /neurodocker
+    && chmod -R 777 /neurodocker && chmod a+s /neurodocker \
     && curl -fsSL https://cmake.org/files/v3.12/cmake-3.12.2.tar.gz | tar -xz \
+    && chmod -R 777 cmake-3.12.2 \
     && cd cmake-3.12.2 \
-    && source /opt/rh/devtoolset-3/enable \
     && printf "\n\n+++++++++++++++++++++++++++++++++\n\
 BUILDING CMAKE WITH $NPROC PROCESS(ES)\n\
 +++++++++++++++++++++++++++++++++\n\n" \
@@ -61,16 +61,15 @@ BUILDING CMAKE WITH $NPROC PROCESS(ES)\n\
     && make -j$NPROC \
     && make install \
     && cd .. \
-    && rm -rf *
+    #&& rm -rf *
 
 RUN echo "Compiling ANTs version 2.2.0" \
     && git clone git://github.com/stnava/ANTs.git ants \
     && cd ants \
     && git fetch origin --tags \
-    && git checkout 2.2.0 \
+    #&& git checkout 2.2.0 \
     && mkdir build \
     && cd build \
-    && source /opt/rh/devtoolset-3/enable \
     && printf "\n\n++++++++++++++++++++++++++++++++\n\
 BUILDING ANTS WITH $NPROC PROCESS(ES)\n\
 ++++++++++++++++++++++++++++++++\n\n" \
@@ -79,17 +78,18 @@ BUILDING ANTS WITH $NPROC PROCESS(ES)\n\
     && if [ -d /src/ants/build/ANTS-build ]; then \
             \
             cd /src/ants/build/ANTS-build \
+	    && printf "MADE IT HERE" \
             && make install; \
-       else \
-            \
-            mkdir -p /opt/ants \
-            && mv bin/* /opt/ants \
-            && mv ../Scripts/* /opt/ants; \
+       #else \
+          #  \
+         #   mkdir -p /opt/ants \
+       #     && mv bin/* /opt/ants \
+        #    && mv ../Scripts/* /opt/ants; \
        fi
-COPY --from=builder /opt/ants /opt/ants
+#COPY --from=builder /opt/ants /opt/ants
 
-ENV ANTSPATH=/opt/ants/ \
-    PATH=/opt/ants:/opt/ants/bin:$PATH
+#ENV ANTSPATH=/opt/ants/ \
+    #PATH=/opt/ants:/opt/ants/bin:$PATH
 ENTRYPOINT ["/neurodocker/startup.sh"]
 
 ENV FSLDIR="/opt/fsl-6.0.3" \
