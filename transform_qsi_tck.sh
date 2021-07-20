@@ -32,9 +32,9 @@ mrtransform id_warp.mif -linear transform_mrtrix.txt native_to_acpc_warp.mif -te
 #transform tracks from acpc space to native space (INVERSE OF ABOVE TRANSFORM)
 tcktransform ${tracks} native_to_acpc_warp.mif transformed_tracks.tck
 
-tckresample -downsample 10 transformed_tracks.tck ds_tf_tracks.tck
+tckresample -downsample 10 transformed_tracks.tck ds_tf_tracks_chap-warp.tck
 
-tckresample -endpoints ds_tf_tracks.tck ds_tf_endp.tck
+#tckresample -endpoints ds_tf_tracks.tck ds_tf.tck
 
-tckconvert ds_tf_endp.tck ds_tf_endp.vtk
+#tckconvert ds_tf_endp.tck ds_tf_endp.vtk
 
