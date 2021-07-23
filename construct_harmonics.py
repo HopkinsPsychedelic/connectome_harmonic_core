@@ -22,11 +22,11 @@ import cift_qsi_to_ch as cift
 import hcp_preproc_to_chap as hcp_prep
 
 def construct_harmonics(args, sub, ses, u, multises): 
-    sc,si=inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
-    ec=inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
-    surf_mat=mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si    
+    sc,si = inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
+    ec = inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
+    surf_mat = mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si    
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
-    struc_conn_mat=mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
+    struc_conn_mat = mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum) #construct struc conn matrix from ec and sc (see matrix methods comments) 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
     connectome = struc_conn_mat + surf_mat #sum connections and surface
     if args.mask_med_wall==True:
@@ -34,7 +34,8 @@ def construct_harmonics(args, sub, ses, u, multises):
         print('[CHAP] Masked out medial wall vertices')
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) #save out connectome 
     print('[CHAP] Saved connectome (surface + long-range connections)')
-    vals,vecs=dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvecs (see decomp.py)
+    #compute harmonics
+    vals,vecs = dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvecs (see decomp.py)
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
@@ -44,6 +45,7 @@ def construct_harmonics(args, sub, ses, u, multises):
             unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],u['mask'])
     else:
         unmasked_vecs = vecs
+    #visualization
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,unmasked_vecs) #save out harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')
@@ -74,7 +76,6 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         for spec in ['powerspectra', 'energyspectra','reconspectra']:
             inout.if_not_exist_make(f'{task_dir}/{spec}')
             inout.if_not_exist_make(f'{task_dir}/criticality/{spec}')
-
         #power spectra
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff}...')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)

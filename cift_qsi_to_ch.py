@@ -24,7 +24,7 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
                 inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
                 for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'): #look in qsirecon output dir for tck
                     if 'tck' in file:
-                        u[f'{sub}_info'][ses]['streamlines'] = file #streamlines list with each session's .tck
+                        u[f'{sub}_info'][ses]['streamlines'] = file #streamlines list with each session's track file
                         print(f'[CHAP] Located tractography for sub-{sub} {ses}')
             get_endpoints(args, sub, u, multises, ses) 
     else: #if sub has just one session
