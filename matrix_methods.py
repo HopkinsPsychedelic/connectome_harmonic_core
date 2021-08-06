@@ -51,7 +51,7 @@ def construct_inter_hemi_matrix(SC,tol=4):
 
 
 
-def construct_structural_connectivity_matrix(SC,EC,tol=3,NNnum=45,binarize=False):
+def construct_structural_connectivity_matrix(SC,EC,tol=3,NNnum=45,binarize=True):
     '''
     SC- array of cortical surface coordinates of size (N_vertices, 3 ) where SC[i]=x_i,y_i,z_i
     EC- array of streamline endpoint coordinates of size (2*N_streamlines, 3 ) where EC[i]=[x_i,y_i,z_i]. also, EC[0] and EC[1] are endpoints of the same streamline etc.

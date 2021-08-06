@@ -44,6 +44,7 @@ parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of ne
 parser.add_argument('--skip_func', type = bool, help= 'Just find structural harmonics, no spectra.')
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen (CHAP-HCP only)')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
+parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix? Default is True')
 parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
 args = parser.parse_args() 
 
@@ -68,6 +69,9 @@ if not args.streamlines:
     args.streamlines = '10000000'
 else:
     args.streamlines = str(args.streamlines)
+#binarize structural connectivity matrix by default
+if not args.binarize:
+    args.binarize = True
     
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')

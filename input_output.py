@@ -394,3 +394,10 @@ def get_rdists(rdist,how_many):
     for x in range(how_many):
         rdist_dic[x] = rdist[:,x]
     return rdist_dic
+
+def save_pickle(a_dict,fname):
+    file_to_write = open(fname,"wb")
+    pickle.dump(a_dict,file_to_write)
+    
+    
+    
