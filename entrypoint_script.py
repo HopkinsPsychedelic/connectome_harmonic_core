@@ -55,10 +55,10 @@ if not args.evecs:
     args.evecs = 100
 #read tol number, set default to 3
 if not args.tol:
-    args.tol = 3
+    args.tol = 1
 #read nnum number, set default to 20
 if not args.nnum:
-    args.nnum = 20
+    args.nnum = 60
 #skip func spectra calculation default false
 if not args.skip_func:
     args.skip_func = False
