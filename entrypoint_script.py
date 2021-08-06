@@ -46,6 +46,7 @@ parser.add_argument('--streamlines', type = int, help = 'Number of streamlines i
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix? Default is True')
 parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
+parser.add_argument('--5tt', type = str)
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
