@@ -127,12 +127,6 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
                 #save behavioral files
                 if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_EVs'):
                     shutil.copytree(f'{results_dir}/tfMRI_{hcp_type}_{dire}/EVs',f'{func_dir}/{hcp_type}/{dire}_EVs')
-                if dire == 'LR':
-                    if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt'):
-                        shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run2_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run2_TAB.txt')
-                else:
-                    if not os.path.exists(f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt'):
-                        shutil.copyfile(f'{results_dir}/tfMRI_{hcp_type}_{dire}/{hcp_type}_run1_TAB.txt',f'{func_dir}/{hcp_type}/{dire}_run1_TAB.txt')
                 for reg_file in os.listdir(results_dir):
                     if 'Movement' in reg_file:
                         shutil.copyfile(f'{results_dir}/{reg_file}',f'{func_dir}/{hcp_type}/movement_regressors/{dire}_reg_file')
