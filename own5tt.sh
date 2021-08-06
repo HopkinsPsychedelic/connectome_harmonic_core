@@ -3,7 +3,7 @@
 dMRIdatapath=$1
 bvals=$2
 bvecs=$3
-T1path=$4
+brainmask=$4
 fivett=$5
 intermediary_output_path=$6
 num_streamlines=$7
