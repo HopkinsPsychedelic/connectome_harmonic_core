@@ -21,11 +21,10 @@ print('''
                                                                 |_|       
 ''')
 
-import os, shutil
+import os
 from glob import glob
 import input_output as inout
 import argparse
-import construct_harmonics as ch
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
 import cift_qsi_to_ch as cift
@@ -34,7 +33,7 @@ import cift_qsi_to_ch as cift
 #for bids pipeline, qsi_dir and ciftify_dir are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory (path)')
-parser.add_argument('analysis_level', type = str, help = 'Participant or group mode')
+parser.add_argument('analysis_level', type = str, help = 'Participant or group mode. Only participant mode supported for now.')
 parser.add_argument('--participant_label', nargs='+', help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
 parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for CHAP-BIDS pipeline')
 parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders OR if one session just downloads. If test-retest, downloads go in respective session folders. Required for CHAP-HCP pipeline.')
@@ -46,9 +45,10 @@ parser.add_argument('--skip_func', type = bool, help= 'Just find structural harm
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen (CHAP-HCP only)')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
-
 args = parser.parse_args() 
-#read evecs number, set default to 100
+
+##set default arguments if user doesn't supply
+#read evecs(harmonics) number, set default to 100
 if not args.evecs:
     args.evecs = 100
 #read tol number, set default to 3
@@ -57,10 +57,10 @@ if not args.tol:
 #read nnum number, set default to 20
 if not args.nnum:
     args.nnum = 20
-#
+#skip func spectra calculation default false
 if not args.skip_func:
     args.skip_func = False
-#
+#mask medial wall default True
 if not args.mask_med_wall:
     args.mask_med_wall = True
 #num streamlines default 10 million
@@ -68,16 +68,20 @@ if not args.streamlines:
     args.streamlines = '10000000'
 else:
     args.streamlines = str(args.streamlines)
+    
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
+#make hcp intermediate dir
+if args.hcp_dir: 
+    inout.if_not_exist_make(f'{args.output_dir}/chap_work')
+
 #set empty u dict
 global u
 u = {}
-#make hcp intermediate dir, load mask
-if args.hcp_dir: 
-    inout.if_not_exist_make(f'{args.output_dir}/chap_work')
+
 #load mask
 u['mask'] = np.load('/home/neuro/repo/hcp_mask.npy')
+
 #find subjects
 subs = []
 if args.participant_label: #user input subjects
@@ -93,6 +97,7 @@ else: #all subjects from qsi output
     subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Using sub(s): {subs}')
+
 for sub in subs:
     u[f'{sub}_info'] = {}  #create dict in u for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
