@@ -27,33 +27,32 @@ import input_output as inout
 import argparse
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
-import cift_qsi_to_ch as cift
+import bids_to_ch as bids
 #user inputs cl arguments separated by spaces. args without dashes are required
 #for hcp, hcp_dir is required
-#for bids pipeline, qsi_dir and ciftify_dir are required
+#for bids pipeline, mrtrix_dir and ciftify_dir are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory (path)')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode. Only participant mode supported for now.')
 parser.add_argument('--participant_label', nargs='+', help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
-parser.add_argument('--qsi_dir', type = str, help = 'qsirecon output directory. Required for CHAP-BIDS pipeline')
+parser.add_argument('--mrtrix_dir', type = str, help = 'bids/mrtrix_connectome preproc output directory. Required for CHAP-BIDS pipeline')
 parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders OR if one session just downloads. If test-retest, downloads go in respective session folders. Required for CHAP-HCP pipeline.')
 parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir (required for CHAP-BIDS)')
-parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100')
-parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 20' )
-parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 3')
+parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100 (minus first trivial harmonic)')
+parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 60' )
+parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 1')
 parser.add_argument('--skip_func', type = bool, help= 'Just find structural harmonics, no spectra.')
-parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen (CHAP-HCP only)')
+parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
-parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix? Default is True')
+parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
 parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
-parser.add_argument('--fivett', type = str)
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
 #read evecs(harmonics) number, set default to 100
 if not args.evecs:
     args.evecs = 100
-#read tol number, set default to 3
+#read tol number, set default to 1
 if not args.tol:
     args.tol = 1
 #read nnum number, set default to 20
@@ -98,8 +97,8 @@ elif args.hcp_dir: #get list of hcp subs from data downloaded
         sub_list = os.listdir(args.hcp_dir) #one session
     subs = [sub[:6] for sub in sub_list]
     subs = list(dict.fromkeys(subs))    
-else: #all subjects from qsi output
-    subject_dirs = glob(os.path.join(args.qsi_dir, "sub-*"))
+else: #all subjects from mrtrix output
+    subject_dirs = glob(os.path.join(args.mrtrix_dir, "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Using sub(s): {subs}')
 
@@ -109,22 +108,12 @@ for sub in subs:
     #if HCP, run hcp_prep function
     if args.hcp_dir:
         hcp_prep.hcp_chapper(args, sub, u)
-    #else, run BIDS/qsi method
+    #else, run BIDS method
     else:      
-        cift.bids_chapper(u, args, sub)
+        bids.bids_chapper(u, args, sub)
     print(f'[CHAP] Finished {sub}')
 print('''
-  /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$                                                    /$$             /$$                     /$$
- /$$__  $$| $$  | $$ /$$__  $$| $$__  $$                                                  | $$            | $$                    | $$
-| $$  \__/| $$  | $$| $$  \ $$| $$  \ $$        /$$$$$$$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ | $$  /$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$$
-| $$      | $$$$$$$$| $$$$$$$$| $$$$$$$/       /$$_____/ /$$__  $$| $$_  $$_  $$ /$$__  $$| $$ /$$__  $$|_  $$_/   /$$__  $$ /$$__  $$
-| $$      | $$__  $$| $$__  $$| $$____/       | $$      | $$  \ $$| $$ \ $$ \ $$| $$  \ $$| $$| $$$$$$$$  | $$    | $$$$$$$$| $$  | $$
-| $$    $$| $$  | $$| $$  | $$| $$            | $$      | $$  | $$| $$ | $$ | $$| $$  | $$| $$| $$_____/  | $$ /$$| $$_____/| $$  | $$
-|  $$$$$$/| $$  | $$| $$  | $$| $$            |  $$$$$$$|  $$$$$$/| $$ | $$ | $$| $$$$$$$/| $$|  $$$$$$$  |  $$$$/|  $$$$$$$|  $$$$$$$
- \______/ |__/  |__/|__/  |__/|__/             \_______/ \______/ |__/ |__/ |__/| $$____/ |__/ \_______/   \___/   \_______/ \_______/
-                                                                                | $$                                                  
-                                                                                | $$                                                  
-                                                                                |__/                                                  
+CHAP Completed.                           
 
 Have a pleasant afternoon.                                                                                                                                                                                                 
 ''')                                                                                                                                    

@@ -18,7 +18,7 @@ import os
 import matrix_methods as mm
 import compute_spectra as cs
 from scipy import sparse
-import cift_qsi_to_ch as cift
+import bids_to_ch as bids
 import hcp_preproc_to_chap as hcp_prep
 
 def construct_harmonics(args, sub, ses, u, multises): 
@@ -65,7 +65,7 @@ def check_func(args,sub,ses,u,vecs,vals):
         if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
             if u[f'{sub}_info'][ses]['is_func'] == 'cift': #bids method
-                cift.bids_spectra_prep(args,sub,ses,u,vecs,vals)
+                bids.bids_spectra_prep(args,sub,ses,u,vecs,vals)
             else:  #functional stuff, HCP method (it saves is_func elsewhere)
                 hcp_prep.hcp_spectra_prep(args,sub,ses,u,vecs,vals)    
     print(f'[CHAP] Finished session: {ses}')

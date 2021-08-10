@@ -41,7 +41,11 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
             break
     if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
         u[f'{sub}_info'][ses]['hcp_types'].clear()
-    u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion']) #add structural and diffusion (required) to hcp_types
+    #rename Structural_preproc_extended dirs Freesurfer
+    for download_dir in os.listdir(f'{args.hcp_dir}/{ses}'):
+        if 'Structural_preproc_extended' in download_dir and 'md5' not in download_dir:
+            os.rename(f'{args.hcp_dir}/{ses}/{download_dir}',f'{args.hcp_dir}/{ses}/{sub}_3T_Freesurfer.zip')
+    u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion','Freesurfer']) #add structural and diffusion (required) to hcp_types
     add_back = [] 
     hcp_types = u[f'{sub}_info'][ses]['hcp_types'].copy()
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #check if there are prev. data computed
@@ -66,25 +70,12 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     #define paths
     diffusion_dir = f'{args.output_dir}/chap_work/sub-{sub}/{ses}/Diffusion/{sub}/T1w/Diffusion' #diffusion path in intermediate dir
     struc_dir = f'{args.output_dir}/chap_work/sub-{sub}/{ses}/Structural/{sub}/T1w' #struc path in intermediate dir
+    freesurfer_dir = f'{args.output_dir}/chap_work/sub-{sub}/{ses}/Freesurfer/{sub}/T1w/{sub}' #freesurfer path in intermediate dir
     #save hcp surfaces in dict
     u[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii' #hcp left hem
     u[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii' #hcp right hem
-    #check if endpoints already computed, if not run diffusion pipeline
-    if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
-        print('[CHAP] Endpoints already detected')
-    else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
-        print('[CHAP] Running mrtrix commands to generate streamline endpoints...')
-        if args.fivett:
-            os.system(f'bash /home/neuro/repo/own5tt.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {diffusion_dir}/nodif_brain_mask.nii.gz {args.fivett} {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix {args.streamlines}')
-        else:
-            os.system(f'bash /home/neuro/repo/msmt_5tt_mrtrix_diffusion_pipeline.sh {diffusion_dir}/data.nii.gz {diffusion_dir}/bvals {diffusion_dir}/bvecs  {struc_dir}/T1w_acpc_dc_restore_brain.nii.gz {diffusion_dir}/nodif_brain_mask.nii.gz {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix {args.streamlines}')
-        print('[CHAP] Removing intermediate files...')
-        #for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', f'{args.streamlines}_endpoints.tck', f'{args.streamlines}.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
-        for file in ['DWI.mif', 'WM_FODs.mif', f'{args.streamlines}_endpoints.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
-            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
-        for item in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/'):
-            if 'dwi2response' in item:
-                shutil.rmtree(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{item}')
+    #check for streamlines; if not, run mrtrix reconstruction script
+    mrtrix_recon(sub,ses,args,f'{diffusion_dir}/data.nii.gz',f'{diffusion_dir}/bvals',f'{diffusion_dir}/bvecs',freesurfer_dir,f'{diffusion_dir}/nodif_brain_mask.nii.gz')
     u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk' #save streamline endpoints in dict
     #send to chcs fxn
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
@@ -146,8 +137,20 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             u[f'{sub}_info'][ses][hcp_type]['ts'] = inout.combine_pe(u[f'{sub}_info'][ses][hcp_type]['LR'],u[f'{sub}_info'][ses][hcp_type]['RL'])  
             ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][hcp_type]['ts'],hcp_type,bids_stuff,vecs,vals)
                   
-                
-                
+def mrtrix_recon(sub,ses,args,diff_preproc,bvals,bvecs,freesurfer_dir,diff_mask):                
+    #check if endpoints already computed, if not run diffusion pipeline
+    if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
+        print('[CHAP] Endpoints already detected')
+    else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
+        print('[CHAP] Running mrtrix commands to generate streamline endpoints...')
+        os.system(f'bash /home/neuro/repo/msmt_5tt_mrtrix_diffusion_pipeline.sh {diff_preproc} {bvals} {bvecs} {freesurfer_dir} {diff_mask} {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix {args.streamlines}')
+        print('[CHAP] Removing intermediate files...')
+        for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', f'{args.streamlines}_endpoints.tck', f'{args.streamlines}.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
+        #for file in ['DWI.mif', 'WM_FODs.mif', f'{args.streamlines}_endpoints.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 
+            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{file}')
+        for item in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/'):
+            if 'dwi2response' in item:
+                shutil.rmtree(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{item}')               
                 
                 
                 

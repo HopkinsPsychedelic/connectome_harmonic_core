@@ -18,10 +18,13 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
         multises = True
         print(f'[CHAP] Detected multiple sessions for {sub}')
-        for ses in os.listdir(f'{args.qsi_dir}/sub-{sub}'): 
+        for ses in os.listdir(f'{args.mrtrix_dir}/sub-{sub}'): 
             if 'ses' in ses:
                 u[f'{sub}_info'][ses] = {}
                 inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
+                
+                
+                
                 for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'): #look in qsirecon output dir for tck
                     if 'tck' in file:
                         u[f'{sub}_info'][ses]['streamlines'] = file #streamlines list with each session's track file
