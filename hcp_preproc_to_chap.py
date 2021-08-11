@@ -141,7 +141,7 @@ def mrtrix_recon(u,sub,ses,args,diff_preproc,bvals,bvecs,freesurfer_dir,diff_mas
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
         print('[CHAP] Endpoints already detected')
     else: #streamlines haven't been generated before, so run mrtrix diffusion pipeline with 10 million streamlines
-        print('[CHAP] Running mrtrix commands to generate streamline endpoints...')
+        print('[CHAP] Running mrtrix commands to generate streamline endpoints. Could take up to a couple hours...')
         os.system(f'bash /home/neuro/repo/msmt_5tt_mrtrix_diffusion_pipeline.sh {diff_preproc} {bvals} {bvecs} {freesurfer_dir} {diff_mask} {args.output_dir}/chap/sub-{sub}/{ses}/mrtrix {args.streamlines}')
         print('[CHAP] Removing intermediate files...')
         for file in ['DWI.mif', '5TT.mif', 'WM_FODs.mif', f'{args.streamlines}_endpoints.tck', f'{args.streamlines}.tck']: #remove large intermediate files from chap mrtrix dir. won't delete endpoints.vtk, which is needed for harmonics. 

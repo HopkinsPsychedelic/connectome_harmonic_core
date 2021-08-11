@@ -23,16 +23,16 @@ def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; pas
             if 'ses' in ses:
                 u[f'{sub}_info'][ses] = {}
                 inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders               
-                diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}_ses-{ses}_'
-                hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}/desc-preproc_dwi.nii.gz', f'{diffusion_dir}/desc-preproc_dwi.bval', f'{diffusion_dir}/desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}/desc-brain_mask.nii.gz')            
+                diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}_ses-{ses}'
+                hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}_desc-preproc_dwi.nii.gz', f'{diffusion_dir}_desc-preproc_dwi.bval', f'{diffusion_dir}_desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}_desc-brain_mask.nii.gz')            
             ciftify_chap(u, args, sub, multises, ses) 
     else: #if sub has just one session
         print(f'[CHAP] Detected only one session for {sub}')
         multises = False
         ses = '' 
         u[f'{sub}_info'][ses] = {}
-        diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}_'
-        hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}/desc-preproc_dwi.nii.gz', f'{diffusion_dir}/desc-preproc_dwi.bval', f'{diffusion_dir}/desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}/desc-brain_mask.nii.gz')            
+        diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}'
+        hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}_desc-preproc_dwi.nii.gz', f'{diffusion_dir}_desc-preproc_dwi.bval', f'{diffusion_dir}_desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}_desc-brain_mask.nii.gz')            
         ciftify_chap(u, args, sub, multises, ses)
         
 def ciftify_chap(u, args, sub, multises, ses):
