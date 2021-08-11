@@ -8,48 +8,32 @@ Created on Thu Jun  3 21:10:09 2021
 """
 import input_output as inout
 import utility_functions as uts
-import subprocess
 import os
 import compute_spectra as cs
 import construct_harmonics as ch
+import hcp_preproc_to_chap as hcp_prep
 
 def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; passes off to ciftify_chap
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
+    freesurfer_dir = f'{args.freesurfer_dir}/sub-{sub}'
     if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
         multises = True
         print(f'[CHAP] Detected multiple sessions for {sub}')
         for ses in os.listdir(f'{args.mrtrix_dir}/sub-{sub}'): 
             if 'ses' in ses:
                 u[f'{sub}_info'][ses] = {}
-                inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders
-                
-                
-                
-                for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi'): #look in qsirecon output dir for tck
-                    if 'tck' in file:
-                        u[f'{sub}_info'][ses]['streamlines'] = file #streamlines list with each session's track file
-                        print(f'[CHAP] Located tractography for sub-{sub} {ses}')
-            get_endpoints(args, sub, u, multises, ses) 
+                inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders               
+                diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}_ses-{ses}_'
+                hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}/desc-preproc_dwi.nii.gz', f'{diffusion_dir}/desc-preproc_dwi.bval', f'{diffusion_dir}/desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}/desc-brain_mask.nii.gz')            
+            ciftify_chap(u, args, sub, multises, ses) 
     else: #if sub has just one session
         print(f'[CHAP] Detected only one session for {sub}')
         multises = False
         ses = '' 
         u[f'{sub}_info'][ses] = {}
-        for file in os.listdir(f'{args.qsi_dir}/sub-{sub}/dwi'):
-            if 'tck' in file:
-                u[f'{sub}_info'][ses]['streamlines'] = file
-                print(f'[CHAP] Located tractography for sub-{sub}')
-        get_endpoints(args, sub, u, multises, ses)
-
-def get_endpoints(args, sub, u, multises, ses):
-    tck_name = u[f'{sub}_info'][ses]['streamlines'].split('/')[-1][:-4]
-    if not os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk'):
-        subprocess.check_call("/home/neuro/repo/mrtrix_qsi_pipeline.sh %s %s %s" %(f'{args.qsi_dir}/sub-{sub}/{ses}/dwi', tck_name, f'{args.output_dir}/chap/sub-{sub}/{ses}'), shell=True) #run mrtrix bash script
-    u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/{tck_name}_endpoints.vtk' #save endpoints to u
-    for file in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}'):
-        if '_endpoints.tck' in file:
-            os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/{file}') #remove endpoints tck
-    ciftify_chap(u, args, sub, multises, ses) 
+        diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}_'
+        hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}/desc-preproc_dwi.nii.gz', f'{diffusion_dir}/desc-preproc_dwi.bval', f'{diffusion_dir}/desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}/desc-brain_mask.nii.gz')            
+        ciftify_chap(u, args, sub, multises, ses)
         
 def ciftify_chap(u, args, sub, multises, ses):
     #get ciftify surfs
@@ -57,7 +41,7 @@ def ciftify_chap(u, args, sub, multises, ses):
     u[f'{sub}_info'][ses]['surfs']['lh'] = f'{args.ciftify_dir}/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.L.white.32k_fs_LR.surf.gii'
     u[f'{sub}_info'][ses]['surfs']['rh'] = f'{args.ciftify_dir}/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii'
     if multises == True:
-        print('[CHAP] PLEASE NOTE: You have input a dataset with multiple sessions. Ciftify only calculates one surface, which will be used at multiple sessions. This is not a problem (see Winston et. al 2021)')
+        print('[CHAP] PLEASE NOTE: You have input a dataset with multiple sessions. Ciftify only calculates one surface, which will be used at multiple sessions. This is not a problem (see Winston et. al 2022)')
     print(f'[CHAP] Found ciftify surfaces for {sub}')
     #for each ses, {sub}_info[ses][func] is a list of the dtseries files
     if os.path.exists(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results'): #there is functional stuff

@@ -37,7 +37,8 @@ parser.add_argument('analysis_level', type = str, help = 'Participant or group m
 parser.add_argument('--participant_label', nargs='+', help = 'Participant label(s) (not including sub-). If this parameter is not provided all subjects will be analyzed. Multiple participants can be specified with a space separated list')
 parser.add_argument('--mrtrix_dir', type = str, help = 'bids/mrtrix_connectome preproc output directory. Required for CHAP-BIDS pipeline')
 parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders OR if one session just downloads. If test-retest, downloads go in respective session folders. Required for CHAP-HCP pipeline.')
-parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir (required for CHAP-BIDS)')
+parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir (required for CHAP-BIDS). Specify the whole directory (i.e. not individual subject\'s')
+parser.add_argument('--freesurfer_dir', type = str, help = 'Freesurfer dir (required for CHAP-BIDS). Specify the whole directory (i.e. not individual subject\'s')
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100 (minus first trivial harmonic)')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 60' )
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 1')
@@ -54,10 +55,10 @@ if not args.evecs:
     args.evecs = 100
 #read tol number, set default to 1
 if not args.tol:
-    args.tol = 1
+    args.tol = 3
 #read nnum number, set default to 20
 if not args.nnum:
-    args.nnum = 60
+    args.nnum = 45
 #skip func spectra calculation default false
 if not args.skip_func:
     args.skip_func = False

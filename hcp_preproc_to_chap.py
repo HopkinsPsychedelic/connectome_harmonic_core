@@ -75,8 +75,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     u[f'{sub}_info'][ses]['surfs']['lh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.L.white.32k_fs_LR.surf.gii' #hcp left hem
     u[f'{sub}_info'][ses]['surfs']['rh'] = f'{struc_dir}/fsaverage_LR32k/{sub}.R.white.32k_fs_LR.surf.gii' #hcp right hem
     #check for streamlines; if not, run mrtrix reconstruction script
-    mrtrix_recon(sub,ses,args,f'{diffusion_dir}/data.nii.gz',f'{diffusion_dir}/bvals',f'{diffusion_dir}/bvecs',freesurfer_dir,f'{diffusion_dir}/nodif_brain_mask.nii.gz')
-    u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk' #save streamline endpoints in dict
+    mrtrix_recon(u,sub,ses,args,f'{diffusion_dir}/data.nii.gz',f'{diffusion_dir}/bvals',f'{diffusion_dir}/bvecs',freesurfer_dir,f'{diffusion_dir}/nodif_brain_mask.nii.gz')
     #send to chcs fxn
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
@@ -137,7 +136,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             u[f'{sub}_info'][ses][hcp_type]['ts'] = inout.combine_pe(u[f'{sub}_info'][ses][hcp_type]['LR'],u[f'{sub}_info'][ses][hcp_type]['RL'])  
             ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][hcp_type]['ts'],hcp_type,bids_stuff,vecs,vals)
                   
-def mrtrix_recon(sub,ses,args,diff_preproc,bvals,bvecs,freesurfer_dir,diff_mask):                
+def mrtrix_recon(u,sub,ses,args,diff_preproc,bvals,bvecs,freesurfer_dir,diff_mask):                
     #check if endpoints already computed, if not run diffusion pipeline
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline
         print('[CHAP] Endpoints already detected')
@@ -151,7 +150,8 @@ def mrtrix_recon(sub,ses,args,diff_preproc,bvals,bvecs,freesurfer_dir,diff_mask)
         for item in os.listdir(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/'):
             if 'dwi2response' in item:
                 shutil.rmtree(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{item}')               
-                
+    u[f'{sub}_info'][ses]['endpoints'] = f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk' #save streamline endpoints in dict
+        
                 
                 
                 
