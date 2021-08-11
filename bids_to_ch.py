@@ -16,7 +16,7 @@ import hcp_preproc_to_chap as hcp_prep
 def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; passes off to ciftify_chap
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
     freesurfer_dir = f'{args.freesurfer_dir}/sub-{sub}'
-    if any('ses' in x for x in os.listdir(f'{args.qsi_dir}/sub-{sub}')): #if multiple sessions
+    if any('ses' in x for x in os.listdir(f'{args.mrtrix_dir}/sub-{sub}')): #if multiple sessions
         multises = True
         print(f'[CHAP] Detected multiple sessions for {sub}')
         for ses in os.listdir(f'{args.mrtrix_dir}/sub-{sub}'): 
