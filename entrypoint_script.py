@@ -42,7 +42,8 @@ parser.add_argument('--freesurfer_dir', type = str, help = 'Freesurfer dir (requ
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100 (minus first trivial harmonic)')
 parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 60' )
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 1')
-parser.add_argument('--skip_func', type = bool, help= 'Just find structural harmonics, no spectra.')
+parser.add_argument('--skip_func', type = bool, help = 'Just find structural harmonics, no spectra.')
+parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pipeline or dhollander pipeline based on bids/mrtrix3_connectome. Choose msmt or dholl.')
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
@@ -73,6 +74,8 @@ else:
 #binarize structural connectivity matrix by default
 if not args.binarize:
     args.binarize = True
+if not args.diff_pipeline:
+    args.diff_pipeline = 'msmt'
     
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
