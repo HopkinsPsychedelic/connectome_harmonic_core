@@ -11,6 +11,92 @@ import utility_functions as ut
 from sklearn.metrics import pairwise_distances_chunked
 import time
 from scipy.sparse import csgraph
+import gdist
+import sklearn
+
+
+def construct_struc_conn(sc,ec,tol=2):
+    ind,dist=ut.neighbors(sc,ec,1)
+    indstart=ind[::2][:,0]
+    indend=ind[1::2][:,0]
+    diststart=dist[::2][:,0]
+    distend=dist[1::2][:,0]
+    
+    tolmask= (diststart>tol) | (distend>tol)
+    
+    M=sparse.lil_matrix((len(sc),len(sc)))
+    
+    for i in range (len(indend)):
+        
+        if not tolmask[i]:
+            
+            M[indstart[i],indend[i]]+=1
+    
+    return M.tocsr()
+
+def construct_incidence_matrices(sc,ec,tol=2):
+    start=time.time()
+    ind,dist=ut.neighbors(sc,ec,1)
+    indstart=ind[::2][:,0]
+    indend=ind[1::2][:,0]
+    diststart=dist[::2][:,0]
+    distend=dist[1::2][:,0]
+    
+    tolmask= (diststart>tol) | (distend>tol)
+    
+    startinc=sparse.lil_matrix( (len(sc), (len(tolmask) -tolmask.sum()) ), dtype=np.float32)
+    endinc=sparse.lil_matrix( (len(sc), (len(tolmask) -tolmask.sum()) ), dtype=np.float32)
+    
+    good_inds=[i for i in range (len(tolmask)) if not tolmask[i]]
+    x=np.arange(len(good_inds))
+    startinc[indstart[good_inds],x]=1
+    endinc[indend[good_inds],x]=1
+    
+    #for j,i in enumerate(good_inds):
+        
+    #    startinc[indstart[i],j]=1
+    #    endinc[indend[i],j]=1
+    end=time.time()
+    print(f'{end-start} seconds taken for incidence matrix construction')
+    return startinc.tocsr(), endinc.tocsr()
+    
+def construct_smoothing_matrix(sc,si,mask,sigma=2,epsilon=0.05):
+    start=time.time()
+    h=int(len(sc)/2)
+    hsi=int(len(si)/2)
+    lg=construct_smoothing_matrix_one_hem(sc[:h], si[:hsi],sigma=sigma,epsilon=epsilon)
+    rg=construct_smoothing_matrix_one_hem(sc[h:], si[hsi:]-h ,sigma=sigma,epsilon=epsilon)
+    
+    sm=sparse.vstack((sparse.hstack((lg,sparse.csr_matrix((lg.shape[0], rg.shape[1]), dtype=lg.dtype))).tocsr(),sparse.hstack((sparse.csr_matrix((rg.shape[0], lg.shape[1]), dtype=lg.dtype),rg)).tocsr()))
+    sm=uts.mask_connectivity_matrix(sm,mask)
+    sm=sklearn.preprocessing.normalize(sm, norm='l1')
+    end=time.time()
+    print (end-start, 'seconds taken for smoothing matrix construction')
+    return sm
+    
+def construct_smoothing_matrix_one_hem(sc,si,sigma=2,epsilon=0.05):
+    maxd=sigma * (-2 * np.log(epsilon)) ** (1 / 2)
+    dists=gdist.local_gdist_matrix(sc.astype(np.float64), si.astype(np.int32),maxd )
+    dists[dists > maxd] = 0
+    dists = dists.minimum(dists.T)
+    dists.eliminate_zeros()
+    dists = dists.tolil()
+    dists.setdiag(0)
+    dists = dists.tocsr()
+    
+    g = -(dists.power(2) / (2 * (sigma ** 2)))
+    np.exp(g.data, out=g.data)
+    g += sparse.eye(g.shape[0], dtype=g.dtype).tocsr()
+
+    return g
+    
+def smooth_incidence_matrices(start, end, coefs):
+    
+    smooth_start = start.T.dot(coefs).T
+    smooth_end = end.T.dot(coefs).T
+    M = smooth_start.dot(smooth_end.T)
+    return M+M.T
+
 
 def construct_surface_matrix(SC,SI):
     """
