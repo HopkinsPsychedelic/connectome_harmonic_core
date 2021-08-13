@@ -14,7 +14,19 @@ from scipy.sparse import csgraph
 import gdist
 import sklearn
 
-
+def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0.2,binarize=False):
+    start=time.time()
+    
+    starti,endi=construct_incidence_matrices(uts.mask_medial_wall_vecs(sc,mask), ec, tol)
+    print('incidence matrices computed')
+    
+    smoothing_coefs=construct_smoothing_matrix(sc,si,mask,sigma,epsilon)
+    print('smoothing coefficients computed')
+    A=smooth_incidence_matrices(starti,endi,smoothing_coefs)
+    end=time.time()
+    print(f'{end-start} seconds taken')
+    return A
+    
 def construct_struc_conn(sc,ec,tol=2):
     ind,dist=ut.neighbors(sc,ec,1)
     indstart=ind[::2][:,0]
