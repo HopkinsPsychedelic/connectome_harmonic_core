@@ -14,19 +14,6 @@ from scipy.sparse import csgraph
 import gdist
 import sklearn
 
-def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0.2,binarize=False):
-    start=time.time()
-    
-    starti,endi=construct_incidence_matrices(uts.mask_medial_wall_vecs(sc,mask), ec, tol)
-    print('incidence matrices computed')
-    
-    smoothing_coefs=construct_smoothing_matrix(sc,si,mask,sigma,epsilon)
-    print('smoothing coefficients computed')
-    A=smooth_incidence_matrices(starti,endi,smoothing_coefs)
-    end=time.time()
-    print(f'{end-start} seconds taken')
-    return A
-    
 def construct_struc_conn(sc,ec,tol=2):
     ind,dist=ut.neighbors(sc,ec,1)
     indstart=ind[::2][:,0]
@@ -102,12 +89,44 @@ def construct_smoothing_matrix_one_hem(sc,si,sigma=2,epsilon=0.05):
 
     return g
     
-def smooth_incidence_matrices(start, end, coefs):
+def smooth_incidence_matrices(start, end, coefs,binarize=False,return_unsmoothed=False):
     
-    smooth_start = start.T.dot(coefs).T
-    smooth_end = end.T.dot(coefs).T
-    M = smooth_start.dot(smooth_end.T)
-    return M+M.T
+    if binarize:
+        M=start.dot(end.T)
+        if return_unsmoothed:
+            mat=M
+        M[M>1]=1
+        
+        M=coefs.T.dot(M.dot(coefs))
+    else:
+        smooth_start = start.T.dot(coefs).T
+        smooth_end = end.T.dot(coefs).T
+        M = smooth_start.dot(smooth_end.T)
+    if return_unsmoothed:
+        return M+M.T,mat+mat.T
+    else:
+        return M+M.T
+
+def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0.2,binarize=False,return_unsmoothed=False):
+    start=time.time()
+    
+    starti,endi=construct_incidence_matrices(uts.mask_medial_wall_vecs(sc,mask), ec, tol)
+    print('incidence matrices computed')
+    
+    smoothing_coefs=construct_smoothing_matrix(sc,si,mask,sigma,epsilon)
+        
+    print('smoothing coefficients computed')
+    if return_unsmoothed:
+        smoothA,A=smooth_incidence_matrices(starti,endi,smoothing_coefs,binarize=binarize,return_unsmoothed=return_unsmoothed)
+        end=time.time()
+        print(f'{end-start} seconds taken')
+        return smoothA,A
+    else:
+        A=smooth_incidence_matrices(starti,endi,smoothing_coefs,binarize=binarize)
+    
+        end=time.time()
+        print(f'{end-start} seconds taken')
+        return A
 
 
 def construct_surface_matrix(SC,SI):
