@@ -101,14 +101,15 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
         print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
         #criticality
-        inout.if_not_exist_make(f'{task_dir}/criticality/')
-        power_criticality = cs.criticality(dynamic_power_spectrum, 'power')
-        power_criticality.to_csv(f'{task_dir}/criticality/power/power_criticality.csv', index=False)
-        energy_criticality = cs.criticality(dynamic_energy_spectrum, 'energy')
-        energy_criticality.to_csv(f'{task_dir}/criticality/power/energy_criticality.csv', index=False)
-        #TODO: reconstruction spectrum has no 'mean_recon_spectra' - should we still be calcluating criticality for this spectrum
-        recon_criticality = cs.criticality(dynamic_reconstruction_spectrum, 'reconstruction')
-        recon_criticality.to_csv(f'{task_dir}/criticality/power/reconstruction_criticality.csv', index=False)
+        if args.criticality == True:
+            inout.if_not_exist_make(f'{task_dir}/criticality/')
+            power_criticality = cs.criticality(dynamic_power_spectrum, 'power')
+            power_criticality.to_csv(f'{task_dir}/criticality/power/power_criticality.csv', index=False)
+            energy_criticality = cs.criticality(dynamic_energy_spectrum, 'energy')
+            energy_criticality.to_csv(f'{task_dir}/criticality/power/energy_criticality.csv', index=False)
+            #TODO: reconstruction spectrum has no 'mean_recon_spectra' - should we still be calcluating criticality for this spectrum
+            recon_criticality = cs.criticality(dynamic_reconstruction_spectrum, 'reconstruction')
+            recon_criticality.to_csv(f'{task_dir}/criticality/power/reconstruction_criticality.csv', index=False)
 
                 
     
