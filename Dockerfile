@@ -164,7 +164,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
     && conda install -yq scikit-learn scipy meshio nibabel \ 
-    && conda install -c conda-forge tvb-gdist
+    && conda install -c conda-forge tvb-gdist \
     && conda install -c mrtrix3 mrtrix3 \
     && conda install vtk matplotlib pandas numpy nilearn powerlaw Cython \
     && sync && conda clean -y --all && sync \
