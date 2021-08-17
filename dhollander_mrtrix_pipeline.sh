@@ -21,7 +21,7 @@ dwi2response dhollander DWI.mif RF_WM.txt RF_GM.txt RF_CSF.txt -mask brainmask.m
 
 dwi2fod msmt_csd DWI.mif RF_WM.txt WM_FODs.mif RF_GM.txt GM.mif RF_CSF.txt CSF.mif -lmax 10,0,0  
 
-mrconvert WM_FODs.mif - -coord 3 0 | mrcat FOD_CSF.mif FOD_GM.mif - tissues.mif -axis 3
+mrconvert WM_FODs.mif - -coord 3 0 | mrcat CSF.mif GM.mif - tissues.mif -axis 3
 
 tckgen WM_FODs.mif ${num_streamlines}.tck -act 5TT.mif -backtrack -crop_at_gmwmi -seed_dynamic WM_FODs.mif -maxlength 250 -select ${num_streamlines} -power 0.33
 
