@@ -67,7 +67,7 @@ def construct_smoothing_matrix(sc,si,mask,sigma=2,epsilon=0.05):
     rg=construct_smoothing_matrix_one_hem(sc[h:], si[hsi:]-h ,sigma=sigma,epsilon=epsilon)
     
     sm=sparse.vstack((sparse.hstack((lg,sparse.csr_matrix((lg.shape[0], rg.shape[1]), dtype=lg.dtype))).tocsr(),sparse.hstack((sparse.csr_matrix((rg.shape[0], lg.shape[1]), dtype=lg.dtype),rg)).tocsr()))
-    sm=uts.mask_connectivity_matrix(sm,mask)
+    sm=ut.mask_connectivity_matrix(sm,mask)
     sm=sklearn.preprocessing.normalize(sm, norm='l1')
     end=time.time()
     print (end-start, 'seconds taken for smoothing matrix construction')
@@ -110,7 +110,7 @@ def smooth_incidence_matrices(start, end, coefs,binarize=False,return_unsmoothed
 def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0.2,binarize=False,return_unsmoothed=False):
     start=time.time()
     
-    starti,endi=construct_incidence_matrices(uts.mask_medial_wall_vecs(sc,mask), ec, tol)
+    starti,endi=construct_incidence_matrices(ut.mask_medial_wall_vecs(sc,mask), ec, tol)
     print('incidence matrices computed')
     
     smoothing_coefs=construct_smoothing_matrix(sc,si,mask,sigma,epsilon)

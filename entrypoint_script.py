@@ -74,6 +74,7 @@ else:
 #binarize structural connectivity matrix by default
 if not args.binarize:
     args.binarize = True
+#msmt_5tt
 if not args.diff_pipeline:
     args.diff_pipeline = 'msmt'
     

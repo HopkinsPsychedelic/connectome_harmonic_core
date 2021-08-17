@@ -27,10 +27,11 @@ def construct_harmonics(args, sub, ses, u, multises):
     surf_mat = mm.construct_surface_matrix(sc,si) #construct surface matrix from sc and si    
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     #construct struc conn matrix from ec and sc (see matrix methods comments); save rdists (QC metric)
-    struc_conn_mat,rdists = mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum, binarize = args.binarize) 
+    #struc_conn_mat,rdists = mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum, binarize = args.binarize) 
+    struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], binarize=args.binarize)
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
-    rdist_dic = inout.get_rdists(rdists,5) 
-    inout.save_pickle(rdist_dic,f'{args.output_dir}/chap/sub-{sub}/{ses}/rdists.pickle')
+    #rdist_dic = inout.get_rdists(rdists,5) 
+    #inout.save_pickle(rdist_dic,f'{args.output_dir}/chap/sub-{sub}/{ses}/rdists.pickle')
     #sum connections and surface
     connectome = struc_conn_mat + surf_mat 
     #mask medial wall
@@ -79,6 +80,7 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         inout.if_not_exist_make(f'{task_dir}')
         for spec in ['powerspectra', 'energyspectra','reconspectra']:
             inout.if_not_exist_make(f'{task_dir}/{spec}')
+            inout.if_not_exist_make(f'{task_dir}/criticality')
             inout.if_not_exist_make(f'{task_dir}/criticality/{spec}')
         #power spectra
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff}...')
