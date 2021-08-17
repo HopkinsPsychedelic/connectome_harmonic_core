@@ -13,6 +13,10 @@ import os
 from scipy import sparse
 #import icc
 
+def mask_medial_wall_vecs(unmasked_vecs,medial_wall_mask):
+    keepinds=np.where(medial_wall_mask==0)[0]
+    return unmasked_vecs[keepinds]
+    
 def unmask_medial_wall(masked_feature,medial_wall_mask):
     unmasked_feature=np.zeros(len(medial_wall_mask))
     keepinds=np.where(medial_wall_mask==0)[0]
