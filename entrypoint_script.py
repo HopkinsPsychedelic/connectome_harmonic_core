@@ -43,7 +43,6 @@ parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmo
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 1')
 parser.add_argument('--sigma', type = int, help = 'Sigma')
 parser.add_argument('--epsilon', type = int, help = 'epsilon')
-parser.add_argument('--sigma', type = int, help = 'Sigma')
 parser.add_argument('--skip_func', type = bool, help = 'Just find structural harmonics, no spectra.')
 parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pipeline or dhollander pipeline based on bids/mrtrix3_connectome. Choose msmt or dholl. Check github sh files for exact commands used.')
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
