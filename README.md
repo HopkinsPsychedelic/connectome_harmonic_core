@@ -49,65 +49,65 @@ In the below example, I run CHAP-BIDS. In addition to the two positional argumen
 
 Below are the full list of options and their descriptions. Please note that CHAP is a rough draft and none of these options are guaranteed to work at this time. Please report any errors or issues on Github, and thank you for your patience.
 
-usage: entrypoint_script.py [-h]
-                            [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
-                            [--mrtrix_dir MRTRIX_DIR] [--hcp_dir HCP_DIR]
-                            [--ciftify_dir CIFTIFY_DIR]
-                            [--freesurfer_dir FREESURFER_DIR] [--evecs EVECS]
-                            [--nnum NNUM] [--tol TOL] [--skip_func SKIP_FUNC]
-                            [--diff_pipeline DIFF_PIPELINE]
-                            [--streamlines STREAMLINES]
-                            [--mask_med_wall MASK_MED_WALL]
-                            [--binarize BINARIZE]
-                            [--calculate_criticality CALCULATE_CRITICALITY]
-                            output_dir analysis_level
+        usage: entrypoint_script.py [-h]
+                                    [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
+                                    [--mrtrix_dir MRTRIX_DIR] [--hcp_dir HCP_DIR]
+                                    [--ciftify_dir CIFTIFY_DIR]
+                                    [--freesurfer_dir FREESURFER_DIR] [--evecs EVECS]
+                                    [--nnum NNUM] [--tol TOL] [--skip_func SKIP_FUNC]
+                                    [--diff_pipeline DIFF_PIPELINE]
+                                    [--streamlines STREAMLINES]
+                                    [--mask_med_wall MASK_MED_WALL]
+                                    [--binarize BINARIZE]
+                                    [--calculate_criticality CALCULATE_CRITICALITY]
+                                    output_dir analysis_level
 
-Connectome Harmonic Analysis Pipeline (CHAP)
+        Connectome Harmonic Analysis Pipeline (CHAP)
 
-positional arguments:
-  output_dir            CHAP output directory (path)
-  analysis_level        Participant or group mode. Only participant mode
-                        supported for now.
+        positional arguments:
+          output_dir            CHAP output directory (path)
+          analysis_level        Participant or group mode. Only participant mode
+                                supported for now.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                        Participant label(s) (not including sub-). If this
-                        parameter is not provided all subjects will be
-                        analyzed. Multiple participants can be specified with
-                        a space separated list
-  --mrtrix_dir MRTRIX_DIR
-                        bids/mrtrix_connectome preproc output directory.
-                        Required for CHAP-BIDS pipeline
-  --hcp_dir HCP_DIR     HCP (min) preprocessed data directory. First level
-                        should be test and retest folders OR if one session
-                        just downloads. If test-retest, downloads go in
-                        respective session folders. Required for CHAP-HCP
-                        pipeline.
-  --ciftify_dir CIFTIFY_DIR
-                        Ciftify dir (required for CHAP-BIDS). Specify the
-                        whole directory (i.e. not individual subject's
-  --freesurfer_dir FREESURFER_DIR
-                        Freesurfer dir (required for CHAP-BIDS). Specify the
-                        whole directory (i.e. not individual subject's
-  --evecs EVECS         Number of eigenvectors (harmonics) to compute. Default
-                        is 100 (minus first trivial harmonic)
-  --nnum NNUM           Number of nearest neighboring surface vertices to
-                        assign to each streamline endpoint. Default = 60
-  --tol TOL             (Tolerance) search radius of nearest neighbor search
-                        for matching endpoints to surface vertices in mm.
-                        Default = 1
-  --skip_func SKIP_FUNC
-                        Just find structural harmonics, no spectra.
-  --diff_pipeline DIFF_PIPELINE
-                        Choices: msmt_5tt pipeline or dhollander pipeline
-                        based on bids/mrtrix3_connectome. Choose msmt or
-                        dholl.
-  --streamlines STREAMLINES
-                        Number of streamlines in MRtrix tckgen
-  --mask_med_wall MASK_MED_WALL
-                        Mask out medial wall vertices. Default is True.
-  --binarize BINARIZE   Binarize structural connectivity matrix. Default is
-                        True
-  --calculate_criticality CALCULATE_CRITICALITY
-                        compute the criticality of the spectra across subjects
+        optional arguments:
+          -h, --help            show this help message and exit
+          --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                                Participant label(s) (not including sub-). If this
+                                parameter is not provided all subjects will be
+                                analyzed. Multiple participants can be specified with
+                                a space separated list
+          --mrtrix_dir MRTRIX_DIR
+                                bids/mrtrix_connectome preproc output directory.
+                                Required for CHAP-BIDS pipeline
+          --hcp_dir HCP_DIR     HCP (min) preprocessed data directory. First level
+                                should be test and retest folders OR if one session
+                                just downloads. If test-retest, downloads go in
+                                respective session folders. Required for CHAP-HCP
+                                pipeline.
+          --ciftify_dir CIFTIFY_DIR
+                                Ciftify dir (required for CHAP-BIDS). Specify the
+                                whole directory (i.e. not individual subject's
+          --freesurfer_dir FREESURFER_DIR
+                                Freesurfer dir (required for CHAP-BIDS). Specify the
+                                whole directory (i.e. not individual subject's
+          --evecs EVECS         Number of eigenvectors (harmonics) to compute. Default
+                                is 100 (minus first trivial harmonic)
+          --nnum NNUM           Number of nearest neighboring surface vertices to
+                                assign to each streamline endpoint. Default = 60
+          --tol TOL             (Tolerance) search radius of nearest neighbor search
+                                for matching endpoints to surface vertices in mm.
+                                Default = 1
+          --skip_func SKIP_FUNC
+                                Just find structural harmonics, no spectra.
+          --diff_pipeline DIFF_PIPELINE
+                                Choices: msmt_5tt pipeline or dhollander pipeline
+                                based on bids/mrtrix3_connectome. Choose msmt or
+                                dholl.
+          --streamlines STREAMLINES
+                                Number of streamlines in MRtrix tckgen
+          --mask_med_wall MASK_MED_WALL
+                                Mask out medial wall vertices. Default is True.
+          --binarize BINARIZE   Binarize structural connectivity matrix. Default is
+                                True
+          --calculate_criticality CALCULATE_CRITICALITY
+                                compute the criticality of the spectra across subjects
