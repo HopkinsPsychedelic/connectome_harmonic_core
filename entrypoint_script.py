@@ -60,10 +60,10 @@ if not args.tol:
     args.tol = 2
 #sigma 
 if not args.sigma:
-    args.tol = 3
+    args.sigma = 3
 #epsilon
 if not args.epsilon:
-    args.tol = 0.2
+    args.epsilon = 0.2
 #skip func spectra calculation default false
 if not args.skip_func:
     args.skip_func = False
