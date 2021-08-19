@@ -34,7 +34,7 @@ In the below example, I run CHAP-HCP. The two required positional arguments are 
     --hcp_dir /data/hcp_test_retest_pp/source_data \
     --participant_label 105923
 
-In the below example, I run CHAP-BIDS. In addition to the two positional arguments discussed above, --mrtrix_dir, --ciftify_dir, and --freesurfer_dir are all required. Each of these should be set to the overall directory (i.e. not an individual subject's directory). 
+In the below example, I run CHAP-BIDS. In addition to the two positional arguments discussed above, --mrtrix_dir, --ciftify_dir, and --freesurfer_dir are all required. Each of these should be set to the overall output directory of that software (i.e. not an individual subject's directory). 
 
     sudo docker run -it --rm \
     -v /data/HCP_Raw:/data/HCP_Raw/ \
