@@ -26,18 +26,11 @@ def construct_harmonics(args, sub, ses, u, multises):
     ec = inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
     surf_mat = uts.mask_connectivity_matrix(mm.construct_surface_matrix(sc,si),u['mask']) #construct surface matrix from sc and si and mask
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
-    #construct struc conn matrix from ec and sc (see matrix methods comments); save rdists (QC metric)
-    #struc_conn_mat,rdists = mm.construct_structural_connectivity_matrix(sc, ec, tol = args.tol, NNnum = args.nnum, binarize = args.binarize) 
-    struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], binarize=args.binarize)
+    #construct struc conn matrix from ec and sc (see matrix methods comments)
+    struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], args.tol, args.sigma, args.epsilon, binarize=args.binarize)
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
-    #rdist_dic = inout.get_rdists(rdists,5) 
-    #inout.save_pickle(rdist_dic,f'{args.output_dir}/chap/sub-{sub}/{ses}/rdists.pickle')
     #sum connections and surface
     connectome = struc_conn_mat + surf_mat 
-    #mask medial wall
-    #if args.mask_med_wall==True:
-        #connectome = uts.mask_connectivity_matrix(connectome, u['mask']) 
-        #print('[CHAP] Masked out medial wall vertices')
     #save out connectome 
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) 
     print('[CHAP] Saved connectome (surface + long-range connections)')

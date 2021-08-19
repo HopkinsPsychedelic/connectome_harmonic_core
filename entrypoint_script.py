@@ -40,10 +40,12 @@ parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data
 parser.add_argument('--ciftify_dir', type = str, help = 'Ciftify dir (required for CHAP-BIDS). Specify the whole directory (i.e. not individual subject\'s')
 parser.add_argument('--freesurfer_dir', type = str, help = 'Freesurfer dir (required for CHAP-BIDS). Specify the whole directory (i.e. not individual subject\'s')
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100 (minus first trivial harmonic)')
-parser.add_argument('--nnum', type = int, help = 'Number of nearest neighboring surface vertices to assign to each streamline endpoint. Default = 60' )
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 1')
+parser.add_argument('--sigma', type = int, help = 'Sigma')
+parser.add_argument('--epsilon', type = int, help = 'epsilon')
+parser.add_argument('--sigma', type = int, help = 'Sigma')
 parser.add_argument('--skip_func', type = bool, help = 'Just find structural harmonics, no spectra.')
-parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pipeline or dhollander pipeline based on bids/mrtrix3_connectome. Choose msmt or dholl.')
+parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pipeline or dhollander pipeline based on bids/mrtrix3_connectome. Choose msmt or dholl. Check github sh files for exact commands used.')
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
@@ -54,12 +56,15 @@ args = parser.parse_args()
 #read evecs(harmonics) number, set default to 100
 if not args.evecs:
     args.evecs = 100
-#read tol number, set default to 1
+#read tol number, set default to 2
 if not args.tol:
+    args.tol = 2
+#sigma 
+if not args.sigma:
     args.tol = 3
-#read nnum number, set default to 20
-if not args.nnum:
-    args.nnum = 45
+#epsilon
+if not args.epsilon:
+    args.tol = 0.2
 #skip func spectra calculation default false
 if not args.skip_func:
     args.skip_func = False
