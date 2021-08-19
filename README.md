@@ -3,7 +3,7 @@ CHAP (Connectome Harmonic Analysis Pipeline) is a containerized software pipelin
 
 CHAP-HCP takes as input Human Connectome Project data preprocessed according to the HCP minimal preprocessing pipeline. For each set of data from each subject and session, data contained in the HCP Structural, Diffusion, and Structural Extended downloads are used to compute structural harmonics. HCP resting state and task-based fMRI data are optional; when present, CHAP-HCP will output a variety of functional spectra for these scans. 
 
-CHAP-BIDS can compute connectome harmonics on any dataset containing T1w and diffusion data with reverse phase-encoding fieldmaps. At this time, this arm requires the outputs of three open-source BIDS (Brain Imaging Data Structure) apps: mrtrix3_connectome, for preprocessing diffusion data,  fmriprep for preprocessing of fMRI data and running FreeSurfer, and ciftify, for further processing of surfaces and functional data. 
+CHAP-BIDS can compute connectome harmonics on any dataset containing T1w and diffusion data with reverse phase-encoding fieldmaps. At this time, this arm requires the outputs of three open-source BIDS (Brain Imaging Data Structure) apps: *mrtrix3_connectome*, for preprocessing diffusion data,  *fmriprep* for preprocessing of fMRI data and running FreeSurfer, and *ciftify*, for further processing of surfaces and functional data. 
 
 **Notes on fMRIprep**:
 
