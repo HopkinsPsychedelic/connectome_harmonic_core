@@ -11,11 +11,11 @@ CHAP-BIDS can compute connectome harmonics on any dataset containing T1w and dif
 
 **Notes on ciftify**:
 
-[Ciftify](https://edickie.github.io/ciftify/#/) should be run with the following two options: --read-from-derivatives should point to the derivatives directory that contains your fMRIprep and FreeSurfer output; --resample-to-T1w32k 
+[Ciftify](https://edickie.github.io/ciftify/#/) should be run with the following two options: 1) --read-from-derivatives should point to the derivatives directory that contains your fMRIprep and FreeSurfer output folders. 2)--resample-to-T1w32k 
 
 **Notes on MRtrix3_connectome**:
 
-[MRtrix3_connectome](https://github.com/BIDS-Apps/MRtrix3_connectome) should be run with the following options: the "preproc" level should be run as opposed to the "participant" level; --t1w_preproc should point to the location of the desc-preproc T1w in the fMRIprep output directory. 
+[MRtrix3_connectome](https://github.com/BIDS-Apps/MRtrix3_connectome) should be run with the following options: 1) the "preproc" level should be run as opposed to the "participant" level. 2) --t1w_preproc should point to the location of the desc-preproc T1w in the fMRIprep output directory. 
 
 **Running CHAP**
 
