@@ -49,7 +49,7 @@ parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pip
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
-parser.add_argument('--calculate_criticality', type = bool, help='compute the criticality of the spectra across subjects')
+parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
@@ -82,6 +82,9 @@ if not args.binarize:
 #msmt_5tt
 if not args.diff_pipeline:
     args.diff_pipeline = 'msmt'
+#calculate criticality
+if not args.criticality:
+    args.criticality = True
     
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
