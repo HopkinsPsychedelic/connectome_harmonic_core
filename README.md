@@ -47,7 +47,7 @@ In the below example, I run CHAP-BIDS. In addition to the two positional argumen
     --freesurfer_dir /data/HCP_Raw/derivatives/freesurfer \
     --participant_label 105923
 
-Below are the full list of options and their descriptions. Please note that CHAP is a rough draft and none of these options are guaranteed to work at this time. Please report any errors or issues on Github, and thank you for your patience.
+Below is the full list of options and their descriptions. Please note that CHAP is a rough draft and none of these options are guaranteed to work at this time. Please report any errors or issues on Github, and thank you for your patience.
 
         usage: entrypoint_script.py [-h]
                                     [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
