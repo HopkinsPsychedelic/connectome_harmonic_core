@@ -1,9 +1,13 @@
 # CHAP (Connectome Harmonic Analysis Pipeline)
-CHAP (Connectome Harmonic Analysis Pipeline) is a containerized software pipeline for performing harmonic decomposition of structural connectomes. CHAP contains two separate arms: CHAP-HCP and CHAP-BIDS, which refer to the type of data that each arm accepts. 
+CHAP contains two distinct arms: CHAP-HCP and CHAP-BIDS, which refer to the type of data that each accepts. 
 
-CHAP-HCP takes as input Human Connectome Project data preprocessed according to the HCP minimal preprocessing pipeline. For each set of data from each subject and session, data contained in the HCP Structural, Diffusion, and Structural Extended downloads are used to compute structural harmonics. HCP resting state and task-based fMRI data are optional; when present, CHAP-HCP will output a variety of functional spectra for these scans. 
+CHAP-HCP takes as input Human Connectome Project data preprocessed according to the HCP minimal preprocessing pipeline. For each set of data from each subject and session, data contained in the HCP Structural, Diffusion, and Structural Extended downloads are used to compute harmonics. HCP resting state and task-based fMRI data are optional; when present, CHAP-HCP will output functional spectra for these scans. 
 
-CHAP-BIDS can compute connectome harmonics on any dataset containing T1w and diffusion data with reverse phase-encoding fieldmaps. At this time, this arm requires the outputs of three open-source BIDS (Brain Imaging Data Structure) apps: *mrtrix3_connectome*, for preprocessing diffusion data,  *fmriprep* for preprocessing of fMRI data and running FreeSurfer, and *ciftify*, for further processing of surfaces and functional data. 
+CHAP-BIDS can compute connectome harmonics on any dataset containing T1w and diffusion data with reverse phase-encoding fieldmaps. At this time, this arm requires the outputs of three open-source BIDS (Brain Imaging Data Structure) apps: bids/mrtrix3_connectome, for preprocessing of diffusion data, nipreps/fmriprep, for preprocessing of fMRI data and running FreeSurfer, and tigrlab/fmriprep_ciftify, for resampling of surfaces and functional timeseries. 
+
+More details on how CHAP works can be found at the bottom of this page. 
+
+# Instructions on usage
 
 **Notes on fMRIprep**:
 
@@ -111,3 +115,37 @@ Below is the full list of options and their descriptions. Please note that CHAP 
                                 True
           --calculate_criticality CALCULATE_CRITICALITY
                                 compute the criticality of the spectra across subjects
+
+# More on CHAP
+
+**Connectomes Overview**:
+
+In CHAP, we represent the structural connectome with a 59,412x59,412 adjacency matrix, an unprecedented level of resolution for this paradigm. We derive local connections from physical adjacency on the cortical surface and estimate long range connections between vertices using diffusion tractography.
+
+**Surface Matrices**:
+
+CHAP uses white matter surfaces resampled to 32k native space. In CHAP-HCP, preprocessed surface GIfTI files are retrieved from the HCP Structural download. In CHAP-BIDS, fmriprep is used to run FreeSurfer. Ciftify then resamples native FreeSurfer surfaces to 32k space. In both pipelines, surface files are located at:
+{subject}/T1w/fsaverage_LR32k/{subject}.{hem}.white.32k_fs_LR.surf.gii Vertex coordinate and connectivity information from surface GIfTIs is loaded using functions from the Nibabel Python library. The left and right hemispheres are concatenated to generate an unmasked sparse adjacency matrix of size 64,948x64,948 in which connections between physically contiguous vertices are represented by a 1 and non-connections by a 0. 
+
+**Diffusion preprocessing**:
+
+CHAP HCP:
+
+In CHAP-HCP, all processing of diffusion data subsequent to the HCP minimal preprocessing pipeline is performed using tools contained in the open-source software package MRtrix3. First, a tissue segmentation for use in anatomically constrained response estimation, fiber orientation distribution (FOD) computation, and tractography is derived using MRtrix’s hybrid surface-volume segmentation (hsvs) algorithm. The hsvs algorithm relies on FreeSurfer output, which is retrieved from the HCP Structural Extended download. 
+Next, a FOD is calculated from the preprocessed diffusion image, and an estimated response function is derived using the MRtrix3 dhollander algorithm. As a default, 10 million streamlines are generated from the FOD using the Second-order Integration over Fiber Orientation Distributions (iFOD2) probabilistic tractography algorithm with 250 mm as the maximum streamline length and the “power” parameter set to 0.33. The seeding and termination of tracks is constrained to the white matter/gray matter interface as defined by FreeSurfer segmentation using the “anatomically constrained tractography” option. The spatial coordinates of the endpoints of each streamline are then extracted.
+
+CHAP-BIDS:
+
+In CHAP-BIDS, we recommend users run the open-source BIDS app bids/MRtrix3_connectome for preprocessing of diffusion data. MRtrix3_connectome first performs bias field correction and brain masking of the T1w image. To preprocess the diffusion images, it does Gibbs ringing removal; motion, eddy current, and EPI distortion correction; outlier detection and replacement; brain masking, bias field correction, and intensity normalization, and finally, rigid-body registration and transformation to the T1w image. CHAP-BIDS accepts the outputs of MRtrix3_connectome and runs an identical tractography reconstruction pipeline to CHAP-HCP.
+
+**Long-Range Connectivity Matrices (same between CHAP-BIDS and CHAP-HCP)**:
+
+In order to encode the information contained in each subject’s tractogram into the surface matrix, CHAP generates a long-range connectivity matrix by associating each surface vertex with its 45 nearest streamline endpoints within 3 mm (configurable parameters). The other endpoint of each of these streamlines is associated with its nearest neighboring surface vertex. Nearest-neighbor computation is conducted using SciKit-Learn’s kd-tree nearest neighbors algorithm. This connectivity information is stored in an adjacency matrix of size 64,948x64,948 in which long-range connections between surface vertices are represented by a 1 and non-connections by a 0.
+
+**Generating Structural Harmonics**:
+
+We concatenate the cortical surface and long-range connectivity matrices to estimate a structural connectome graph with dimensions 64,948x64,948. We then use the HCP mask to mask out vertices located on the medial wall where streamline termination is anatomically implausible. Masking reduces the matrix to size 59,412x59,412. 
+
+Using functions from the Scipy.sparse library, we then compute the eigenvectors and eigenvalues of the graph Laplacian of the connectome. By default, CHAP saves 100 eigenvectors (harmonics) in a Numpy array of size 59,412x100, where the first (zero-th) harmonic is the trivial solution. Visualization toolkit (.vtk) files containing the set of harmonics projected on the cortical surface are also saved. 
+
+**More incoming...**
