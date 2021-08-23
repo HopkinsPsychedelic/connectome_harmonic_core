@@ -98,12 +98,12 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         #criticality
         inout.if_not_exist_make(f'{task_dir}/criticality/')
         power_criticality = cs.criticality(dynamic_power_spectrum, 'power')
-        power_criticality.to_csv(f'{task_dir}/criticality/power/power_criticality.csv', index=False)
+        power_criticality.to_csv(f'{task_dir}/criticality/power_criticality.csv', index=False)
         energy_criticality = cs.criticality(dynamic_energy_spectrum, 'energy')
-        energy_criticality.to_csv(f'{task_dir}/criticality/power/energy_criticality.csv', index=False)
+        energy_criticality.to_csv(f'{task_dir}/criticality/energy_criticality.csv', index=False)
         #TODO: reconstruction spectrum has no 'mean_recon_spectra' - should we still be calcluating criticality for this spectrum
         recon_criticality = cs.criticality(dynamic_reconstruction_spectrum, 'reconstruction')
-        recon_criticality.to_csv(f'{task_dir}/criticality/power/reconstruction_criticality.csv', index=False)
+        recon_criticality.to_csv(f'{task_dir}/criticality/reconstruction_criticality.csv', index=False)
 
                 
     
