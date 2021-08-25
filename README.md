@@ -1,4 +1,8 @@
 # CHAP (Connectome Harmonic Analysis Pipeline)
+<img width="174" alt="Screen Shot 2021-08-24 at 9 29 19 PM" src="https://user-images.githubusercontent.com/61159065/130711344-9a354697-8525-4fea-a05a-4659f759e962.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 31 09 PM" src="https://user-images.githubusercontent.com/61159065/130711463-db54cb33-889b-4ecb-af33-b75cfb9d2930.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 30 38 PM" src="https://user-images.githubusercontent.com/61159065/130711430-df5b0c1f-38a8-4d43-8676-be640892c898.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 31 28 PM" src="https://user-images.githubusercontent.com/61159065/130711497-00af5938-36f1-4543-9f8f-eea8c1d3475f.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 32 13 PM" src="https://user-images.githubusercontent.com/61159065/130711571-e884fa81-a012-4bd3-88d6-ae081630efc5.png">
+
+
+
 CHAP contains two distinct arms: CHAP-HCP and CHAP-BIDS, which refer to the type of data that each accepts. 
 
 CHAP-HCP takes as input Human Connectome Project data preprocessed according to the HCP minimal preprocessing pipeline. For each set of data from each subject and session, data contained in the HCP Structural, Diffusion, and Structural Extended downloads are used to compute harmonics. HCP resting state and task-based fMRI data are optional; when present, CHAP-HCP will output functional spectra for these scans. 
