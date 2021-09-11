@@ -43,7 +43,7 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
         u[f'{sub}_info'][ses]['hcp_types'].clear()
     #rename Structural_preproc_extended dirs Freesurfer
     for download_dir in os.listdir(f'{args.hcp_dir}/{ses}'):
-        if 'Structural_preproc_extended' in download_dir and 'md5' not in download_dir:
+        if sub in download_dir and 'Structural_preproc_extended' in download_dir and 'md5' not in download_dir:
             os.rename(f'{args.hcp_dir}/{ses}/{download_dir}',f'{args.hcp_dir}/{ses}/{sub}_3T_Freesurfer.zip')
     u[f'{sub}_info'][ses]['hcp_types'].extend(['Structural','Diffusion','Freesurfer']) #add structural and diffusion (required) to hcp_types
     add_back = [] 
