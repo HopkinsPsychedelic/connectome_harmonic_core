@@ -80,7 +80,7 @@ if not args.binarize:
     args.binarize = True
 #msmt_5tt
 if not args.diff_pipeline:
-    args.diff_pipeline = 'msmt'
+    args.diff_pipeline = 'dholl'
 #calculate criticality
 if not args.criticality:
     args.criticality = True
