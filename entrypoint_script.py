@@ -83,7 +83,7 @@ if not args.diff_pipeline:
     args.diff_pipeline = 'dholl'
 #calculate criticality
 if not args.criticality:
-    args.criticality = True
+    args.criticality = False
     
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
