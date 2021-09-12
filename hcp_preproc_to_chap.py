@@ -87,7 +87,8 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
 def hcp_spectra_prep(args,sub,ses,u,vecs,vals):  
     #func prep stuff
     func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'  
-    u[f'{sub}_info'][ses]['hcp_types'] = [i for i in u[f'{sub}_info'][ses]['hcp_types'] if i not in ('Structural', 'Diffusion', 'Freesurfer')] #get hcp types that aren't structural or diffusion
+    u[f'{sub}_info'][ses]['hcp_types'] = [i for i in u[f'{sub}_info'][ses]['hcp_types'] if i not in ('Structural', 'Diffusion', 'Freesurfer')] #get hcp types that aren't structural or diffusion or freesrufr
+    print(u[f'{sub}_info'][ses]['hcp_types'])
     if 'REST1' in u[f'{sub}_info'][ses]['hcp_types']:
         u[f'{sub}_info'][ses]['hcp_types'].remove('REST2') #don't need to run below twice
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #for each functional scan
