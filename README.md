@@ -1,7 +1,15 @@
 # CHAP (Connectome Harmonic Analysis Pipeline)
 <img width="174" alt="Screen Shot 2021-08-24 at 9 29 19 PM" src="https://user-images.githubusercontent.com/61159065/130711344-9a354697-8525-4fea-a05a-4659f759e962.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 31 09 PM" src="https://user-images.githubusercontent.com/61159065/130711463-db54cb33-889b-4ecb-af33-b75cfb9d2930.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 30 38 PM" src="https://user-images.githubusercontent.com/61159065/130711430-df5b0c1f-38a8-4d43-8676-be640892c898.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 31 28 PM" src="https://user-images.githubusercontent.com/61159065/130711497-00af5938-36f1-4543-9f8f-eea8c1d3475f.png">
 
+# Intro 
+An outstanding challenge in human neuroimaging research is interpreting functional brain data through the bounds of structural connectivity. Historically, Functional Magnetic Resonance Imaging (fMRI) analyses have studied temporal correlations between intensities of spatially distinct voxels. Using this approach, a set of reliable brain networks have been identified. A limitation of this approach, however, is that these correlations do not take into account the complex and particular physical connectivity of the human brain. 
 
+Connectome harmonic decomposition, first described in Atasoy et. al 2016, is a technique for interpreting functional brain data through the brain’s connectivity structure.  Connectome harmonics are defined as the eigenvectors of the graph laplacian computed on the structural connectome. Within this framework, functional data at each timepoint can be interpreted as a weighted sum of the harmonic (or resonant) modes. Although the functional relevance of these harmonics is yet unknown, Atasoy and colleagues have shown that relatively few harmonics can be used to reconstruct canonical resting state networks, and that changes in harmonic signatures predicts changes in level of consciousness. 
+
+# CHAP Overview
+Connectome harmonic decomposition is a relatively new framework; in addition to theoretical considerations of the functional significance of harmonic modes, there are myriad basic, methodological questions that require answering. Although a growing number of groups are employing the connectome harmonic paradigm to interpret fMRI, and more recently EEG, data, there currently exists no open-source software program to perform this analysis. 
+
+To fill this need, we created a containerized and open-source software pipeline, CHAP (Connectome Harmonic Analysis Pipeline). Using functions from several top open-source neuroimaging libraries such as FreeSurfer, MRtrix3, FSL, and fMRIprep, CHAP can compute harmonics on any dataset containing adequate structural and diffusion data. CHAP also projects BOLD fMRI data through harmonics to output a variety of functional spectra that are useful in analyzing resting state and event-related timeseries data.
 
 CHAP contains two distinct arms: CHAP-HCP and CHAP-BIDS, which refer to the type of data that each accepts. 
 
