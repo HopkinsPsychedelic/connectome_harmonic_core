@@ -1,46 +1,322 @@
 
-<!DOCTYPE html>
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connectome-Harmonic Analysis Pipeline (CHAP): Preprocessing and analysis for Connectome-Specific Harmonic Waves (CSHWs) on BIDS and HCP-structured data &#8212; Connectome-Harmonic Analysis Pipeline (CHAP)  documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="_static/theme_override.css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>CHAP (Connectome Harmonic Analysis Pipeline) &mdash; Connectome-Harmonic Analysis Pipeline (CHAP)  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="#" class="icon icon-home"> Connectome-Harmonic Analysis Pipeline (CHAP)
+          
+
+          
+          </a>
+
+          
             
-  <div class="section" id="connectome-harmonic-analysis-pipeline-chap-preprocessing-and-analysis-for-connectome-specific-harmonic-waves-cshws-on-bids-and-hcp-structured-data">
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Connectome-Harmonic Analysis Pipeline (CHAP)</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>CHAP (Connectome Harmonic Analysis Pipeline)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="chap-connectome-harmonic-analysis-pipeline">
+<h1>CHAP (Connectome Harmonic Analysis Pipeline)<a class="headerlink" href="#chap-connectome-harmonic-analysis-pipeline" title="Permalink to this headline">¶</a></h1>
+<p>CHAP contains two distinct arms: CHAP-HCP and CHAP-BIDS, which refer to
+the type of data that each accepts.</p>
+<p>CHAP-HCP takes as input Human Connectome Project data preprocessed
+according to the HCP minimal preprocessing pipeline. For each set of
+data from each subject and session, data contained in the HCP
+Structural, Diffusion, and Structural Extended downloads are used to
+compute harmonics. HCP resting state and task-based fMRI data are
+optional; when present, CHAP-HCP will output functional spectra for
+these scans.</p>
+<p>CHAP-BIDS can compute connectome harmonics on any dataset containing T1w
+and diffusion data with reverse phase-encoding fieldmaps. At this time,
+this arm requires the outputs of three open-source BIDS (Brain Imaging
+Data Structure) apps: bids/mrtrix3_connectome, for preprocessing of
+diffusion data, nipreps/fmriprep, for preprocessing of fMRI data and
+running FreeSurfer, and tigrlab/fmriprep_ciftify, for resampling of
+surfaces and functional timeseries.</p>
+<p>More details on how CHAP works can be found at the bottom of this page.</p>
+<p><strong>Running CHAP</strong></p>
+<p>In the below example, I run CHAP-HCP. The two required positional
+arguments are output directory and analysis level, respectively. For
+now, only “participant” level is supported. In CHAP-HCP, the –hcp_dir
+argument is also required. If using test-retest data, the hcp_dir
+should contain two directories: ses-test and ses-retest, each with the
+data directories downloaded as-is from ConnectomeDB. If just one
+session, the HCP downloads can go directly in hcp_dir. The
+–participant_label argument is optional. If this parameter is not
+provided all subjects will be analyzed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">rm</span> \
+<span class="o">-</span><span class="n">v</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">hcp_test_retest_pp</span><span class="o">/</span><span class="p">:</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">hcp_test_retest_pp</span><span class="o">/</span>  \
+<span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> \
+<span class="n">winstonian3</span><span class="o">/</span><span class="n">connectome_harmonic</span><span class="p">:</span><span class="n">latest</span> \
+<span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">hcp_test_retest_pp</span><span class="o">/</span><span class="n">derivatives</span> \
+<span class="n">participant</span> \
+<span class="o">--</span><span class="n">hcp_dir</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">hcp_test_retest_pp</span><span class="o">/</span><span class="n">source_data</span> \
+<span class="o">--</span><span class="n">participant_label</span> <span class="mi">105923</span>
+</pre></div>
+</div>
+<p>In the below example, I run CHAP-BIDS. In addition to the two positional
+arguments discussed above, –mrtrix_dir, –ciftify_dir, and
+–freesurfer_dir are all required. Each of these should be set to the
+overall output directory of that software (i.e. not an individual
+subject’s directory).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">rm</span> \
+<span class="o">-</span><span class="n">v</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">HCP_Raw</span><span class="p">:</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">HCP_Raw</span><span class="o">/</span> \
+<span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> \
+<span class="n">winstonian3</span><span class="o">/</span><span class="n">connectome_harmonic</span><span class="p">:</span><span class="n">latest</span> \
+<span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">HCP_Raw</span><span class="o">/</span><span class="n">derivatives</span> \
+<span class="n">participant</span> \
+<span class="o">--</span><span class="n">mrtrix_dir</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">HCP_Raw</span><span class="o">/</span><span class="n">derivatives</span><span class="o">/</span><span class="n">MRtrix3_connectome</span><span class="o">-</span><span class="n">preproc</span> \
+<span class="o">--</span><span class="n">ciftify_dir</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">HCP_Raw</span><span class="o">/</span><span class="n">derivatives</span><span class="o">/</span><span class="n">ciftify</span> \
+<span class="o">--</span><span class="n">freesurfer_dir</span> <span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">HCP_Raw</span><span class="o">/</span><span class="n">derivatives</span><span class="o">/</span><span class="n">freesurfer</span> \
+<span class="o">--</span><span class="n">participant_label</span> <span class="mi">105923</span>
+</pre></div>
+</div>
+<p>Below is the full list of options and their descriptions. Please note
+that CHAP is a rough draft and none of these options are guaranteed to
+work at this time. Please report any errors or issues on Github, and
+thank you for your patience.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">entrypoint_script</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">participant_label</span> <span class="n">PARTICIPANT_LABEL</span> <span class="p">[</span><span class="n">PARTICIPANT_LABEL</span> <span class="o">...</span><span class="p">]]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">mrtrix_dir</span> <span class="n">MRTRIX_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">hcp_dir</span> <span class="n">HCP_DIR</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">ciftify_dir</span> <span class="n">CIFTIFY_DIR</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">freesurfer_dir</span> <span class="n">FREESURFER_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">evecs</span> <span class="n">EVECS</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">nnum</span> <span class="n">NNUM</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">tol</span> <span class="n">TOL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skip_func</span> <span class="n">SKIP_FUNC</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">diff_pipeline</span> <span class="n">DIFF_PIPELINE</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">streamlines</span> <span class="n">STREAMLINES</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">mask_med_wall</span> <span class="n">MASK_MED_WALL</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">binarize</span> <span class="n">BINARIZE</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">calculate_criticality</span> <span class="n">CALCULATE_CRITICALITY</span><span class="p">]</span>
+                            <span class="n">output_dir</span> <span class="n">analysis_level</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="more-on-chap">
+<h1>More on CHAP<a class="headerlink" href="#more-on-chap" title="Permalink to this headline">¶</a></h1>
+<p><strong>Connectomes Overview</strong>:</p>
+<p>In CHAP, we represent the structural connectome with a 59,412x59,412
+adjacency matrix, an unprecedented level of resolution for this
+paradigm. We derive local connections from physical adjacency on the
+cortical surface and estimate long range connections between vertices
+using diffusion tractography.</p>
+<p><strong>Surface Matrices</strong>:</p>
+<p>CHAP uses white matter surfaces resampled to 32k native space. In
+CHAP-HCP, preprocessed surface GIfTI files are retrieved from the HCP
+Structural download. In CHAP-BIDS, fmriprep is used to run FreeSurfer.
+Ciftify then resamples native FreeSurfer surfaces to 32k space. In both
+pipelines, surface files are located at:
+{subject}/T1w/fsaverage_LR32k/{subject}.{hem}.white.32k_fs_LR.surf.gii
+Vertex coordinate and connectivity information from surface GIfTIs is
+loaded using functions from the Nibabel Python library. The left and
+right hemispheres are concatenated to generate an unmasked sparse
+adjacency matrix of size 64,948x64,948 in which connections between
+physically contiguous vertices are represented by a 1 and
+non-connections by a 0.</p>
+<p><strong>Diffusion preprocessing</strong>:</p>
+<p>CHAP HCP:</p>
+<p>In CHAP-HCP, all processing of diffusion data subsequent to the HCP
+minimal preprocessing pipeline is performed using tools contained in the
+open-source software package MRtrix3. First, a tissue segmentation for
+use in anatomically constrained response estimation, fiber orientation
+distribution (FOD) computation, and tractography is derived using
+MRtrix’s hybrid surface-volume segmentation (hsvs) algorithm. The hsvs
+algorithm relies on FreeSurfer output, which is retrieved from the HCP
+Structural Extended download. Next, a FOD is calculated from the
+preprocessed diffusion image, and an estimated response function is
+derived using the MRtrix3 dhollander algorithm. As a default, 10 million
+streamlines are generated from the FOD using the Second-order
+Integration over Fiber Orientation Distributions (iFOD2) probabilistic
+tractography algorithm with 250 mm as the maximum streamline length and
+the “power” parameter set to 0.33. The seeding and termination of tracks
+is constrained to the white matter/gray matter interface as defined by
+FreeSurfer segmentation using the “anatomically constrained
+tractography” option. The spatial coordinates of the endpoints of each
+streamline are then extracted.</p>
+<p>CHAP-BIDS:</p>
+<p>In CHAP-BIDS, we recommend users run the open-source BIDS app
+bids/MRtrix3_connectome for preprocessing of diffusion data.
+MRtrix3_connectome first performs bias field correction and brain
+masking of the T1w image. To preprocess the diffusion images, it does
+Gibbs ringing removal; motion, eddy current, and EPI distortion
+correction; outlier detection and replacement; brain masking, bias field
+correction, and intensity normalization, and finally, rigid-body
+registration and transformation to the T1w image. CHAP-BIDS accepts the
+outputs of MRtrix3_connectome and runs an identical tractography
+reconstruction pipeline to CHAP-HCP.</p>
+<p><strong>Long-Range Connectivity Matrices (same between CHAP-BIDS and
+CHAP-HCP)</strong>:</p>
+<p>In order to encode the information contained in each subject’s
+tractogram into the surface matrix, CHAP generates a long-range
+connectivity matrix by associating each surface vertex with its 45
+nearest streamline endpoints within 3 mm (configurable parameters). The
+other endpoint of each of these streamlines is associated with its
+nearest neighboring surface vertex. Nearest-neighbor computation is
+conducted using SciKit-Learn’s kd-tree nearest neighbors algorithm. This
+connectivity information is stored in an adjacency matrix of size
+64,948x64,948 in which long-range connections between surface vertices
+are represented by a 1 and non-connections by a 0.</p>
+<p><strong>Generating Structural Harmonics</strong>:</p>
+<p>We concatenate the cortical surface and long-range connectivity matrices
+to estimate a structural connectome graph with dimensions 64,948x64,948.
+We then use the HCP mask to mask out vertices located on the medial wall
+where streamline termination is anatomically implausible. Masking
+reduces the matrix to size 59,412x59,412.</p>
+<p>Using functions from the Scipy.sparse library, we then compute the
+eigenvectors and eigenvalues of the graph Laplacian of the connectome.
+By default, CHAP saves 100 eigenvectors (harmonics) in a Numpy array of
+size 59,412x100, where the first (zero-th) harmonic is the trivial
+solution. Visualization toolkit (.vtk) files containing the set of
+harmonics projected on the cortical surface are also saved.</p>
+<p><strong>More incoming…</strong></p>
+</div>
+<div class="section" id="connectome-harmonic-analysis-pipeline-chap-preprocessing-and-analysis-for-connectome-specific-harmonic-waves-cshws-on-bids-and-hcp-structured-data">
 <h1>Connectome-Harmonic Analysis Pipeline (CHAP): Preprocessing and analysis for Connectome-Specific Harmonic Waves (CSHWs) on BIDS and HCP-structured data<a class="headerlink" href="#connectome-harmonic-analysis-pipeline-chap-preprocessing-and-analysis-for-connectome-specific-harmonic-waves-cshws-on-bids-and-hcp-structured-data" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#manual-installation-environment-in-python-todo-version">Manual Installation Environment in Python (TODO: version)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#containerized-environments-docker-and-singularity">Containerized Environments (Docker and Singularity)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#manual-installation-environment-in-python-version-3-7-or-above">Manual Installation Environment in Python (version 3.7 or above)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#external-dependencies">External Dependencies</a></li>
 </ul>
 </li>
@@ -54,71 +330,50 @@
 </div>
 
 
+           </div>
+           
           </div>
-          
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Brian Winston, Patrick Taylor and Quintin Frerichs.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">Connectome-Harmonic Analysis Pipeline (CHAP)</a></h1>
 
+    </section>
 
+  </div>
+  
 
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
 
-
-
-
-
-<h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage Notes</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2021, Brian Winston, Patrick Taylor and Quintin Frerichs.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/index.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
-
+  
+  
     
+   
 
-    
-  </body>
+</body>
 </html>
