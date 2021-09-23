@@ -7,6 +7,7 @@ Created on Thu May 28 18:39:04 2020
 """
 
 import sklearn.neighbors as skn
+import resource
 import time
 import numpy as np
 import os 
@@ -216,5 +217,11 @@ def procrustes_alignment(data, reference=None, n_iter=10, tol=1e-5,
 def get_icc(measures):
     return icc.icc(measures,model='twoway',type='consistency',unit='single')
 '''          
-    
+
+#limit python memory allocation 
+    def limit_memory(max_mem_mb):
+        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+        resource.setrlimit(resource.RLIMIT_AS, (bytearray(max_mem_mb*1024**2), bytearray(max_mem_mb*1024**2)))
+
+
     

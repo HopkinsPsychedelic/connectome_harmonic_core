@@ -24,6 +24,7 @@ print('''
 import os
 from glob import glob
 import input_output as inout
+import utility_functions as uts
 import argparse
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
@@ -49,10 +50,13 @@ parser.add_argument('--streamlines', type = int, help = 'Number of streamlines i
 parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
 parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
+parser.add_argument('--mem_mb', type=int, help='set maximum memory usage for CHAP')
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
 #read evecs(harmonics) number, set default to 100
+if args.mem_mb:
+    uts.limit_memory(args.mem_mb)
 if not args.evecs:
     args.evecs = 100
 #read tol number, set default to 2
