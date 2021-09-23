@@ -94,6 +94,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing <em>CHAP</em></a></li>
 </ul>
 
             
@@ -172,7 +173,7 @@
 <h2>Containerized Environments (Docker and Singularity)<a class="headerlink" href="#containerized-environments-docker-and-singularity" title="Permalink to this headline">¶</a></h2>
 <p>CHAP can be run through Docker or Singularity. For good information on running Docker and Singularity apps, <a class="reference external" href="https://www.nipreps.org/apps/docker/#running-a-niprep-directly-interacting-with-the-docker-engine">see this</a>. If using Singularity, pull the singularity image, using</p>
 <p>singularity pull docker://winstonian3/connectome_harmonic</p>
-<p>The follow instructions in _Usage to run your singulari</p>
+<p>Then follow instructions in Usage Notes to run your Singularity or Docker image</p>
 </div>
 <div class="section" id="manual-installation-environment-in-python-version-3-7-or-above">
 <h2>Manual Installation Environment in Python (version 3.7 or above)<a class="headerlink" href="#manual-installation-environment-in-python-version-3-7-or-above" title="Permalink to this headline">¶</a></h2>
@@ -180,15 +181,29 @@
 <p class="admonition-title">Warning</p>
 <p>This is not the recommended method for installing CHAP! Refer to section on Containerized Environments.</p>
 </div>
-</div>
-<div class="section" id="external-dependencies">
-<h2>External Dependencies<a class="headerlink" href="#external-dependencies" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CHAP</span></code> is written using Python 3.7 or above</p></li>
 </ul>
-<p>If you have set up your environment manually (bullet one), you are ready to execute <code class="docutils literal notranslate"><span class="pre">CHAP</span></code> via the command line using the <a class="reference external" href="https://github.com/hptaylor/connectome_harmonic_core/blob/master/entrypoint_script.py">entrypoint script</a> within the directory associated with the CHAP <a class="reference external" href="https://github.com/hptaylor/connectome_harmonic_core/">Github repository</a>. The command-line options for <code class="docutils literal notranslate"><span class="pre">CHAP</span></code> are documented in the <a class="reference internal" href="usage.html#usage"><span class="std std-ref">Usage Notes</span></a> section.</p>
+<p>First ensure that the <a class="reference internal" href="#external-dependencies">External Dependencies</a> have been installed on your system.</p>
+<p>Specifications for configuring the proper python environment can be found in <a class="reference external" href="https://github.com/hptaylor/connectome_harmonic_core/blob/master/Dockerfile">Dockerfile</a>. It is recommended to install the python dependencies via <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda</a>.</p>
+<p>If you have set up your environment manually, you are ready to execute <code class="docutils literal notranslate"><span class="pre">CHAP</span></code> via the command line using the <a class="reference external" href="https://github.com/hptaylor/connectome_harmonic_core/blob/master/entrypoint_script.py">entrypoint script</a> within the directory associated with the CHAP <a class="reference external" href="https://github.com/hptaylor/connectome_harmonic_core/">Github repository</a>. The command-line options for <code class="docutils literal notranslate"><span class="pre">CHAP</span></code> are documented in the <a class="reference internal" href="usage.html#usage"><span class="std std-ref">Usage Notes</span></a> section.</p>
 <p><code class="docutils literal notranslate"><span class="pre">CHAP</span></code> conforms to the <a class="reference external" href="http://bids.neuroimaging.io">BIDS</a> recommended user interface formatting, specifically</p>
-<p>::$ python entrypoint_script.py &lt;input_bids_path&gt; &lt;derivatives_path&gt; &lt;analysis_level&gt; &lt;named_options&gt; (TODO: check if this is correct)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python entrypoint_script.py &lt;input_bids_path&gt; &lt;derivatives_path&gt; &lt;analysis_level&gt; &lt;named_options&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="external-dependencies">
+<h2>External Dependencies<a class="headerlink" href="#external-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>These external packages are present in the containerized build of CHAP, but are not managed by Python packaging (PyPi), and must be installed on your system sparately.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/">FSL</a> (version 6.0.3)</p></li>
+<li><p><a class="reference external" href="https://stnava.github.io/ANTs/">ANTs</a> (version 2.2.0 - NeuroDocker build)</p></li>
+<li><p><a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/">FreeSurfer</a> (version 7.1.0)</p></li>
+<li><p><a class="reference external" href="https://fmriprep.org/en/stable/">fMRIPrep</a> (version 20.2.3)</p></li>
+<li><p><a class="reference external" href="https://edickie.github.io/ciftify/">Ciftify</a> (version 2.2.3)</p></li>
+<li><p><a class="reference external" href="https://www.humanconnectome.org/software/connectome-workbench">connectome-workbench</a> (version Debian-1.3.2)</p></li>
+<li><p><a class="reference external" href="https://github.com/bids-standard/bids-validator">bids-validator</a> (version 1.4.0)</p></li>
+</ul>
 </div>
 </div>
 

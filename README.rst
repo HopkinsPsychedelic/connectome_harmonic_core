@@ -1,6 +1,18 @@
 CHAP (Connectome Harmonic Analysis Pipeline)
 ============================================
 
+.. image:: https://user-images.githubusercontent.com/61159065/130711344-9a354697-8525-4fea-a05a-4659f759e962.png
+   :alt: Image 1 unavailable! 
+.. image:: https://user-images.githubusercontent.com/61159065/130711463-db54cb33-889b-4ecb-af33-b75cfb9d2930.png
+   :alt: Image 2 unavailable!
+.. image:: https://user-images.githubusercontent.com/61159065/130711430-df5b0c1f-38a8-4d43-8676-be640892c898.png
+   :alt: Image 3 unavailable! 
+.. image:: https://user-images.githubusercontent.com/61159065/130711497-00af5938-36f1-4543-9f8f-eea8c1d3475f.png
+   :alt: Image 4 unavailable!     
+
+About
+-----   
+
 CHAP contains two distinct arms: CHAP-HCP and CHAP-BIDS, which refer to
 the type of data that each accepts.
 
