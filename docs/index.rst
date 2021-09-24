@@ -16,4 +16,5 @@ Contents
 
    installation
    usage
+   outputs
    citing
