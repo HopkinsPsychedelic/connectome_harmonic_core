@@ -219,9 +219,9 @@ def get_icc(measures):
 '''          
 
 #limit python memory allocation 
-    def limit_memory(max_mem_mb):
-        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-        resource.setrlimit(resource.RLIMIT_AS, (bytearray(max_mem_mb*1024**2), bytearray(max_mem_mb*1024**2)))
+def limit_memory(max_mem_mb):
+    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    resource.setrlimit(resource.RLIMIT_AS, (bytearray(max_mem_mb*1024**2), bytearray(max_mem_mb*1024**2)))
 
 
     
