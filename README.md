@@ -31,7 +31,7 @@ More details on how CHAP works can be found at the bottom of this page.
 
 **Notes on fMRIprep**:
 
-[fMRIprep](https://fmriprep.org/en/stable/) should be run first. Make sure the "anat" output space is selected, and make sure FreeSurfer is run.
+[fMRIprep](https://fmriprep.org/en/stable/) should be run first. Make sure the "anat" output space is selected and make sure FreeSurfer is run.
 
 **Notes on ciftify**:
 
