@@ -56,6 +56,8 @@ def construct_harmonics(args, sub, ses, u, multises):
 
 def check_func(args,sub,ses,u,vecs,vals):
     if args.skip_func == False:
+        print('ok...')
+        print(u[f'{sub}_info'][ses]['is_func'])
         if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
             print('is func is true')
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
