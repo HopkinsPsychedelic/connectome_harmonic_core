@@ -57,10 +57,12 @@ def construct_harmonics(args, sub, ses, u, multises):
 def check_func(args,sub,ses,u,vecs,vals):
     if args.skip_func == False:
         if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
+            print('is func is true')
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
             if u[f'{sub}_info'][ses]['is_func'] == 'cift': #bids method
                 bids.bids_spectra_prep(args,sub,ses,u,vecs,vals)
             else:  #functional stuff, HCP method (it saves is_func elsewhere)
+                print('hcp one was triggered')
                 hcp_prep.hcp_spectra_prep(args,sub,ses,u,vecs,vals)    
     print(f'[CHAP] Finished session: {ses}')
 
