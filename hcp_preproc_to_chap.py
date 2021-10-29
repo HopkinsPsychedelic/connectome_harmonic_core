@@ -116,6 +116,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
                 os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
         #tasks
+        '''
         else: #e.g. MOTOR or LANGUAGE
             u[f'{sub}_info'][ses][hcp_type] = {}
             results_dir = f'{args.output_dir}/chap_work/sub-{sub}/{ses}/{hcp_type}/{sub}/MNINonLinear/Results'
@@ -140,7 +141,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {hcp_type} scan...')
             u[f'{sub}_info'][ses][hcp_type]['ts'] = inout.combine_pe(u[f'{sub}_info'][ses][hcp_type]['LR'],u[f'{sub}_info'][ses][hcp_type]['RL'])  
             ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][hcp_type]['ts'],hcp_type,bids_stuff,vecs,vals)
-                  
+          '''        
 def mrtrix_recon(u,sub,ses,args,diff_preproc,bvals,bvecs,freesurfer_dir,diff_mask):                
     #check if endpoints already computed, if not run diffusion pipeline
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/mrtrix/{args.streamlines}_endpoints.vtk'): #endpoints have been generated previously, skip mrtrix pipeline

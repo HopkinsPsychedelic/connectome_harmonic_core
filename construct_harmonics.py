@@ -55,6 +55,7 @@ def construct_harmonics(args, sub, ses, u, multises):
     check_func(args,sub,ses,u,vecs,vals)
 
 def check_func(args,sub,ses,u,vecs,vals):
+    print args.skip_func
     if args.skip_func == False:
         print('ok...')
         print(u[f'{sub}_info'][ses]['is_func'])
