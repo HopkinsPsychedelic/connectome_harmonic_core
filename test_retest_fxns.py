@@ -479,7 +479,7 @@ def find_bcorrs_2v(hp, run, n_evecs):
 ##METRIC 1
 #chap_out = '/Users/bwinston/Downloads/chap_out_test'        
 
-def struc_metric_1(chap_dir, n_evecs):
+def struc_metric_1(chap_dir, n_evecs, vecs_dict):
     global sm 
     sm = {} #for chap_data
     sm['within_subj_all'], sm['across_subj_all'] = [],[]
@@ -488,7 +488,7 @@ def struc_metric_1(chap_dir, n_evecs):
         sm[sub] = {}
         for ses in ['test','retest']:
            sm[sub][ses] = {}
-           sm[sub][ses]['vecs'] = ivp[sub][ses]['vecs']
+           sm[sub][ses]['vecs'] = vecs_dict[sub][ses]['vecs']
         sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs,n_evecs, False))
         sm['within_subj_all'].append(sm[sub][sub])
         sm[sub]['c_sub_all'] = [] #where empty averages will go
@@ -503,16 +503,15 @@ def struc_metric_1(chap_dir, n_evecs):
         sm['across_subj_all'].append(stats.mean(sm[sub]['c_sub_all']))
     sm['within_subj_avg'] = stats.mean(sm['within_subj_all']) 
     sm['across_subj_avg'] = stats.mean(sm['across_subj_all'])
-    return sm['within_subj_avg'], sm['across_subj_avg']
+    return sm
                    
 #let's check where it stops separating!        
-def struc_metric_1_sep(chap_dir, n_evecs):
+def struc_metric_1_sep(chap_dir, n_evecs, vecs_dict):
     print('ehllo')
     global sm 
     sm = {} #for chap_data
     sm['within_subj_all'], sm['across_subj_all'] = [],[]
-    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
-    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+    subs = inout.get_subs(chap_dir)
     for sub in ['test_avg', 'retest_avg', 'total_avg']:
         if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
@@ -520,8 +519,8 @@ def struc_metric_1_sep(chap_dir, n_evecs):
         sm[sub] = {}
         for ses in ['test','retest']:
            sm[sub][ses] = {}
-           sm[sub][ses]['vecs'] = f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy'
-        sm[sub][sub] = test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs)
+           sm[sub][ses]['vecs'] = vecs_dict[sub][ses]['vecs']
+        sm[sub][sub] = test_retest_rel_2v(sm[sub]['test']['vecs'], sm[sub]['retest']['vecs'], n_evecs, n_evecs, False)
         sm['within_subj_all'].append(sm[sub][sub])
         sm[sub]['c_sub_all'] = [] #where empty averages will go
     sm['within_subj_avg'] = np.average(np.array(sm['within_subj_all']), axis=0)
@@ -1058,4 +1057,82 @@ def subsp_dist_chap(chap_dir='/data/hcp_test_retest_pp/derivatives/chap'):
     sdc['within_dist_avg'] = stats.mean(sdc['within_dist_all'])
     inout.across_avg(subs,av,sdc,dcp.subspace_distance_projection,'dist',False)
     return sdc
-       
+
+
+
+def visu(title, top_harm, bottom_harm, sc, si, lhc, lhi, rhc, rhi, save = False, img_path = '', fname = ''):
+    bottom_harm = check_polarity(top_harm,bottom_harm)
+    fig,ax = plt.subplots(2,6,subplot_kw={'projection': '3d'})
+    fig.subplots_adjust(left=0, right=1, bottom=0.27, top=.73, wspace=0, hspace=0)
+    fig.suptitle(title, fontsize=14)
+    plotting.plot_surf_stat_map([sc,si],top_harm,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][0])
+    plotting.plot_surf_stat_map([sc,si],top_harm,view='ventral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][1])
+    plotting.plot_surf_stat_map([sc,si],top_harm,view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][2])
+    plotting.plot_surf_stat_map([sc,si],top_harm,view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][3])
+    #fig.text(.07,.71, top_title,fontsize=13)
+    plotting.plot_surf_stat_map([lhc,lhi],top_harm[:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][4])
+    plotting.plot_surf_stat_map([rhc,rhi],top_harm[:32492],view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[0][5])
+    #bottom harm
+    plotting.plot_surf_stat_map([sc,si],bottom_harm,view='dorsal',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][0])
+    plotting.plot_surf_stat_map([sc,si],bottom_harm,view='ventral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][1])
+    plotting.plot_surf_stat_map([sc,si],bottom_harm,view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][2])
+    plotting.plot_surf_stat_map([sc,si],bottom_harm,view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][3])
+    #fig.text(.025,.415, bottom_title,fontsize=13)
+    plotting.plot_surf_stat_map([lhc,lhi],bottom_harm[:32492],view='medial',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][4])
+    plotting.plot_surf_stat_map([rhc,rhi],bottom_harm[:32492],view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][5]) 
+    #fig.tight_layout()
+    if save: 
+        fig.savefig(f'{img_path}/{fname}.png',dpi=150)
+    #fig.clf()
+    #plt.close('all')
+
+#visu('hey there', harms['103818']['test']['unmasked_vecs'][:,5], 'BIDS H5', harms['103818']['retest']['unmasked_vecs'][:,5], 'HCP H5', sc, si, lhc, lhi)
+
+def check_polarity(vec1, vec2):
+    if pearsonr(vec1,vec2)[0] < 0:
+        return np.negative(vec2)
+    else:
+        return vec2
+
+def get_retest_inds(pairs_dict,start,stop):
+    retest_inds = []       
+    for test_ind in range(start,stop):
+        retest_inds.append(pairs_dict[test_ind]['ret_ind'])
+    return retest_inds
+
+def test_retest_plots_one_sub(all_vecs, sub, pairs_dict, start, stop, sc, si, lhc, lhi, rhc, rhi):
+    retest_inds = get_retest_inds(pairs_dict, start, stop)
+    for test_harm,retest_harm in enumerate(retest_inds):
+        title = f'Test Harmonic {test_harm} vs. Retest Harmonic {retest_harm}'
+        my_fname = f'sub-{sub}_test-H{test_harm}_retest-H{retest_harm}_plot'
+        visu(title,all_vecs[sub]['test']['unmasked_vecs'][:,test_harm], all_vecs[sub]['retest']['unmasked_vecs'][:,retest_harm], sc, si, lhc, lhi, rhc, rhi, save=True, img_path = f'/data/hcp_test_retest/derivatives/chap_figs/sub-{sub}',fname = my_fname)
+        
+def reliability_each_harm(chap_dir, n_evecs, vecs_dict): 
+    reh, reh['within_all'],reh['across_all'] = {},{},{}
+    reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
+    for harm in range(99):
+        reh['within_all'][harm], reh['across_all'][harm] = [],[]
+    subs = inout.get_subs(chap_dir)
+    for sub in subs:
+        reh[sub] = {}
+        for ses in ['test','retest']:
+           reh[sub][ses] = {}
+           reh[sub][ses]['vecs'] = vecs_dict[sub][ses]['vecs']
+        reh[sub][sub] = test_retest_rel_2v(reh[sub]['test']['vecs'], reh[sub]['retest']['vecs'], n_evecs,n_evecs, False)
+        for harm in range(99):
+            reh['within_all'][harm].append(reh[sub][sub][harm])
+    for sub in subs:
+        for c_sub in subs:
+            if c_sub != sub:
+                reh[sub][c_sub] = {}
+                for ses in ['test','retest']:
+                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, False)
+                    for harm in range(99):
+                        reh['across_all'][harm].append(reh[sub][c_sub][ses][harm])
+    for harm in range(99):
+        reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
+        reh['across_subj_avgs'].append(stats.mean(reh['across_all'][harm]))
+    return reh  
+        
+
+
