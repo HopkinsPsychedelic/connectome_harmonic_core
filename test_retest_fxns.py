@@ -427,7 +427,7 @@ def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca,
     hp['corr_orig'] = np.empty((n_evecs,n_comp))
     for evec_1 in range(0,n_comp): 
         for evec_2 in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-            hp['corr_orig'][evec_2,evec_1] = abs(pearsonr(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2])[0]) #comparing column with column (ev with ev)
+            hp['corr_orig'][evec_2,evec_1] = inout.abs_pearson(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2],True,True) #comparing column with column (ev with ev)
     hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
     hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
     find_bcorrs_2v(hp, 0, n_evecs) #run find bcorrs function, get best pairs
@@ -1082,11 +1082,9 @@ def visu(title, top_harm, bottom_harm, sc, si, lhc, lhi, rhc, rhi, save = False,
     plotting.plot_surf_stat_map([rhc,rhi],bottom_harm[:32492],view='lateral',cmap='RdBu',output_file=None,colorbar=False,vmax=.005,figure=fig,axes=ax[1][5]) 
     #fig.tight_layout()
     if save: 
-        fig.savefig(f'{img_path}/{fname}.png',dpi=150)
-    #fig.clf()
-    #plt.close('all')
-
-#visu('hey there', harms['103818']['test']['unmasked_vecs'][:,5], 'BIDS H5', harms['103818']['retest']['unmasked_vecs'][:,5], 'HCP H5', sc, si, lhc, lhi)
+        fig.savefig(f'{img_path}/{fname}.png',dpi=500)
+    fig.clf()
+    plt.close('all')
 
 def check_polarity(vec1, vec2):
     if pearsonr(vec1,vec2)[0] < 0:
@@ -1105,34 +1103,150 @@ def test_retest_plots_one_sub(all_vecs, sub, pairs_dict, start, stop, sc, si, lh
     for test_harm,retest_harm in enumerate(retest_inds):
         title = f'Test Harmonic {test_harm} vs. Retest Harmonic {retest_harm}'
         my_fname = f'sub-{sub}_test-H{test_harm}_retest-H{retest_harm}_plot'
-        visu(title,all_vecs[sub]['test']['unmasked_vecs'][:,test_harm], all_vecs[sub]['retest']['unmasked_vecs'][:,retest_harm], sc, si, lhc, lhi, rhc, rhi, save=True, img_path = f'/data/hcp_test_retest/derivatives/chap_figs/sub-{sub}',fname = my_fname)
+        visu(title,all_vecs[sub]['test']['unmasked_vecs'][:,test_harm], all_vecs[sub]['retest']['unmasked_vecs'][:,retest_harm], sc, si, lhc, lhi, rhc, rhi, save=True, img_path = f'/data/hcp_test_retest/derivatives/chap_figs/sub-{sub}_pngs',fname = my_fname)
         
-def reliability_each_harm(chap_dir, n_evecs, vecs_dict): 
+def reliability_each_harm(chap_dir, n_evecs, vecs_dict,just_within=False): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
     subs = inout.get_subs(chap_dir)
+    #subs = ['103818','105923','111312']
     for sub in subs:
         reh[sub] = {}
         for ses in ['test','retest']:
            reh[sub][ses] = {}
            reh[sub][ses]['vecs'] = vecs_dict[sub][ses]['vecs']
-        reh[sub][sub] = test_retest_rel_2v(reh[sub]['test']['vecs'], reh[sub]['retest']['vecs'], n_evecs,n_evecs, False)
+        reh[sub][sub] = test_retest_rel_2v(reh[sub]['test']['vecs'], reh[sub]['retest']['vecs'], n_evecs,n_evecs, True)
         for harm in range(99):
-            reh['within_all'][harm].append(reh[sub][sub][harm])
+            reh['within_all'][harm].append(reh[sub][sub][harm]['bcorr'])
+    if just_within == True:
+        for harm in range(99):
+            reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
+            reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
+        return reh
     for sub in subs:
         for c_sub in subs:
             if c_sub != sub:
                 reh[sub][c_sub] = {}
                 for ses in ['test','retest']:
-                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, False)
+                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, True)
                     for harm in range(99):
                         reh['across_all'][harm].append(reh[sub][c_sub][ses][harm])
     for harm in range(99):
         reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
         reh['across_subj_avgs'].append(stats.mean(reh['across_all'][harm]))
+    for harm in range(99):
+        reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
+        reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
     return reh  
+
+def plot_reh(reh,save=False):
+    plt.plot(reh['within_subj_avgs'], label = 'Within Subject')
+    plt.plot(reh['across_subj_avgs'], label = 'Across Subject')
+    plt.xlabel('Harmonic Rank')
+    plt.ylabel('Spatial Correlation')
+    plt.legend()
+    #plt.title('Average Test-Retest Reliability by Wavenumber')
+    if save: 
+        plt.savefig(f'/home/bwinsto2/reh.png',dpi=2000)
+    plt.close()
+
+#TODO do across with pair stuff
+def reliability_each_harm_mean_power(chap_dir,reh): 
+    rehp = {}
+    rehp,rehp['within_all'],rehp['across_all'] = {},{},{}
+    rehp['within_subj_avgs'],rehp['across_subj_avgs'],rehp['within_final'], rehp['mc_final'] = [],[],[],[]
+    for ses in ['test','retest']:
+        rehp['within_all'][ses], rehp['across_all'][ses] = {},{}
+        for harm in range(99):
+            rehp['within_all'][ses][harm] = []
+            rehp['across_all'][harm] = {}
+    
+    subs = inout.get_subs(chap_dir,rest=True)
+    #subs = ['105923','103818']
+    for sub in subs:
+        rehp[sub] = {}
+        for ses in ['test','retest']:
+            rehp[sub][ses] = {}
+            rehp[sub][ses]['rest1'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST1/powerspectra/sub-{sub}_ses-{ses}_task-rest1_acq-rl_mean_power_spectrum.npy')[1:]
+            rehp[sub][ses]['rest2'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST2/powerspectra/sub-{sub}_ses-{ses}_task-rest2_acq-rl_mean_power_spectrum.npy')[1:]
+            for harm in range(99):
+                rehp[sub][ses][harm] = stats.mean([rehp[sub][ses]['rest1'][harm],rehp[sub][ses]['rest2'][harm]])
+                #rehp['within_all'][ses][harm].append(rehp[sub][ses][harm])
+    for sub in subs:
+        rehp[sub]['ret_inds'] = get_retest_inds(reh[sub][sub], 0, 99)
+        for test,retest in enumerate(rehp[sub]['ret_inds']):
+            rehp['within_all']['test'][test].append(rehp[sub]['test'][test])
+            rehp['within_all']['retest'][test].append(rehp[sub]['retest'][retest])
+    for harm in range(99):
+        rehp['within_subj_avgs'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['within_all']['retest'][harm],fisher = False, abso=False))
+    rehp['across_all']['fake_correlations'] = []
+    for harm in range(99):
+        rehp['across_all'][harm]['correlations'] = []
+        #within
+        for sim in range(1000):
+            rehp['across_all'][harm][f'sim-{sim}'] = random.sample(rehp['within_all']['retest'][harm],len(rehp['within_all']['retest'][harm]))            
+            rehp['across_all'][harm]['correlations'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['across_all'][harm][f'sim-{sim}'],True))
+        rehp['across_all'][harm]['avg_correlation'] = stats.mean(rehp['across_all'][harm]['correlations'])
+        rehp['across_all']['fake_correlations'].append(rehp['across_all'][harm]['avg_correlation'])
+    for harm in range(99):
+        rehp['within_final'].append(np.tanh(rehp['within_subj_avgs'][harm]))
+        rehp['mc_final'].append(np.tanh(rehp['across_all']['fake_correlations'][harm]))
+    return rehp
+
+def plot_rehp(rehp,save=False):
+    plt.plot(rehp['within_final'], label = 'Within Subject')
+    plt.plot(rehp['mc_final'], label = 'Permutation (Across Subject)')
+    plt.xlabel('Harmonic Rank')
+    plt.ylabel('Correlation')
+    plt.legend()
+    #plt.title('Test-Retest Reliability of Activity by Wavenumber')
+    if save: 
+        plt.savefig(f'/home/bwinsto2/rehp.png',dpi=2000)
+    else:
+        plt.show()
+    plt.close()
+
         
+def reliability_power_across_harms(chap_dir,reh):
+    rpah = {}
+    rpah,rpah['across_all'] = {},{}
+    rpah['within_all'],rpah['within_subj_avgs'],rpah['across_subj_avgs'] = [],[],[]
+    subs = inout.get_subs(chap_dir,rest=True)
+    #subs = ['105923','103818','111312']
+    #within
+    for sub in subs:
+        rpah[sub] = {}
+        for ses in ['test','retest']:
+            rpah[sub][ses] = {}
+            rpah[sub][ses]['rest1'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST1/powerspectra/sub-{sub}_ses-{ses}_task-rest1_acq-rl_mean_power_spectrum.npy')[1:]
+            rpah[sub][ses]['rest2'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST2/powerspectra/sub-{sub}_ses-{ses}_task-rest2_acq-rl_mean_power_spectrum.npy')[1:]
+            rpah[sub][ses]['rest_avg'] = inout.mofl([rpah[sub][ses]['rest1'],rpah[sub][ses]['rest2']])
+    for sub in subs:
+        rpah[sub]['ret_inds'] = get_retest_inds(reh[sub][sub], 0, 99)
+        rpah[sub]['retest_reordered'] = rpah[sub]['retest']['rest_avg'][rpah[sub]['ret_inds']]
+        rpah['within_all'].append(inout.abs_pearson(rpah[sub]['test']['rest_avg'],rpah[sub]['retest_reordered'],False,True))
+    #across so rpah[sub][test] vs. rpah[c_sub][retest]
+    inout.across_avg(subs,rpah,inout.abs_pearson,'rest_avg',False)
+    rpah['across_final'] = rpah['across_subj_avg_rest_avg']
+    rpah['within_final'] = stats.mean(rpah['within_all'])
+    #rpah['across_final'] = np.tanh(rpah['across_subj_avg_rest_avg'])
+    #rpah['within_final'] = np.tanh(stats.mean(rpah['within_all']))
+    return rpah
 
-
+def plot_rpah(rpah,save=False):
+    fig = plt.figure()
+    ax = fig.add_axes([0,0,1,1])
+    within_std = np.std(rpah['within_all'])
+    across_std = np.std(sum(rpah[f'across_subj_all_rest_avg'],[]))
+    ax.bar(1,rpah['within_final'], width = 0.1, yerr=within_std, capsize=5)
+    plt.bar(1.15,rpah['across_final'], width = 0.1, yerr=across_std, capsize=5)
+    plt.xticks([1,1.15],['Within Subject','Across Subject'])
+    plt.ylabel('Correlation')
+    plt.suptitle('Test-retest reliability of mean RMS for harmonics 1-99 during resting state')
+    plt.show()
+    plt.close()
+    
+      
+#496 combinations in across 

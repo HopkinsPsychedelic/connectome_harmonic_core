@@ -306,15 +306,25 @@ for network in list(set(parcel_csv['Community'])):
     net_verts[network]['verts'] = network_verts(network, parcel_csv, dtseries)
     net_verts[network]['unmasked_verts'] = uts.unmask_medial_wall(net_verts[network]['verts'],np.load('/Users/bwinston/Documents/connectome_harmonics/hcp_mask.npy'))
 '''
-def get_subs(chap_dir,functional=False):
+
+'''
+627549 missing resting state
+341834 missing structural harmonics?
+859671 retest structural harmonics?
+114823 was GUCCI. removed from bad list
+877168, 601127,  was gucci. removed from list
+'''
+def get_subs(chap_dir,functional=False, rest = False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-   for sub in ['test_avg', 'retest_avg', 'total_avg']:
+   for sub in ['test_avg', 'retest_avg', 'total_avg','859671']:
         if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
    if functional == True:
         subs.remove('341834')
         subs.remove('627549')
+   elif rest == True:
+       subs = [sub for sub in subs if sub not in ['341834','627549','859671']]
    return subs
 
 def mofl(list_of_lists):
@@ -339,7 +349,7 @@ def across_avg(subs,av,dic,fxn,data,mofl=True): #dic doesn't have to be overall 
         dic[f'across_subj_all_{data}'] = list(set(dic[f'across_subj_all_{data}']))
     dic[f'across_subj_avg_{data}'] = stats.mean(dic[sub][f'c_sub_all_{data}'])
 '''
-def across_avg(subs,av,dic,fxn,data,mofl=True): #dic doesn't have to be overall dict #data is just name
+def across_avg(subs,dic,fxn,data,mofl=True): #dic doesn't have to be overall dict #data is just name
     dic[f'across_subj_all_{data}'] = []
     for sub in subs:
         dic[sub][f'c_sub_all_{data}'] = []
@@ -351,15 +361,22 @@ def across_avg(subs,av,dic,fxn,data,mofl=True): #dic doesn't have to be overall 
                         if mofl:
                             dic[sub][c_sub][ses] = fxn(mofl(dic[sub][ses][f'{data}']),mofl(dic[c_sub][ses][f'{data}']))
                         else:
-                            dic[sub][c_sub][ses] = fxn(av[sub][ses]['vecs'],av[c_sub][ses]['vecs'],)
+                            dic[sub][c_sub][ses] = fxn(dic[sub][ses][f'{data}'],dic[c_sub][ses][f'{data}'])
                     dic[sub][f'c_sub_all_{data}'].append((dic[sub][c_sub]['test'] + dic[sub][c_sub]['retest'])/2)
         dic[f'across_subj_all_{data}'].append(dic[sub][f'c_sub_all_{data}'])
     dic[f'across_subj_avg_{data}'] = stats.mean(sum(dic[f'across_subj_all_{data}'],[]))
 
                 
-def abs_pearson(x,y):
-    return abs(pearsonr(x,y)[0])
-    
+def abs_pearson(x,y,fisher=False, abso = True):
+    if fisher==True and abso==True:
+        return np.arctanh(abs(pearsonr(x,y)[0]))
+    elif fisher==False and abso==True:
+        return abs(pearsonr(x,y)[0])
+    elif fisher==True and abso==False:
+        return np.arctanh(pearsonr(x,y)[0])
+    elif fisher==False and abso==False:
+        return pearsonr(x,y)[0]
+
 def load_pkl(file): #file should end in .pkl
     file_to_read = open(file,"rb")
     loaded_dic = pickle.load(file_to_read)
