@@ -38,8 +38,6 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
         if any(hcp_type in x for x in os.listdir(f'{args.hcp_dir}/{ses}')): #if func data are downloaded
             inout.if_not_exist_make(f'{args.output_dir}/chap_work/sub-{sub}/{ses}/func') #hcp func folder
             u[f'{sub}_info'][ses]['is_func'] = 'hcp'
-            print(u[f'{sub}_info'][ses]['is_func'])
-            print('that shit got set')
             break
     if 'is_func' not in u[f'{sub}_info'][ses]: #if no functional 
         u[f'{sub}_info'][ses]['hcp_types'].clear()
@@ -81,8 +79,6 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     #send to chcs fxn
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
-        print('yo')
-        print(u[f'{sub}_info'][ses]['is_func'])
         ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy'))
     else:
         ch.construct_harmonics(args, sub, ses, u, multises) #run ch function
@@ -92,7 +88,6 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
     #func prep stuff
     func_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func'  
     u[f'{sub}_info'][ses]['hcp_types'] = [i for i in u[f'{sub}_info'][ses]['hcp_types'] if i not in ('Structural', 'Diffusion', 'Freesurfer')] #get hcp types that aren't structural or diffusion or freesrufr
-    print(u[f'{sub}_info'][ses]['hcp_types'])
     if 'REST1' in u[f'{sub}_info'][ses]['hcp_types']:
         u[f'{sub}_info'][ses]['hcp_types'].remove('REST2') #don't need to run below twice
     for hcp_type in u[f'{sub}_info'][ses]['hcp_types']: #for each functional scan
