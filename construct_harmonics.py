@@ -55,17 +55,12 @@ def construct_harmonics(args, sub, ses, u, multises):
     check_func(args,sub,ses,u,vecs,vals)
 
 def check_func(args,sub,ses,u,vecs,vals):
-    print(args.skip_func)
     if args.skip_func == False:
-        print('ok...')
-        print(u[f'{sub}_info'][ses]['is_func'])
         if 'is_func' in u[f'{sub}_info'][ses]: #func stuff
-            print('is func is true')
             inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/func') #func output folder
             if u[f'{sub}_info'][ses]['is_func'] == 'cift': #bids method
                 bids.bids_spectra_prep(args,sub,ses,u,vecs,vals)
             else:  #functional stuff, HCP method (it saves is_func elsewhere)
-                print('hcp one was triggered')
                 hcp_prep.hcp_spectra_prep(args,sub,ses,u,vecs,vals)    
     print(f'[CHAP] Finished session: {ses}')
 
@@ -84,7 +79,6 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff}...')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
-        '''
         dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals) #power at each TR
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
         normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
@@ -112,7 +106,7 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
             recon_criticality = cs.criticality(dynamic_reconstruction_spectrum, 'reconstruction')
             recon_criticality.to_csv(f'{task_dir}/criticality/power/reconstruction_criticality.csv', index=False)
 
-            '''    
+      
     
   
     
