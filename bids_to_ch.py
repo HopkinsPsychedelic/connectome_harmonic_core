@@ -56,13 +56,32 @@ def ciftify_chap(u, args, sub, multises, ses):
     ch.construct_harmonics(args, sub, ses, u, multises) 
 
 def bids_spectra_prep(args,sub,ses,u,vecs,vals):
-    for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
-        bids_stuff = f'sub-{sub}_{inout.get_bids_stuff(dts)}' #e.g. sub-{sub}_ses-{ses}_task-{task}
-        inout.dts_to_func_gii(dts, f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}') #extract cortical timeseries with connectome workbench
-        u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii') #func.gii to timeseries
-        u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], u['mask']) #mask timeseries
-        ch.func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], inout.get_task(dts), bids_stuff, vecs, vals)
-   
+    if 'HCP_Raw' in args.ciftify_dir: #if inputting HCP Raw data to BIDS version (used in Winston et. al 2022)
+        tasks = ['WM','MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL']
+        for task in tasks:
+            for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
+                if task in dts:
+                    for dire in ['LR','RL']:
+                        bids_stuff = f'sub-{sub}_{ses}_task-{task}_acq-{dire}'
+                        u[f'{sub}_info'][ses][f'{task}_{dire}'] = dts
+                        inout.dts_to_func_gii(u[f'{sub}_info'][ses][f'{task}_{dire}'], f'{func_dir}/{bids_stuff}')
+                        u[f'{sub}_info'][ses][f'{task}_{dire}'] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+                        u[f'{sub}_info'][ses][f'{task}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{task}_{dire}'],u['mask'])
+                        os.remove(f'{func_dir}/{bids_stuff}_hem-l.func.gii')
+                        os.remove(f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+                    print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {task} scan...')
+                    u[f'{sub}_info'][ses][f'{task}_ts'] = inout.combine_pe(u[f'{sub}_info'][ses][f'{task}_{LR}'],u[f'{sub}_info'][ses][f'{task}_RL'])  
+                    ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][f'{task}_ts'],task,bids_stuff,vecs,vals)   
+    else: #non HCP raw data
+        for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
+            bids_stuff = f'sub-{sub}_{inout.get_bids_stuff(dts)}' #e.g. sub-{sub}_ses-{ses}_task-{task}
+            inout.dts_to_func_gii(dts, f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}') #extract cortical timeseries with connectome workbench
+            u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii') #func.gii to timeseries
+            u[f'{sub}_info'][ses][f'{bids_stuff}_ts'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], u['mask']) #mask timeseries
+            os.remove(f'{func_dir}/{bids_stuff}_hem-l.func.gii')
+            os.remove(f'{func_dir}/{bids_stuff}_hem-r.func.gii')
+            ch.func_spectra(args, sub, ses, u[f'{sub}_info'][ses][f'{bids_stuff}_ts'], inout.get_task(dts), bids_stuff, vecs, vals)
+            
     
 
 
