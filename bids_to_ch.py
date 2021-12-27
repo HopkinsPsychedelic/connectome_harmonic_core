@@ -68,6 +68,7 @@ def bids_spectra_prep(args,sub,ses,u,vecs,vals):
                 if task in dts:
                     for dire in ['LR','RL']:
                         if dire in dts:
+                            print(dts)
                             bids_stuff = f'sub-{sub}_{ses}_task-{task}_acq-{dire}'
                             u[f'{sub}_info'][ses][f'{task}_{dire}'] = dts
                             inout.dts_to_func_gii(u[f'{sub}_info'][ses][f'{task}_{dire}'], f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}')
