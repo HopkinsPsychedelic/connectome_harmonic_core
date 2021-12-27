@@ -63,6 +63,7 @@ def ciftify_chap(u, args, sub, multises, ses):
 def bids_spectra_prep(args,sub,ses,u,vecs,vals):
     if 'HCP_Raw' in args.ciftify_dir: #if inputting HCP Raw data to BIDS version (used in Winston et. al 2022)
         tasks = ['WM','MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL']
+        print(u[f'{sub}_info'][ses]['func'])
         for task in tasks:
             for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
                 if task in dts:
