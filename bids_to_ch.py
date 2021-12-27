@@ -55,7 +55,7 @@ def ciftify_chap(u, args, sub, multises, ses):
                         print(f'[CHAP] Found ciftify timeseries: {file}') 
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
-        ch.check_func(args,sub,ses,u,vecs,vals)
+        ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'))
     else:
         ch.construct_harmonics(args, sub, ses, u, multises) 
 
