@@ -9,6 +9,7 @@ Created on Thu Jun  3 21:10:09 2021
 import input_output as inout
 import utility_functions as uts
 import os
+import numpy as np
 import compute_spectra as cs
 import construct_harmonics as ch
 import hcp_preproc_to_chap as hcp_prep
