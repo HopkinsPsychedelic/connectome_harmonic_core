@@ -14,7 +14,7 @@ import compute_spectra as cs
 import construct_harmonics as ch
 import hcp_preproc_to_chap as hcp_prep
 
-def bids_chapper(u, args, sub): #saves qsiprep tck to sub_info[streamlines]; passes off to ciftify_chap
+def bids_chapper(u, args, sub): 
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
     freesurfer_dir = f'{args.freesurfer_dir}/sub-{sub}'
     if any('ses' in x for x in os.listdir(f'{args.mrtrix_dir}/sub-{sub}')): #if multiple sessions
@@ -45,15 +45,13 @@ def ciftify_chap(u, args, sub, multises, ses):
         print('[CHAP] PLEASE NOTE: You have input a dataset with multiple sessions. Ciftify only calculates one surface, which will be used at multiple sessions. This is not a problem (see Winston et. al 2022)')
     print(f'[CHAP] Found ciftify surfaces for {sub}')
     #for each ses, {sub}_info[ses][func] is a list of the dtseries files
-    if os.path.exists(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results'): #there is functional stuff
+    if os.path.exists(f'{args.fmriprep_dir}/sub-{sub}/func'): #there is functional stuff
         u[f'{sub}_info'][ses]['is_func'] = 'cift'
         u[f'{sub}_info'][ses]['func'] = []
-        for func_dir in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results'): 
-            if ses in func_dir: #ses can be empty, remember
-                for file in os.listdir(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results/{func_dir}'): #ciftify functional timeseries directories
-                    if 'dtseries' in file:
-                        u[f'{sub}_info'][ses]['func'].append(f'{args.ciftify_dir}/sub-{sub}/MNINonLinear/Results/{func_dir}/{file}')
-                        print(f'[CHAP] Found ciftify timeseries: {file}') 
+        for func_file in os.listdir(f'{args.fmriprep_dir}/sub-{sub}/func'): 
+            if ses in func_file and 'dtseries' in func_file: #ses can be empty, remember
+                    u[f'{sub}_info'][ses]['func'].append(f'{args.fmriprep_dir}/sub-{sub}/func/{func_file}')
+                    print(f'[CHAP] Found cifti timeseries: {func_file}') 
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
         ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'))
