@@ -1,6 +1,8 @@
 # CHAP (Connectome Harmonic Analysis Pipeline)
 <img width="174" alt="Screen Shot 2021-08-24 at 9 29 19 PM" src="https://user-images.githubusercontent.com/61159065/130711344-9a354697-8525-4fea-a05a-4659f759e962.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 31 09 PM" src="https://user-images.githubusercontent.com/61159065/130711463-db54cb33-889b-4ecb-af33-b75cfb9d2930.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 30 38 PM" src="https://user-images.githubusercontent.com/61159065/130711430-df5b0c1f-38a8-4d43-8676-be640892c898.png"> <img width="174" alt="Screen Shot 2021-08-24 at 9 31 28 PM" src="https://user-images.githubusercontent.com/61159065/130711497-00af5938-36f1-4543-9f8f-eea8c1d3475f.png">
 
+Created by Brian Winston, Patrick Taylor, Frederick Barrett, and Quintin Frerichs
+
 # Intro 
 An outstanding challenge in neuroimaging research is interpreting functional brain data (collected using functional magnetic resonance imaging, or fMRI) through the bounds of structural connectivity (often estimated using diffusion-weighted and/or T1-weighted MRI.) Attempts have typically included separate pipelines of analysis for functional and structural data, with a final step of qualitative comparison between the spatial distribution of functional and structural connectivity, or some post-hoc quantitative comparison of the two. Other attempts at understanding function through structure include the use of a structure to generate a graph through which function is then understood (Bullmore & Sporns 2009). 
 
