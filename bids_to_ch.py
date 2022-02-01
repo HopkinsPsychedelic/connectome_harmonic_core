@@ -16,15 +16,15 @@ import hcp_preproc_to_chap as hcp_prep
 
 def bids_chapper(u, args, sub): 
     u[f'{sub}_info']['streamlines'] = [] #where streamlines files will go
-    freesurfer_dir = f'{args.freesurfer_dir}/sub-{sub}'
-    if any('ses' in x for x in os.listdir(f'{args.mrtrix_dir}/sub-{sub}')): #if multiple sessions
+    freesurfer_dir = f'{args.derivatives_dir}/freesurfer/sub-{sub}'
+    if any('ses' in x for x in os.listdir(f'{args.derivatives_dir}/MRtrix3_connectome-preproc/sub-{sub}')): #if multiple sessions
         multises = True
         print(f'[CHAP] Detected multiple sessions for {sub}')
-        for ses in os.listdir(f'{args.mrtrix_dir}/sub-{sub}'): 
+        for ses in os.listdir(f'{args.derivatives_dir}/MRtrix3_connectome-preproc/sub-{sub}'): 
             if 'ses' in ses:
                 u[f'{sub}_info'][ses] = {}
                 inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}') #create output session folders               
-                diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}_ses-{ses}'
+                diffusion_dir = f'{args.derivatives_dir}/MRtrix3_connectome-preproc/sub-{sub}/{ses}/dwi/sub-{sub}_ses-{ses}'
                 hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}_desc-preproc_dwi.nii.gz', f'{diffusion_dir}_desc-preproc_dwi.bval', f'{diffusion_dir}_desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}_desc-brain_mask.nii.gz')            
             ciftify_chap(u, args, sub, multises, ses) 
     else: #if sub has just one session
@@ -32,25 +32,25 @@ def bids_chapper(u, args, sub):
         multises = False
         ses = '' 
         u[f'{sub}_info'][ses] = {}
-        diffusion_dir = f'{args.mrtrix_dir}/sub-{sub}/{ses}/dwi/sub-{sub}'
+        diffusion_dir = f'{args.derivatives_dir}/MRtrix3_connectome-preproc/sub-{sub}/{ses}/dwi/sub-{sub}'
         hcp_prep.mrtrix_recon(u,sub, ses, args, f'{diffusion_dir}_desc-preproc_dwi.nii.gz', f'{diffusion_dir}_desc-preproc_dwi.bval', f'{diffusion_dir}_desc-preproc_dwi.bvec', freesurfer_dir, f'{diffusion_dir}_desc-brain_mask.nii.gz')            
         ciftify_chap(u, args, sub, multises, ses)
         
 def ciftify_chap(u, args, sub, multises, ses):
     #get ciftify surfs
     u[f'{sub}_info'][ses]['surfs'] = {}
-    u[f'{sub}_info'][ses]['surfs']['lh'] = f'{args.ciftify_dir}/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.L.white.32k_fs_LR.surf.gii'
-    u[f'{sub}_info'][ses]['surfs']['rh'] = f'{args.ciftify_dir}/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii'
+    u[f'{sub}_info'][ses]['surfs']['lh'] = f'{args.derivatives_dir}/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.L.white.32k_fs_LR.surf.gii'
+    u[f'{sub}_info'][ses]['surfs']['rh'] = f'{args.derivatives_dir}/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii'
     if multises == True:
         print('[CHAP] PLEASE NOTE: You have input a dataset with multiple sessions. Ciftify only calculates one surface, which will be used at multiple sessions. This is not a problem (see Winston et. al 2022)')
     print(f'[CHAP] Found ciftify surfaces for {sub}')
     #for each ses, {sub}_info[ses][func] is a list of the dtseries files
-    if os.path.exists(f'{args.fmriprep_dir}/sub-{sub}/func'): #there is functional stuff
+    if os.path.exists(f'{args.derivatives_dir}/fmriprep/sub-{sub}/func'): #there is functional stuff
         u[f'{sub}_info'][ses]['is_func'] = 'cift'
         u[f'{sub}_info'][ses]['func'] = []
-        for func_file in os.listdir(f'{args.fmriprep_dir}/sub-{sub}/func'): 
+        for func_file in os.listdir(f'{args.derivatives_dir}/fmriprep/sub-{sub}/func'): 
             if ses in func_file and 'dtseries' in func_file: #ses can be empty, remember
-                    u[f'{sub}_info'][ses]['func'].append(f'{args.fmriprep_dir}/sub-{sub}/func/{func_file}')
+                    u[f'{sub}_info'][ses]['func'].append(f'{args.derivatives_dir}/fmriprep/sub-{sub}/func/{func_file}')
                     print(f'[CHAP] Found cifti timeseries: {func_file}') 
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
