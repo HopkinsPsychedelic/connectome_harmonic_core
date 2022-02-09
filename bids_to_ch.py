@@ -49,7 +49,7 @@ def ciftify_chap(u, args, sub, multises, ses):
         u[f'{sub}_info'][ses]['is_func'] = 'cift'
         u[f'{sub}_info'][ses]['func'] = []
         for func_file in os.listdir(f'{args.derivatives_dir}/fmriprep/sub-{sub}/func'): 
-            if ses in func_file and 'dtseries' in func_file: #ses can be empty, remember
+            if ses in func_file and 'dtseries.nii' in func_file: #ses can be empty, remember
                     u[f'{sub}_info'][ses]['func'].append(f'{args.derivatives_dir}/fmriprep/sub-{sub}/func/{func_file}')
                     print(f'[CHAP] Found cifti timeseries: {func_file}') 
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
