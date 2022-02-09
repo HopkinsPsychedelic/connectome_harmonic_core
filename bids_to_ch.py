@@ -59,7 +59,7 @@ def ciftify_chap(u, args, sub, multises, ses):
         ch.construct_harmonics(args, sub, ses, u, multises) 
 
 def bids_spectra_prep(args,sub,ses,u,vecs,vals):
-    if 'HCP_Raw' in args.ciftify_dir: #if inputting HCP Raw data to BIDS version (used in Winston et. al 2022)
+    if 'HCP_Raw' in args.derivatives_dir: #if inputting HCP Raw data to BIDS version (used in Winston et. al 2022)
         tasks = ['WM','MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL']
         for task in tasks:
             for dire in ['LR','RL']:
