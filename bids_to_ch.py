@@ -69,8 +69,9 @@ def bids_spectra_prep(args,sub,ses,u,vecs,vals):
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = dts
                         inout.dts_to_func_gii(u[f'{sub}_info'][ses][f'{task}_{dire}'], f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}')
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii')
+                        u[f'{sub}_info'][ses][f'{task}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{task}_{dire}'],u['mask'])
                         #u[f'{sub}_info'][ses][f'{task}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{task}_{dire}'],u['mask'])
-                        np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{task}_{dire}.npy',u[f'{sub}_info'][ses][f'{task}_{dire}'])
+                        #np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{task}_{dire}.npy',u[f'{sub}_info'][ses][f'{task}_{dire}'])
                         os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii')
                         os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii')
             print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {task} scan...')
