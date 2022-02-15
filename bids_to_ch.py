@@ -70,12 +70,12 @@ def bids_spectra_prep(args,sub,ses,u,vecs,vals):
                         inout.dts_to_func_gii(u[f'{sub}_info'][ses][f'{task}_{dire}'], f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}')
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii')
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{task}_{dire}'],u['mask'])
+                        u[f'{sub}_info'][ses][f'{task}_{dire}'] = np.nan_to_num(u[f'{sub}_info'][ses][f'{task}_{dire}'])
                         #u[f'{sub}_info'][ses][f'{task}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{task}_{dire}'],u['mask'])
                         #np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{task}_{dire}.npy',u[f'{sub}_info'][ses][f'{task}_{dire}'])
                         os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii')
                         os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii')
             print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {task} scan...')
-            u[f'{sub}_info'][ses][f'{task}_ts'] = np.nan_to_num(u[f'{sub}_info'][ses][f'{task}_ts'],nan=0.0)
             u[f'{sub}_info'][ses][f'{task}_ts'] = inout.combine_pe(u[f'{sub}_info'][ses][f'{task}_LR'],u[f'{sub}_info'][ses][f'{task}_RL'])  
             ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][f'{task}_ts'],task,bids_stuff,vecs,vals)   
     else: #non HCP raw data
