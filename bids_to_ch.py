@@ -77,7 +77,7 @@ def bids_spectra_prep(args,sub,ses,u,vecs,vals):
                         os.remove(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii')
             print(f'[CHAP] Concatenating LR and RL PE direction scans for {sub} {ses} {task} scan...')
             u[f'{sub}_info'][ses][f'{task}_ts'] = inout.combine_pe(u[f'{sub}_info'][ses][f'{task}_LR'],u[f'{sub}_info'][ses][f'{task}_RL'])  
-            np.save(f'{args.output_dir}/sub-{sub}/func/{task}_ts',u[f'{sub}_info'][ses][f'{task}_ts'])
+            np.save(f'{args.output_dir}/chap/sub-{sub}/func/{task}_ts',u[f'{sub}_info'][ses][f'{task}_ts'])
             ch.func_spectra(args,sub,ses,u[f'{sub}_info'][ses][f'{task}_ts'],task,bids_stuff,vecs,vals)   
     else: #non HCP raw data
         for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
