@@ -65,7 +65,7 @@ def bids_spectra_prep(args,sub,ses,u,vecs,vals):
             for dire in ['LR','RL']:
                 print(dire)
                 for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
-                    if dire in dts and task in dts:
+                    if f'acq-{dire}' in dts and task in dts:
                         bids_stuff = f'sub-{sub}_{ses}_task-{task}_acq-{dire}'
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = dts
                         print(dts)
