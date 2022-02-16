@@ -60,7 +60,7 @@ def ciftify_chap(u, args, sub, multises, ses):
 
 def bids_spectra_prep(args,sub,ses,u,vecs,vals):
     if 'HCP_Raw' in args.derivatives_dir: #if inputting HCP Raw data to BIDS version (used in Winston et. al 2022)
-        tasks = ['WM','MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL']
+        tasks = ['MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL'] #add WM
         for task in tasks:
             for dire in ['LR','RL']:
                 print(dire)
