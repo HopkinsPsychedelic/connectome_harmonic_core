@@ -63,11 +63,12 @@ def bids_spectra_prep(args,sub,ses,u,vecs,vals):
         tasks = ['WM','MOTOR','LANGUAGE','EMOTION','GAMBLING','SOCIAL','RELATIONAL']
         for task in tasks:
             for dire in ['LR','RL']:
+                print(dire)
                 for dts in u[f'{sub}_info'][ses]['func']: #each ciftify dtseries
                     if dire in dts and task in dts:
                         bids_stuff = f'sub-{sub}_{ses}_task-{task}_acq-{dire}'
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = dts
-                        print(bids_stuff)
+                        print(dts)
                         inout.dts_to_func_gii(u[f'{sub}_info'][ses][f'{task}_{dire}'], f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}')
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = cs.read_functional_timeseries(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-l.func.gii', f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{bids_stuff}_hem-r.func.gii')
                         u[f'{sub}_info'][ses][f'{task}_{dire}'] = uts.mask_timeseries(u[f'{sub}_info'][ses][f'{task}_{dire}'],u['mask'])
