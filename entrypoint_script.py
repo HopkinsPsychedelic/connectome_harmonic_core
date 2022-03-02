@@ -119,12 +119,17 @@ print(f'[CHAP] Using sub(s): {subs}')
 for sub in subs:
     u[f'{sub}_info'] = {}  #create dict in u for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
+    problematic_subs = []
     #if HCP, run hcp_prep function
     if args.hcp_dir:
         hcp_prep.hcp_chapper(args, sub, u)
     #else, run BIDS method
-    else:      
-        bids.bids_chapper(u, args, sub)
+    else:  
+        try:
+            bids.bids_chapper(u, args, sub)
+        except:
+            print(f'Error occurred during {sub}')
+            problematic_subs.append(sub)
     print(f'[CHAP] Finished {sub}')
 print('''
           )        (                                                   
@@ -137,7 +142,8 @@ print('''
   \___|_||_/_/ \_\|_|      \___\___/_|_|_|| .__/|_\___| \__\___\__,_|  
                                           |_|                                                   
 Have a pleasant afternoon.                                                                                                                                                                                                 
-''')                                                                                                                                    
+''')            
+print(f'Problematic subs: {problematic_subs}')                                                                                                                        
                                                                                                                                       
                                                                                                                                       
 
