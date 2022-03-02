@@ -112,7 +112,7 @@ elif args.hcp_dir: #get list of hcp subs from data downloaded
     subs = [sub[:6] for sub in sub_list]
     subs = list(dict.fromkeys(subs))    
 else: #all subjects from mrtrix output
-    subject_dirs = glob(os.path.join(args.mrtrix_dir, "sub-*"))
+    subject_dirs = glob(os.path.join(f'{args.derivatives_dir}/freesurfer', "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Using sub(s): {subs}')
 
