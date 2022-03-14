@@ -975,19 +975,25 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
     if os.path.exists(f'{chap_dir}/sub-103818/ses-test'):
         t_rt = True
         all_vecs['retest'] = {}    
-    subs = inout.get_subs(chap_dir,functional)
+    else:
+        t_rt = False
+    #subs = inout.get_subs(chap_dir,functional)
+    subs = ['103818','105923','200614']
     for sub in subs:
         all_vecs[sub] = {}    
         for ses in ['test','retest']:
            all_vecs[sub][ses] = {}
-           all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
+           if t_rt == True:
+               all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
+           else:
+               all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/vecs.npy')
            all_vecs[sub][ses]['vecs'] = np.delete(all_vecs[sub][ses]['vecs'], 0, axis=1)
            all_vecs[sub][ses]['unmasked_vecs'] = np.empty([64984,len(all_vecs[sub][ses]['vecs'][0])])
            mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
            all_vecs[sub][ses]['vecs'] = all_vecs[sub][ses]['vecs'][:,0:n_evecs]
            for ev in range(n_evecs):
                all_vecs[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(all_vecs[sub][ses]['vecs'][:,ev],mask)
-           if t_rt == True: 
+           if t_rt == False: 
                break #only do test
     return all_vecs
 
@@ -1256,17 +1262,20 @@ def plot_rpah(rpah,save=False):
 Methods paper stuff
 '''
 
-def struc1_hcpvsbids(chap_hcp, chap_bids,n_evecs):
+def struc1_hcpvsbids():
     sm = {}
     sm['within_subj_all'], sm['across_subj_all'] = [],[]
-    subs = inout.get_subs(chap_bids)
+    #subs = inout.get_subs('/data/HCP_Raw/derivatives/chap')
+    subs = ['103818','105923','200614']
+    chap_bids = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
+    chap_hcp = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
     for sub in subs:
         sm[sub] = {}
         for pipe in ['bids','hcp']:
            sm[sub][pipe] = {}
         sm[sub]['hcp']['vecs'] = chap_hcp[sub]['test']['vecs']
-        sm[sub]['bids']['vecs'] = chap_bids[sub]['vecs']
-        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['hcp']['vecs'], sm[sub]['bids']['vecs'], n_evecs,n_evecs, False))
+        sm[sub]['bids']['vecs'] = chap_bids[sub]['test']['vecs']
+        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['hcp']['vecs'], sm[sub]['bids']['vecs'], 99,99, False))
         sm['within_subj_all'].append(sm[sub][sub])
     return sm
     
