@@ -970,9 +970,11 @@ def gen_harms(surf_mat,struc_conn_mat,mask):
     surf_t_dwi_r.vecs = tr
     surf_r_dwi_t.vecs = rt
 '''
-#TODO: make this fxn work for single session
 def load_vecs(chap_dir,functional,n_evecs): #probs want 99
-    all_vecs, all_vecs['test'], all_vecs['retest'] = {}, {}, {}
+    all_vecs, all_vecs['test'] = {},{}
+    if os.path.exists(f'{chap_dir}/sub-103818/ses-test'):
+        t_rt = True
+        all_vecs['retest'] = {}    
     subs = inout.get_subs(chap_dir,functional)
     for sub in subs:
         all_vecs[sub] = {}    
@@ -985,6 +987,8 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
            all_vecs[sub][ses]['vecs'] = all_vecs[sub][ses]['vecs'][:,0:n_evecs]
            for ev in range(n_evecs):
                all_vecs[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(all_vecs[sub][ses]['vecs'][:,ev],mask)
+           if t_rt == True: 
+               break #only do test
     return all_vecs
 
 def get_mat(sub,surf,ses): #surf is boolean True for surface matrix false for struc conn
@@ -1247,6 +1251,24 @@ def plot_rpah(rpah,save=False):
     plt.suptitle('Test-retest reliability of mean RMS for harmonics 1-99 during resting state')
     plt.show()
     plt.close()
+
+'''
+Methods paper stuff
+'''
+
+def struc1_hcpvsbids(chap_hcp, chap_bids,n_evecs):
+    sm = {}
+    sm['within_subj_all'], sm['across_subj_all'] = [],[]
+    subs = inout.get_subs(chap_bids)
+    for sub in subs:
+        sm[sub] = {}
+        for pipe in ['bids','hcp']:
+           sm[sub][pipe] = {}
+        sm[sub]['hcp']['vecs'] = chap_hcp[sub]['test']['vecs']
+        sm[sub]['bids']['vecs'] = chap_bids[sub]['vecs']
+        sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['hcp']['vecs'], sm[sub]['bids']['vecs'], n_evecs,n_evecs, False))
+        sm['within_subj_all'].append(sm[sub][sub])
+    return sm
     
       
 #496 combinations in across 
