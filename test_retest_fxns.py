@@ -1279,5 +1279,31 @@ def struc1_hcpvsbids():
         sm['within_subj_all'].append(sm[sub][sub])
     return sm
     
-      
+def reh_hcpvsbids(): 
+    reh, reh['within_all'],reh['across_all'] = {},{},{}
+    reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
+    for harm in range(99):
+        reh['within_all'][harm], reh['across_all'][harm] = [],[]
+    #subs = inout.get_subs(chap_dir)
+    subs = ['103818','105923','200614']
+    reh['chap_bids'] = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
+    reh['chap_hcp'] = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
+    for sub in subs:
+        reh[sub] = {}
+        for pipe in ['hcp','bids']:
+           reh[sub][pipe] = {}
+           reh[sub][pipe]['vecs'] = reh[f'chap_{pipe}'][sub]['test']['vecs']
+        reh[sub][sub] = test_retest_rel_2v(reh[sub][pipe]['test']['vecs'], reh[sub][pipe]['test']['vecs'], 99, 99, True)
+        for harm in range(99):
+            reh['within_all'][harm].append(reh[sub][sub][harm]['bcorr'])
+    for harm in range(99):
+        reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
+        reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
+    return reh
+        
+    
+    
+    
+    
+    
 #496 combinations in across 
