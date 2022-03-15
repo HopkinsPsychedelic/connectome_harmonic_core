@@ -122,7 +122,11 @@ for sub in subs:
     problematic_subs = []
     #if HCP, run hcp_prep function
     if args.hcp_dir:
-        hcp_prep.hcp_chapper(args, sub, u)
+        try:
+            hcp_prep.hcp_chapper(args, sub, u)
+        except:
+            print(f'Error occurred during {sub}')
+            problematic_subs.append(sub)
     #else, run BIDS method
     else:  
         try:
