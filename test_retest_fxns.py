@@ -978,7 +978,7 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
     else:
         t_rt = False
     #subs = inout.get_subs(chap_dir,functional)
-    subs = ['103818','105923','200614']
+    subs = ['103818','105923','200614','143325', '149337','172332','175439','177746','194140','195041']
     for sub in subs:
         all_vecs[sub] = {}    
         for ses in ['test','retest']:
@@ -1285,7 +1285,7 @@ def reh_hcpvsbids():
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
     #subs = inout.get_subs(chap_dir)
-    subs = ['103818','105923','200614']
+    subs = ['103818','105923','200614','143325', '149337','172332','175439','177746','194140','195041']
     reh['chap_bids'] = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
     reh['chap_hcp'] = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
     for sub in subs:
@@ -1293,7 +1293,7 @@ def reh_hcpvsbids():
         for pipe in ['hcp','bids']:
            reh[sub][pipe] = {}
            reh[sub][pipe]['vecs'] = reh[f'chap_{pipe}'][sub]['test']['vecs']
-        reh[sub][sub] = test_retest_rel_2v(reh[sub][pipe]['test']['vecs'], reh[sub][pipe]['test']['vecs'], 99, 99, True)
+        reh[sub][sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[sub]['bids']['vecs'], 99, 99, True)
         for harm in range(99):
             reh['within_all'][harm].append(reh[sub][sub][harm]['bcorr'])
     for harm in range(99):
