@@ -129,11 +129,11 @@ for sub in subs:
             problematic_subs.append(sub)
     #else, run BIDS method
     else:  
-        try:
-            bids.bids_chapper(u, args, sub)
-        except:
-            print(f'Error occurred during {sub}')
-            problematic_subs.append(sub)
+        #try:
+        bids.bids_chapper(u, args, sub)
+        #except:
+            #print(f'Error occurred during {sub}')
+            #problematic_subs.append(sub)
     print(f'[CHAP] Finished {sub}')
 print('''
           )        (                                                   

@@ -126,7 +126,6 @@ def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0
     
         end=time.time()
         print(f'{end-start} seconds taken')
-        A = ut.mask_connectivity_matrix(A,zeromask)
         return A
 
 
