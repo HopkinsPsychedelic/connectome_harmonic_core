@@ -25,12 +25,13 @@ def construct_harmonics(args, sub, ses, u, multises):
     sc,si = inout.read_gifti_surface_both_hem(u[f'{sub}_info'][ses]['surfs']['lh'], u[f'{sub}_info'][ses]['surfs']['rh'], hcp = True)
     ec = inout.read_streamline_endpoints(u[f'{sub}_info'][ses]['endpoints']) #read endpoint locations into numpy array (see top of file for definition of ec)
     surf_mat = uts.mask_connectivity_matrix(mm.construct_surface_matrix(sc,si),u['mask']) #construct surface matrix from sc and si and mask
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     #construct struc conn matrix from ec and sc (see matrix methods comments)
     struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], args.tol, args.sigma, args.epsilon, binarize=args.binarize)   
     zeromask = uts.get_zero_mask_from_connectivity(struc_conn_mat)
     struc_conn_mat = uts.mask_connectivity_matrix(struc_conn_mat,zeromask)
-    #sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
+    surf_mat = uts.mask_connectivity_matrix(surf_mat,zeromask)
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     #sum connections and surface
     connectome = struc_conn_mat + surf_mat 
     #save out connectome 
