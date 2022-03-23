@@ -223,5 +223,17 @@ def limit_memory(max_mem_mb):
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
     resource.setrlimit(resource.RLIMIT_AS, (bytearray(max_mem_mb*1024**2), bytearray(max_mem_mb*1024**2)))
 
+def get_vertex_degree(m):
+	degree=np.zeros(m.shape[0])
+	for i in range (m.shape[0]):
+		d=np.sum(m[:,i])
+		degree[i]=d
+	return degree
 
+def get_zero_mask_from_connectivity(m,threshold=0.1):
+	zeromask=np.zeros(m.shape[0])
+	degree=get_vertex_degree(m)
+	inds=np.where(degree<=threshold)[0]
+	zeromask[inds]=1
+	return zeromask
     

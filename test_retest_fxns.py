@@ -977,8 +977,8 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
         all_vecs['retest'] = {}    
     else:
         t_rt = False
-    #subs = inout.get_subs(chap_dir,functional)
-    subs = ['103818','105923','200614','143325', '149337','172332','175439','177746','194140','195041']
+    subs = inout.get_subs(chap_dir,functional)
+    #subs = ['103818','105923','200614','143325', '149337','172332','175439','177746','194140','195041']
     for sub in subs:
         all_vecs[sub] = {}    
         for ses in ['test','retest']:
@@ -987,9 +987,10 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
                all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
            else:
                all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/vecs.npy')
+
            all_vecs[sub][ses]['vecs'] = np.delete(all_vecs[sub][ses]['vecs'], 0, axis=1)
            all_vecs[sub][ses]['unmasked_vecs'] = np.empty([64984,len(all_vecs[sub][ses]['vecs'][0])])
-           mask = np.load('/data2/Brian/connectome_harmonics/mask.npy')
+           mask = np.load('/usr/local/connectome_harmonic_core/connectome_harmonic_core/hcp_mask.npy')
            all_vecs[sub][ses]['vecs'] = all_vecs[sub][ses]['vecs'][:,0:n_evecs]
            for ev in range(n_evecs):
                all_vecs[sub][ses]['unmasked_vecs'][:,ev]=uts.unmask_medial_wall(all_vecs[sub][ses]['vecs'][:,ev],mask)
@@ -1278,14 +1279,15 @@ def struc1_hcpvsbids():
         sm[sub][sub] = stats.mean(test_retest_rel_2v(sm[sub]['hcp']['vecs'], sm[sub]['bids']['vecs'], 99,99, False))
         sm['within_subj_all'].append(sm[sub][sub])
     return sm
-    
+
+#TODO: add across   
 def reh_hcpvsbids(): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
-    #subs = inout.get_subs(chap_dir)
-    subs = ['103818','105923','200614','143325', '149337','172332','175439','177746','194140','195041']
+    subs = ['103818','105923','111312']
+    #subs = inout.get_subs('/data/HCP_Raw/derivatives/chap')
     reh['chap_bids'] = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
     reh['chap_hcp'] = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
     for sub in subs:
@@ -1296,12 +1298,61 @@ def reh_hcpvsbids():
         reh[sub][sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[sub]['bids']['vecs'], 99, 99, True)
         for harm in range(99):
             reh['within_all'][harm].append(reh[sub][sub][harm]['bcorr'])
+    #across
+    for sub in subs:
+        for c_sub in subs:
+            if c_sub != sub:
+                reh[sub][c_sub] = {}
+                reh[sub][c_sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[c_sub]['bids']['vecs'], 99, 99, True)
+                for harm in range(99):
+                    reh['across_all'][harm].append(reh[sub][c_sub][harm])
     for harm in range(99):
         reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
         reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
     return reh
-        
-    
+   
+
+#rpah but within is hcp vs. bids same subject; across is hcp vs. bids (all other subs)   
+def rehp_hcpvsbids(chap_dir,reh): 
+    rehp = {}
+    rehp,rehp['within_all'],rehp['across_all'] = {},{},{}
+    rehp['within_subj_avgs'],rehp['across_subj_avgs'],rehp['within_final'], rehp['mc_final'] = [],[],[],[]
+    for pipe in ['hcp','bids']:
+        rehp['within_all'][ses], rehp['across_all'][ses] = {},{}
+        for harm in range(99):
+            rehp['within_all'][ses][harm] = []
+            rehp['across_all'][harm] = {}   
+    subs = inout.get_subs(chap_dir,rest=True)
+    #subs = ['105923','103818']
+    for sub in subs:
+        rehp[sub] = {}
+        for ses in ['test','retest']:
+            rehp[sub][ses] = {}
+            rehp[sub][ses]['rest1'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST1/powerspectra/sub-{sub}_ses-{ses}_task-rest1_acq-rl_mean_power_spectrum.npy')[1:]
+            rehp[sub][ses]['rest2'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST2/powerspectra/sub-{sub}_ses-{ses}_task-rest2_acq-rl_mean_power_spectrum.npy')[1:]
+            for harm in range(99):
+                rehp[sub][ses][harm] = stats.mean([rehp[sub][ses]['rest1'][harm],rehp[sub][ses]['rest2'][harm]])
+                #rehp['within_all'][ses][harm].append(rehp[sub][ses][harm])
+    for sub in subs:
+        rehp[sub]['ret_inds'] = get_retest_inds(reh[sub][sub], 0, 99)
+        for test,retest in enumerate(rehp[sub]['ret_inds']):
+            rehp['within_all']['test'][test].append(rehp[sub]['test'][test])
+            rehp['within_all']['retest'][test].append(rehp[sub]['retest'][retest])
+    for harm in range(99):
+        rehp['within_subj_avgs'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['within_all']['retest'][harm],fisher = False, abso=False))
+    rehp['across_all']['fake_correlations'] = []
+    for harm in range(99):
+        rehp['across_all'][harm]['correlations'] = []
+        #within
+        for sim in range(1000):
+            rehp['across_all'][harm][f'sim-{sim}'] = random.sample(rehp['within_all']['retest'][harm],len(rehp['within_all']['retest'][harm]))            
+            rehp['across_all'][harm]['correlations'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['across_all'][harm][f'sim-{sim}'],True))
+        rehp['across_all'][harm]['avg_correlation'] = stats.mean(rehp['across_all'][harm]['correlations'])
+        rehp['across_all']['fake_correlations'].append(rehp['across_all'][harm]['avg_correlation'])
+    for harm in range(99):
+        rehp['within_final'].append(np.tanh(rehp['within_subj_avgs'][harm]))
+        rehp['mc_final'].append(np.tanh(rehp['across_all']['fake_correlations'][harm]))
+    return rehp   
     
     
     

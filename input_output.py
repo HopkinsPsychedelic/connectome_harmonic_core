@@ -309,15 +309,12 @@ for network in list(set(parcel_csv['Community'])):
 
 '''
 627549 missing resting state
-341834 missing structural harmonics?
 859671 retest structural harmonics?
-114823 was GUCCI. removed from bad list
-877168, 601127,  was gucci. removed from list
 '''
 def get_subs(chap_dir,functional=False, rest = False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-   for sub in ['test_avg', 'retest_avg', 'total_avg','859671']:
+   for sub in ['test_avg', 'retest_avg', 'total_avg','192439','115320','139839','114823','185442','859671','187547']:
         if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
    if functional == True:
@@ -325,6 +322,7 @@ def get_subs(chap_dir,functional=False, rest = False):
         subs.remove('627549')
    elif rest == True:
        subs = [sub for sub in subs if sub not in ['341834','627549','859671']]
+   subs = ['105923','103818','111312']
    return subs
 
 def mofl(list_of_lists):
@@ -349,7 +347,7 @@ def across_avg(subs,av,dic,fxn,data,mofl=True): #dic doesn't have to be overall 
         dic[f'across_subj_all_{data}'] = list(set(dic[f'across_subj_all_{data}']))
     dic[f'across_subj_avg_{data}'] = stats.mean(dic[sub][f'c_sub_all_{data}'])
 '''
-def across_avg(subs,dic,fxn,data,mofl=True): #dic doesn't have to be overall dict #data is just name
+def across_avg(subs,dic,fxn,data,mofl=True,seslist = ['test','retest']): #dic doesn't have to be overall dict #data is just name
     dic[f'across_subj_all_{data}'] = []
     for sub in subs:
         dic[sub][f'c_sub_all_{data}'] = []
@@ -357,7 +355,7 @@ def across_avg(subs,dic,fxn,data,mofl=True): #dic doesn't have to be overall dic
             if c_sub != sub:
                 if sub not in dic[c_sub]:
                     dic[sub][c_sub] = {}
-                    for ses in ['test','retest']: #take mofl out of below if isn't mofl #gd needs mofl
+                    for ses in seslist: #take mofl out of below if isn't mofl #gd needs mofl
                         if mofl:
                             dic[sub][c_sub][ses] = fxn(mofl(dic[sub][ses][f'{data}']),mofl(dic[c_sub][ses][f'{data}']))
                         else:

@@ -107,7 +107,7 @@ def smooth_incidence_matrices(start, end, coefs,binarize=False,return_unsmoothed
     else:
         return M+M.T
 
-def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0.2,binarize=False,return_unsmoothed=False):
+def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0.2,binarize=True,return_unsmoothed=False):
     start=time.time()
     
     starti,endi=construct_incidence_matrices(ut.mask_medial_wall_vecs(sc,mask), ec, tol)
@@ -126,6 +126,7 @@ def construct_smoothed_connectivity_matrix(sc,si,ec,mask,tol=2,sigma=3,epsilon=0
     
         end=time.time()
         print(f'{end-start} seconds taken')
+        A = ut.mask_connectivity_matrix(A,zeromask)
         return A
 
 

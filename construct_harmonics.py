@@ -27,8 +27,10 @@ def construct_harmonics(args, sub, ses, u, multises):
     surf_mat = uts.mask_connectivity_matrix(mm.construct_surface_matrix(sc,si),u['mask']) #construct surface matrix from sc and si and mask
     sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
     #construct struc conn matrix from ec and sc (see matrix methods comments)
-    struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], args.tol, args.sigma, args.epsilon, binarize=args.binarize)
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
+    struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], args.tol, args.sigma, args.epsilon, binarize=args.binarize)   
+    zeromask = uts.get_zero_mask_from_connectivity(struc_conn_mat)
+    struc_conn_mat = uts.mask_connectivity_matrix(struc_conn_mat,zeromask)
+    #sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
     #sum connections and surface
     connectome = struc_conn_mat + surf_mat 
     #save out connectome 
@@ -36,13 +38,12 @@ def construct_harmonics(args, sub, ses, u, multises):
     print('[CHAP] Saved connectome (surface + long-range connections)')
     #compute harmonics
     vals,vecs = dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvecs (see decomp.py)
+    vecs = uts.unmask_medial_wall_vecs(vecs,zeromask)
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
     if args.mask_med_wall==True: #save unmasked vecs for visualization purposes
-        unmasked_vecs = np.empty([64984,args.evecs])
-        for ev in range(args.evecs):
-            unmasked_vecs[:,ev]=uts.unmask_medial_wall(vecs[:,ev],u['mask'])
+        unmasked_vecs=uts.unmask_medial_wall_vecs(vecs,u['mask'])
     else:
         unmasked_vecs = vecs
     #visualization
