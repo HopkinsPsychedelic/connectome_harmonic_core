@@ -49,6 +49,7 @@ parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
 parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
 parser.add_argument('--mem_mb', type=int, help='set maximum memory usage for CHAP')
+praser.add_argument('--debug', type = bool, help = 'True runs without try/except statement')
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
@@ -86,7 +87,9 @@ if not args.diff_pipeline:
 #calculate criticality
 if not args.criticality:
     args.criticality = False
-    
+
+if not args.debug:
+    args.debug = False
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
 #make hcp intermediate dir
@@ -128,12 +131,15 @@ for sub in subs:
             print(f'Error occurred during {sub}')
             problematic_subs.append(sub)
     #else, run BIDS method
-    else:  
-        try:
+    else:
+        if args.debug == False:
+            try:
+                bids.bids_chapper(u, args, sub)
+            except:
+                print(f'Error occurred during {sub}')
+                problematic_subs.append(sub)
+        else:
             bids.bids_chapper(u, args, sub)
-        except:
-            print(f'Error occurred during {sub}')
-            problematic_subs.append(sub)
     print(f'[CHAP] Finished {sub}')
 print('''
           )        (                                                   

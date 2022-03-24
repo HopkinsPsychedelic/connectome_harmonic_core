@@ -6,7 +6,7 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-#import vtk
+import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
@@ -314,7 +314,7 @@ for network in list(set(parcel_csv['Community'])):
 def get_subs(chap_dir,functional=False, rest = False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-   for sub in ['test_avg', 'retest_avg', 'total_avg','192439','115320','139839','114823','185442','859671','187547']:
+   for sub in ['test_avg', 'retest_avg', 'total_avg','192439','115320','139839','114823','185442','187547']:
         if os.path.exists(f'{chap_dir}/sub-{sub}'):
             subs.remove(sub)
    if functional == True:
