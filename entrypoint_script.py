@@ -49,7 +49,7 @@ parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
 parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
 parser.add_argument('--mem_mb', type=int, help='set maximum memory usage for CHAP')
-praser.add_argument('--debug', type = bool, help = 'True runs without try/except statement')
+parser.add_argument('--debug', type = bool, help = 'True runs without try/except statement')
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
