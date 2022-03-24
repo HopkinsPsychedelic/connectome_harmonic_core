@@ -6,7 +6,7 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-import vtk
+#import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
@@ -322,7 +322,7 @@ def get_subs(chap_dir,functional=False, rest = False):
         subs.remove('627549')
    elif rest == True:
        subs = [sub for sub in subs if sub not in ['341834','627549','859671']]
-   subs = ['105923','103818','111312']
+   #subs = ['105923','103818','111312']
    return subs
 
 def mofl(list_of_lists):
