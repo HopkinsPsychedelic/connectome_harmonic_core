@@ -69,9 +69,6 @@ if not args.epsilon:
 #skip func spectra calculation default false
 if not args.skip_func:
     args.skip_func = False
-#mask medial wall default True
-if not args.mask_med_wall:
-    args.mask_med_wall = True
 #num streamlines default 10 million
 if not args.streamlines:
     args.streamlines = '10000000'
