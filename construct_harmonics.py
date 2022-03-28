@@ -27,27 +27,25 @@ def construct_harmonics(args, sub, ses, u, multises):
     surf_mat = uts.mask_connectivity_matrix(mm.construct_surface_matrix(sc,si),u['mask']) #construct surface matrix from sc and si and mask
     #construct struc conn matrix from ec and sc (see matrix methods comments)
     struc_conn_mat = mm.construct_smoothed_connectivity_matrix(sc,si,ec,u['mask'], args.tol, args.sigma, args.epsilon, binarize=args.binarize)   
+    #find vertices with zero connections, mask em out
     zeromask = uts.get_zero_mask_from_connectivity(struc_conn_mat)
     struc_conn_mat = uts.mask_connectivity_matrix(struc_conn_mat,zeromask)
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
+    #sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
+    #mask out those vertices from surf mat also
     surf_mat = uts.mask_connectivity_matrix(surf_mat,zeromask)
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
-    #sum connections and surface
+    #sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix
+    #sum long range and surface matrices
     connectome = struc_conn_mat + surf_mat 
-    #save out connectome 
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) 
+    #sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/connectome', connectome) 
     print('[CHAP] Saved connectome (surface + long-range connections)')
-    #compute harmonics
+    #compute harmonics (with medial wall and zero places masked out)
     vals,vecs = dcp.lapDecomp(connectome, args.evecs) #laplacian decomposition, returns eigenvals and eigenvecs (see decomp.py)
-    vecs = uts.unmask_medial_wall_vecs(vecs,zeromask)
+    vecs = uts.unmask_medial_wall_vecs(vecs,zeromask) #add zero vertices back 
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals',vals) #save np array eigenvals
     np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs',vecs) #save np array eigenvecs
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis') #create visualization output directory
-    if args.mask_med_wall==True: #save unmasked vecs for visualization purposes
-        unmasked_vecs=uts.unmask_medial_wall_vecs(vecs,u['mask'])
-    else:
-        unmasked_vecs = vecs
-    #visualization
+    unmasked_vecs = uts.unmask_medial_wall_vecs(vecs,u['mask']) 
+    #save out visualization (.vtk) files
     if multises:
         inout.save_eigenvector(f'{args.output_dir}/chap/sub-{sub}/{ses}/vis/sub-{sub}_{ses}_harmonics.vtk',sc,si,unmasked_vecs) #save out harmonics.vtk
         print(f'[CHAP] Saved harmonics for {sub} {ses}')

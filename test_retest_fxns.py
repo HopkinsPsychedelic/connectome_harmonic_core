@@ -1281,6 +1281,8 @@ def struc1_hcpvsbids():
     return sm
 
 #TODO: add across   
+#hcp vs bids within subject 
+#vs. hcp vs. bids across subject
 def reh_hcpvsbids(): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
@@ -1305,10 +1307,13 @@ def reh_hcpvsbids():
                 reh[sub][c_sub] = {}
                 reh[sub][c_sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[c_sub]['bids']['vecs'], 99, 99, True)
                 for harm in range(99):
-                    reh['across_all'][harm].append(reh[sub][c_sub][harm])
+                    reh['across_all'][harm].append(reh[sub][c_sub][harm]['bcorr']) #value per harm for that subject combo
     for harm in range(99):
         reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
+        reh['across_subj_avgs'].append(stats.mean(reh['across_all'][harm]))
+    for harm in range(99):
         reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
+        reh['across_subj_avgs'][harm] = np.tanh(reh['acros_subj_avgs'][harm])
     return reh
    
 
@@ -1355,6 +1360,4 @@ def rehp_hcpvsbids(chap_dir,reh):
     return rehp   
     
     
-    
-    
-#496 combinations in across 
+     

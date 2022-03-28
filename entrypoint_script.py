@@ -29,9 +29,8 @@ import argparse
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
 import bids_to_ch as bids
+
 #user inputs cl arguments separated by spaces. args without dashes are required
-#for hcp, hcp_dir is required
-#for bids pipeline, mrtrix_dir and ciftify_dir are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
 parser.add_argument('output_dir', type = str, help = 'CHAP output directory (path)')
 parser.add_argument('analysis_level', type = str, help = 'Participant or group mode. Only participant mode supported for now.')
@@ -45,11 +44,11 @@ parser.add_argument('--epsilon', type = int, help = 'epsilon')
 parser.add_argument('--skip_func', type = bool, help = 'Just find structural harmonics, no spectra.')
 parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pipeline or dhollander pipeline based on bids/mrtrix3_connectome. Choose msmt or dholl. Check github sh files for exact commands used.')
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
-parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
+#parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
 parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
 parser.add_argument('--mem_mb', type=int, help='set maximum memory usage for CHAP')
-parser.add_argument('--debug', type = bool, help = 'True runs without try/except statement')
+parser.add_argument('--debug', type = bool, help = 'When True runs without try/except statement (i.e. crashes when a subject fails)')
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
@@ -87,9 +86,10 @@ if not args.diff_pipeline:
 #calculate criticality
 if not args.criticality:
     args.criticality = False
-
+#debug mode False default
 if not args.debug:
     args.debug = False
+    
 #create CHAP output directory
 inout.if_not_exist_make(f'{args.output_dir}/chap')
 #make hcp intermediate dir
@@ -114,22 +114,26 @@ elif args.hcp_dir: #get list of hcp subs from data downloaded
         sub_list = os.listdir(args.hcp_dir) #one session
     subs = [sub[:6] for sub in sub_list]
     subs = list(dict.fromkeys(subs))    
-else: #all subjects from mrtrix output
+else: #all subjects from freesurfer output
     subject_dirs = glob(os.path.join(f'{args.derivatives_dir}/freesurfer', "sub-*"))
     subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
 print(f'[CHAP] Using sub(s): {subs}')
 
+#main subjects loop
 for sub in subs:
     u[f'{sub}_info'] = {}  #create dict in u for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
     problematic_subs = []
     #if HCP, run hcp_prep function
     if args.hcp_dir:
-        try:
+        if args.debug == False:
+            try:
+                hcp_prep.hcp_chapper(args, sub, u)
+            except:
+                print(f'Error occurred during {sub}')
+                problematic_subs.append(sub)
+        else:
             hcp_prep.hcp_chapper(args, sub, u)
-        except:
-            print(f'Error occurred during {sub}')
-            problematic_subs.append(sub)
     #else, run BIDS method
     else:
         if args.debug == False:

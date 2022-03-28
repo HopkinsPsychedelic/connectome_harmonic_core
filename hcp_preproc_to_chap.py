@@ -79,8 +79,6 @@ def hcp_prep_for_ch(args, sub, u, multises, ses):
     #send to chcs fxn
     if os.path.exists(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'):
         print('[CHAP] Harmonics already detected. Checking for spectra...')
-        print('hcp types:')
-        print(u[f'{sub}_info'][ses]['hcp_types'])
         ch.check_func(args,sub,ses,u,np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vecs.npy'),np.load(f'{args.output_dir}/chap/sub-{sub}/{ses}/vals.npy'))
     else:
         ch.construct_harmonics(args, sub, ses, u, multises) #run ch function
@@ -113,7 +111,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
             for n, dire, hem in product(('1','2'), ('lr','rl'), ('l','r')): #remove giftis
                 os.remove(f'{func_dir}/sub-{sub}_{ses}_task-rest{n}_acq-{dire}_hem-{hem}.func.gii')
         #tasks
-        else: #e.g. MOTOR or LANGUAGE
+        else: #e.g. MOTOR, LANGUAGE
             u[f'{sub}_info'][ses][hcp_type] = {}
             results_dir = f'{args.output_dir}/chap_work/sub-{sub}/{ses}/{hcp_type}/{sub}/MNINonLinear/Results'
             inout.if_not_exist_make(f'{func_dir}/{hcp_type}')
