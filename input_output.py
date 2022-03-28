@@ -19,6 +19,7 @@ import os
 from glob import glob
 import statistics as stats
 import pickle
+from scipy import sparse
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -414,5 +415,12 @@ def save_pickle(a_dict,fname):
     file_to_write = open(fname,"wb")
     pickle.dump(a_dict,file_to_write)
     
-def save_degree_vector():
-    
+def save_degree_vector(sub):
+    mat = sparse.load_npz(f'/data/HCP_Raw/derivatives/chap/sub-{sub}/struc_conn_mat.npz')
+    mat = mat.toarray()
+    jeff = []
+    for vert in range(59412):
+        jeff.append(sum(mat[vert]))
+    sums = np.array(jeff)
+    sums_unmasked = uts.unmask_medial_wall_vecs(sums,'/usr/local/connectome_harmonic_core/connectome_harmonic_core/hcp_mask.npy')
+    return sums_unmasked
