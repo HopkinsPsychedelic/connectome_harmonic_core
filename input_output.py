@@ -414,5 +414,5 @@ def save_pickle(a_dict,fname):
     file_to_write = open(fname,"wb")
     pickle.dump(a_dict,file_to_write)
     
-    
+def save_degree_vector():
     
