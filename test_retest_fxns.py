@@ -978,10 +978,10 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
     else:
         t_rt = False
     #subs = inout.get_subs(chap_dir,functional)
-    subs = ['660951','341834','135528']
+    subs = ['341834','135528']
     for sub in subs:
         all_vecs[sub] = {}    
-        for ses in ['test','retest']:
+        for ses in ['test']: #add retest if u want
            all_vecs[sub][ses] = {}
            if t_rt == True:
                all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
@@ -1288,7 +1288,7 @@ def reh_hcpvsbids():
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
-    subs = ['660951','341834','135528']
+    subs = ['341834','135528']
     #subs = inout.get_subs('/data/HCP_Raw/derivatives/chap')
     reh['chap_bids'] = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
     reh['chap_hcp'] = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)

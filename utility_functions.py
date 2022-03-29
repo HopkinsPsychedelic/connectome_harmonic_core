@@ -230,7 +230,7 @@ def get_vertex_degree(m):
 		degree[i]=d
 	return degree
 
-def get_zero_mask_from_connectivity(m,threshold=50):
+def get_zero_mask_from_connectivity(m,threshold=0.1):
 	zeromask=np.zeros(m.shape[0])
 	degree=get_vertex_degree(m)
 	inds=np.where(degree<=threshold)[0]
