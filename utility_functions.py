@@ -12,6 +12,8 @@ import time
 import numpy as np
 import os 
 from scipy import sparse
+import input_output as inout
+from shutil import rmtree
 #import icc
 
 def mask_medial_wall_vecs(unmasked_vecs,medial_wall_mask):
@@ -230,10 +232,20 @@ def get_vertex_degree(m):
 		degree[i]=d
 	return degree
 
-def get_zero_mask_from_connectivity(m,threshold=0.1):
+def get_zero_mask_from_connectivity(m,threshold=3):
 	zeromask=np.zeros(m.shape[0])
 	degree=get_vertex_degree(m)
 	inds=np.where(degree<=threshold)[0]
 	zeromask[inds]=1
 	return zeromask
-    
+
+def delete_chap_output(chap_dir = '/data/HCP_Raw/derivatives/chap'):
+    subs = inout.get_subs(chap_dir)
+    for sub in subs:
+        for file in ['struc_conn_mat.npz','connectome.npz','surf_mat.npz','vecs.npy','vals.npy']:
+            if os.path.exists(f'{chap_dir}/sub-{sub}/{file}'):
+                os.remove(f'{chap_dir}/sub-{sub}/{file}')
+    for sub in subs:
+        for direc in ['vis','func']:
+            if os.path.exists(f'{chap_dir}/sub-{sub}/{direc}'):
+                rmtree(f'{chap_dir}/sub-{sub}/{direc}')
