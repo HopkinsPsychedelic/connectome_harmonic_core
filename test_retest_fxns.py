@@ -410,7 +410,7 @@ def find_bcorrs_ivp(sub, ses, hp, run, n_evecs):
 
 '''2v shit'''
 
-def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca, vec_1 = pca, otherwise same as n_evecs
+def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs, icc=False): #if doing for pca, vec_1 = pca, otherwise same as n_evecs
     global cd 
     cd = {} #for chap_data
     cd['bcorrs'] = []
@@ -427,7 +427,10 @@ def test_retest_rel_2v(vec_1, vec_2, n_evecs, n_comp, pairs): #if doing for pca,
     hp['corr_orig'] = np.empty((n_evecs,n_comp))
     for evec_1 in range(0,n_comp): 
         for evec_2 in range(0,n_evecs): #n_evecs x n_evecs correlation matrix
-            hp['corr_orig'][evec_2,evec_1] = inout.abs_pearson(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2],True,True) #comparing column with column (ev with ev)
+            if icc ==True:
+                hp['corr_orig'][evec_2,evec_1] = inout.icc_vecs(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2]) #comparing column with column (ev with ev)                   
+            else:
+                hp['corr_orig'][evec_2,evec_1] = inout.abs_pearson(cd['vec_1'][:,evec_1], cd['vec_2'][:,evec_2],True,True) #comparing column with column (ev with ev)   
     hp['corr_all'] = hp['corr_orig'].swapaxes(0,1) #prepare to turn into dicts
     hp['corr_all'] = {index:{i:j for i,j in enumerate(k) if j} for index,k in enumerate(hp['corr_all'])} #turn into dicts
     find_bcorrs_2v(hp, 0, n_evecs) #run find bcorrs function, get best pairs
@@ -974,14 +977,15 @@ def load_vecs(chap_dir,functional,n_evecs): #probs want 99
     all_vecs, all_vecs['test'] = {},{}
     if os.path.exists(f'{chap_dir}/sub-103818/ses-test'):
         t_rt = True
-        all_vecs['retest'] = {}    
+        all_vecs['retest'] = {}  
+        subs = inout.get_subs(chap_dir,functional,t_rt=True)
     else:
         t_rt = False
-    #subs = inout.get_subs(chap_dir,functional)
-    subs = ['341834','135528']
+        subs = inout.get_subs(chap_dir,functional) 
+    #subs = ['341834','111312','103818','105923','195041']
     for sub in subs:
         all_vecs[sub] = {}    
-        for ses in ['test']: #add retest if u want
+        for ses in ['test','retest']: #add retest if u want
            all_vecs[sub][ses] = {}
            if t_rt == True:
                all_vecs[sub][ses]['vecs'] = np.load(f'{chap_dir}/sub-{sub}/ses-{ses}/vecs.npy')
@@ -1109,19 +1113,33 @@ def get_retest_inds(pairs_dict,start,stop):
         retest_inds.append(pairs_dict[test_ind]['ret_ind'])
     return retest_inds
 
-def test_retest_plots_one_sub(all_vecs, sub, pairs_dict, start, stop, sc, si, lhc, lhi, rhc, rhi):
+def test_retest_plots_one_sub(all_vecs, sub, pairs_dict, start, stop):
+    sc = inout.get_sc(sub)
     retest_inds = get_retest_inds(pairs_dict, start, stop)
     for test_harm,retest_harm in enumerate(retest_inds):
         title = f'Test Harmonic {test_harm} vs. Retest Harmonic {retest_harm}'
         my_fname = f'sub-{sub}_test-H{test_harm}_retest-H{retest_harm}_plot'
-        visu(title,all_vecs[sub]['test']['unmasked_vecs'][:,test_harm], all_vecs[sub]['retest']['unmasked_vecs'][:,retest_harm], sc, si, lhc, lhi, rhc, rhi, save=True, img_path = f'/data/hcp_test_retest/derivatives/chap_figs/sub-{sub}_pngs',fname = my_fname)
-        
-def reliability_each_harm(chap_dir, n_evecs, vecs_dict,just_within=False): 
+        visu(title,all_vecs[sub]['test']['unmasked_vecs'][:,test_harm], all_vecs[sub]['retest']['unmasked_vecs'][:,retest_harm], sc['sc'], sc['si'], sc['lhc'], sc['lhi'], sc['rhc'], sc['rhi'], save=True, img_path = f'/data/hcp_test_retest/derivatives/chap_figs/sub-{sub}_pngs',fname = my_fname)
+
+def hcp_bids_plots_one_sub(sub,start,stop):
+    sc = inout.get_sc(sub)
+    chap_bids = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
+    chap_hcp = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
+    pairs_dict = test_retest_rel_2v(chap_hcp[sub]['test']['vecs'],chap_bids[sub]['test']['vecs'],99,99,True)
+    bids_inds = get_retest_inds(pairs_dict,start,stop)
+    for hcp_harm,bids_harm in enumerate(bids_inds):
+        title = f'HCP Harmonic {hcp_harm} vs. BIDS Harmonic {bids_harm}'
+        my_fname = f'sub-{sub}_hcp-H{hcp_harm}_bids-H{bids_harm}_plot'
+        visu(title,chap_hcp[sub]['test']['unmasked_vecs'][:,hcp_harm], chap_bids[sub]['test']['unmasked_vecs'][:,bids_harm], sc['sc'], sc['si'], sc['lhc'], sc['lhi'], sc['rhc'], sc['rhi'], save=True, img_path = f'/data/HCP_Raw/derivatives/chap_figs',fname = my_fname)
+       
+def reliability_each_harm(chap_dir, n_evecs,just_within=False): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
-    subs = inout.get_subs(chap_dir)
+    subs = inout.get_subs(chap_dir,t_rt=True)
+    subs = ['105923','103818','111312']
+    vecs_dict = load_vecs(chap_dir,False,99)
     #subs = ['103818','105923','111312']
     for sub in subs:
         reh[sub] = {}
@@ -1141,7 +1159,7 @@ def reliability_each_harm(chap_dir, n_evecs, vecs_dict,just_within=False):
             if c_sub != sub:
                 reh[sub][c_sub] = {}
                 for ses in ['test','retest']:
-                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, True)
+                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, False)
                     for harm in range(99):
                         reh['across_all'][harm].append(reh[sub][c_sub][ses][harm])
     for harm in range(99):
@@ -1288,8 +1306,8 @@ def reh_hcpvsbids():
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
-    subs = ['341834','135528']
-    #subs = inout.get_subs('/data/HCP_Raw/derivatives/chap')
+    #subs = ['341834','111312','103818','105923','195041']
+    subs = inout.get_subs('/data/HCP_Raw/derivatives/chap')
     reh['chap_bids'] = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
     reh['chap_hcp'] = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
     for sub in subs:
@@ -1315,7 +1333,18 @@ def reh_hcpvsbids():
         reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
         reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
     return reh
-   
+
+def plot_reh_hcp_vs_bids(reh,save=False):
+    plt.plot(reh['within_subj_avgs'], label = 'Within Subject')
+    plt.plot(reh['across_subj_avgs'], label = 'Across Subject')
+    plt.xlabel('Harmonic Rank')
+    plt.ylabel('Spatial Correlation')
+    plt.legend()
+    plt.title('Avg. HCP vs. BIDS Harmonic Correlation by Wavenumber')
+    if save: 
+        plt.savefig(f'/home/bwinsto2/reh.png',dpi=2000)
+    plt.close()
+
 
 #rpah but within is hcp vs. bids same subject; across is hcp vs. bids (all other subs)   
 def rehp_hcpvsbids(chap_dir,reh): 

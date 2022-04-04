@@ -6,7 +6,7 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-import vtk
+#import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
@@ -20,6 +20,9 @@ from glob import glob
 import statistics as stats
 import pickle
 from scipy import sparse
+from pingouin import intraclass_corr
+import pandas as pd
+import test_retest_fxns as t_rt
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -312,12 +315,17 @@ for network in list(set(parcel_csv['Community'])):
 627549 missing resting state
 859671 retest structural harmonics?
 '''
-def get_subs(chap_dir,functional=False, rest = False):
+def get_subs(chap_dir,functional=False, rest = False, t_rt=False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
-   for sub in ['test_avg', 'retest_avg', 'total_avg','192439','115320','139839','114823','185442','187547']:
-        if os.path.exists(f'{chap_dir}/sub-{sub}'):
-            subs.remove(sub)
+   if t_rt==False:
+       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','172332','192439']: #add bad subs here
+            if os.path.exists(f'{chap_dir}/sub-{sub}'):
+                subs.remove(sub)
+   else:
+       for sub in ['test_avg', 'retest_avg', 'total_avg','859671','187547']: #add bad subs here
+            if os.path.exists(f'{chap_dir}/sub-{sub}'):
+                subs.remove(sub)        
    if functional == True:
         subs.remove('341834')
         subs.remove('627549')
@@ -419,8 +427,27 @@ def save_degree_vector(sub):
     mat = sparse.load_npz(f'/data/HCP_Raw/derivatives/chap/sub-{sub}/struc_conn_mat.npz')
     mat = mat.toarray()
     jeff = []
-    for vert in range(59412):
+    for vert in range(len(mat)):
         jeff.append(sum(mat[vert]))
     sums = np.array(jeff)
     sums_unmasked = uts.unmask_medial_wall_vecs(sums,'/usr/local/connectome_harmonic_core/connectome_harmonic_core/hcp_mask.npy')
-    return sums_unmasked
+    return sums
+
+def get_sc(sub): #gets HCP_Raw surface info
+    sc = {}
+    sc['sc'],sc['si'] = read_gifti_surface_both_hem(f'/data/HCP_Raw/derivatives/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.L.white.32k_fs_LR.surf.gii',f'/data/HCP_Raw/derivatives/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii', True)
+    sc['lhc'],sc['lhi'] = read_gifti_surface(f'/data/HCP_Raw/derivatives/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.L.white.32k_fs_LR.surf.gii',hcp=True)
+    sc['rhc'],sc['rhi'] = read_gifti_surface(f'/data/HCP_Raw/derivatives/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii',hcp=True)
+    return sc 
+
+def icc_vecs(vec1,vec2):
+    vec2 = t_rt.check_polarity(vec1,vec2)
+    target = list(range(59412))
+    target = target + list(range(59412))
+    rater = ['vec1'] * 59412
+    rater = rater + (['vec2'] * 59412)
+    rating = np.hstack((vec1,vec2))
+    df = pd.DataFrame({'vertex':target, 'vecs':rater, 'value':rating})
+    icc = intraclass_corr(data=df, targets = 'vertex', raters = 'vecs', ratings = 'value')
+    icc.set_index('Type')
+    return icc['ICC'][0]
