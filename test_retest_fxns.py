@@ -1132,13 +1132,13 @@ def hcp_bids_plots_one_sub(sub,start,stop):
         my_fname = f'sub-{sub}_hcp-H{hcp_harm}_bids-H{bids_harm}_plot'
         visu(title,chap_hcp[sub]['test']['unmasked_vecs'][:,hcp_harm], chap_bids[sub]['test']['unmasked_vecs'][:,bids_harm], sc['sc'], sc['si'], sc['lhc'], sc['lhi'], sc['rhc'], sc['rhi'], save=True, img_path = f'/data/HCP_Raw/derivatives/chap_figs',fname = my_fname)
        
-def reliability_each_harm(chap_dir, n_evecs,just_within=False): 
+def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
     subs = inout.get_subs(chap_dir,t_rt=True)
-    subs = ['105923','103818','111312']
+    #subs = ['105923','103818','111312']
     vecs_dict = load_vecs(chap_dir,False,99)
     #subs = ['103818','105923','111312']
     for sub in subs:
@@ -1146,7 +1146,7 @@ def reliability_each_harm(chap_dir, n_evecs,just_within=False):
         for ses in ['test','retest']:
            reh[sub][ses] = {}
            reh[sub][ses]['vecs'] = vecs_dict[sub][ses]['vecs']
-        reh[sub][sub] = test_retest_rel_2v(reh[sub]['test']['vecs'], reh[sub]['retest']['vecs'], n_evecs,n_evecs, True)
+        reh[sub][sub] = test_retest_rel_2v(reh[sub]['test']['vecs'], reh[sub]['retest']['vecs'], n_evecs,n_evecs, True, icc)
         for harm in range(99):
             reh['within_all'][harm].append(reh[sub][sub][harm]['bcorr'])
     if just_within == True:
@@ -1159,22 +1159,23 @@ def reliability_each_harm(chap_dir, n_evecs,just_within=False):
             if c_sub != sub:
                 reh[sub][c_sub] = {}
                 for ses in ['test','retest']:
-                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, False)
+                    reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, False, icc)
                     for harm in range(99):
                         reh['across_all'][harm].append(reh[sub][c_sub][ses][harm])
     for harm in range(99):
         reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
         reh['across_subj_avgs'].append(stats.mean(reh['across_all'][harm]))
-    for harm in range(99):
-        reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
-        reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
+    if icc == False:
+        for harm in range(99):
+            reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
+            reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
     return reh  
 
 def plot_reh(reh,save=False):
     plt.plot(reh['within_subj_avgs'], label = 'Within Subject')
     plt.plot(reh['across_subj_avgs'], label = 'Across Subject')
     plt.xlabel('Harmonic Rank')
-    plt.ylabel('Spatial Correlation')
+    plt.ylabel('Intraclass Correlation')
     plt.legend()
     #plt.title('Average Test-Retest Reliability by Wavenumber')
     if save: 
@@ -1209,14 +1210,14 @@ def reliability_each_harm_mean_power(chap_dir,reh):
             rehp['within_all']['test'][test].append(rehp[sub]['test'][test])
             rehp['within_all']['retest'][test].append(rehp[sub]['retest'][retest])
     for harm in range(99):
-        rehp['within_subj_avgs'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['within_all']['retest'][harm],fisher = False, abso=False))
+        rehp['within_subj_avgs'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['within_all']['retest'][harm],fisher = True, abso=False))
     rehp['across_all']['fake_correlations'] = []
     for harm in range(99):
         rehp['across_all'][harm]['correlations'] = []
         #within
         for sim in range(1000):
             rehp['across_all'][harm][f'sim-{sim}'] = random.sample(rehp['within_all']['retest'][harm],len(rehp['within_all']['retest'][harm]))            
-            rehp['across_all'][harm]['correlations'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['across_all'][harm][f'sim-{sim}'],True))
+            rehp['across_all'][harm]['correlations'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['across_all'][harm][f'sim-{sim}'],fisher = True, abso=False))
         rehp['across_all'][harm]['avg_correlation'] = stats.mean(rehp['across_all'][harm]['correlations'])
         rehp['across_all']['fake_correlations'].append(rehp['across_all'][harm]['avg_correlation'])
     for harm in range(99):

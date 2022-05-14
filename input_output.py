@@ -23,6 +23,8 @@ from scipy import sparse
 from pingouin import intraclass_corr
 import pandas as pd
 import test_retest_fxns as t_rt
+import datetime
+import icc as ic
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -330,7 +332,8 @@ def get_subs(chap_dir,functional=False, rest = False, t_rt=False):
         subs.remove('341834')
         subs.remove('627549')
    elif rest == True:
-       subs = [sub for sub in subs if sub not in ['341834','627549','859671']]
+       subs = [sub for sub in subs if sub not in ['187547','341834','859671','627549']]
+       #subs = [sub for sub in subs if sub not in ['200109','146129','783462','187547','287248','158035','111312','660951','341834','859671','135528']]
    #subs = ['105923','103818','111312']
    return subs
 
@@ -440,14 +443,21 @@ def get_sc(sub): #gets HCP_Raw surface info
     sc['rhc'],sc['rhi'] = read_gifti_surface(f'/data/HCP_Raw/derivatives/ciftify/sub-{sub}/T1w/fsaverage_LR32k/sub-{sub}.R.white.32k_fs_LR.surf.gii',hcp=True)
     return sc 
 
-def icc_vecs(vec1,vec2):
+def icc_vecs(vec1,vec2, icc_module=True):
+    begin_time = datetime.datetime.now()
     vec2 = t_rt.check_polarity(vec1,vec2)
-    target = list(range(59412))
-    target = target + list(range(59412))
+    if icc_module == True:
+        measures = pd.DataFrame({'vec1':vec1, 'vec2':vec2})
+        return ic.icc(measures,model='twoway',type='agreement',unit='single')[0]
+    target_59 = list(range(59412))
+    target = target_59 + list(range(59412))
     rater = ['vec1'] * 59412
     rater = rater + (['vec2'] * 59412)
     rating = np.hstack((vec1,vec2))
     df = pd.DataFrame({'vertex':target, 'vecs':rater, 'value':rating})
+    icc_time = datetime.datetime.now()
     icc = intraclass_corr(data=df, targets = 'vertex', raters = 'vecs', ratings = 'value')
     icc.set_index('Type')
+    print(f'icc itself took {datetime.datetime.now() - icc_time} h:m:s')
+    print(f'total time {datetime.datetime.now() - begin_time} h:m:s')
     return icc['ICC'][0]

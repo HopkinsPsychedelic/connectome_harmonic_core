@@ -215,10 +215,10 @@ def procrustes_alignment(data, reference=None, n_iter=10, tol=1e-5,
         dist = new_dist
 
     return (aligned, reference) if return_reference else aligned
-'''
+
 def get_icc(measures):
     return icc.icc(measures,model='twoway',type='consistency',unit='single')
-'''          
+       
 
 #limit python memory allocation 
 def limit_memory(max_mem_mb):
