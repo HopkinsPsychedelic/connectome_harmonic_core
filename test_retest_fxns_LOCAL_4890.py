@@ -1131,9 +1131,7 @@ def hcp_bids_plots_one_sub(sub,start,stop):
         title = f'HCP Harmonic {hcp_harm} vs. BIDS Harmonic {bids_harm}'
         my_fname = f'sub-{sub}_hcp-H{hcp_harm}_bids-H{bids_harm}_plot'
         visu(title,chap_hcp[sub]['test']['unmasked_vecs'][:,hcp_harm], chap_bids[sub]['test']['unmasked_vecs'][:,bids_harm], sc['sc'], sc['si'], sc['lhc'], sc['lhi'], sc['rhc'], sc['rhi'], save=True, img_path = f'/data/HCP_Raw/derivatives/chap_figs',fname = my_fname)
-
-'''test retest abstract'''
-        
+       
 def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
@@ -1185,7 +1183,6 @@ def plot_reh(reh,save=False):
     plt.close()
 
 #TODO do across with pair stuff
-#maybe a weighted correlation or ICC that decreases with increasing harmonic rank?
 def reliability_each_harm_mean_power(chap_dir,reh): 
     rehp = {}
     rehp,rehp['within_all'],rehp['across_all'] = {},{},{}
@@ -1201,7 +1198,7 @@ def reliability_each_harm_mean_power(chap_dir,reh):
     for sub in subs:
         rehp[sub] = {}
         for ses in ['test','retest']:
-            rehp[sub][ses] = {} #below won't include trivial ev
+            rehp[sub][ses] = {}
             rehp[sub][ses]['rest1'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST1/powerspectra/sub-{sub}_ses-{ses}_task-rest1_acq-rl_mean_power_spectrum.npy')[1:]
             rehp[sub][ses]['rest2'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST2/powerspectra/sub-{sub}_ses-{ses}_task-rest2_acq-rl_mean_power_spectrum.npy')[1:]
             for harm in range(99):
@@ -1302,6 +1299,7 @@ def struc1_hcpvsbids():
         sm['within_subj_all'].append(sm[sub][sub])
     return sm
 
+#TODO: add across   
 #hcp vs bids within subject 
 #vs. hcp vs. bids across subject
 def reh_hcpvsbids(): 

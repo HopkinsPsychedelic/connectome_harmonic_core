@@ -1,5 +1,5 @@
 """
-@author: patricktaylor
+@authors: patricktaylor, bwinston
 """
 
 import numpy as np
@@ -10,18 +10,29 @@ from matplotlib.ticker import MaxNLocator
 from statistics import stdev
 import matplotlib.lines as mlines
 import matplotlib.transforms as mtransforms
-from powerlaw import plot_pdf, Fit, pdf
-import powerlaw
+#from powerlaw import plot_pdf, Fit, pdf
+#import powerlaw
 import math
 from sklearn.metrics import mean_squared_error
 import pandas as pd
 import os 
 
-
-def dynamic_energy_spectrum(timeseries,vecs,vals):
+def get_zeromean(timeseries):
     zeromean = np.zeros(np.shape(timeseries))
     for i in range(len(timeseries)):
+    #zeromean is the same as the timeseries, just with zero as the mean
         zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
+    return zeromean
+
+def rms(spectrum):
+    squares = np.zeros(np.shape(spectrum))
+    for harmonic in range(len(spectrum)):
+        for timepoint in range(len(spectrum[0])):
+            squares[harmonic][timepoint] = spectrum[harmonic][timepoint]**2
+    return squares
+            
+def dynamic_energy_spectrum(timeseries,vecs,vals):
+    zeromean = get_zeromean(timeseries)
     spectrum=np.zeros((len(vecs[0,:]),len(timeseries[0,:])))
     for k in range(len(spectrum)):
         v=vecs[:,k]
@@ -29,22 +40,25 @@ def dynamic_energy_spectrum(timeseries,vecs,vals):
             spectrum[k][tp]=(np.abs(np.dot(v,zeromean[:,tp]))**2)*vals[k]**2
     return spectrum 
 
-def dynamic_power_spectrum(timeseries,vecs,vals):
-    zeromean = np.zeros(np.shape(timeseries))
-    for i in range(len(timeseries)):
-        zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
+def dynamic_power_spectrum(timeseries,vecs):
+    zeromean = get_zeromean(timeseries)
+    #spectrum has dims vecs x timepoints
     spectrum=np.zeros((len(vecs[0,:]),len(timeseries[0,:])))
-    for k in range(len(spectrum)):
-        #print(k)
-        v=vecs[:,k]
-        for tp in range(len(zeromean[0,:])):
-            spectrum[k][tp]=np.abs(np.dot(v,zeromean[:,tp]))
+    for v in range(len(spectrum)): #for each vec
+        vec=vecs[:,v] #values in the vec
+        for tp in range(len(zeromean[0,:])): #for each timepoint
+            #ev strength at that timepoint is the dot product of 
+            #the ev x the distribution of activity at a timepoint 
+            #these are the same shape (i.e. both 59k vectors)
+            #dot product is showing how much overlap? why abs?
+            #no squaring
+            #for mean, we're taking the average of that for each harmonic over the scan
+            #each timepoint of spectrum is dot product btwn ev and fmri timeslice
+            spectrum[v][tp]=np.abs(np.dot(vec,zeromean[:,tp]))
     return spectrum
 
-def dynamic_reconstruction_spectrum(timeseries,vecs,vals):
-    zeromean = np.zeros(np.shape(timeseries))
-    for i in range(len(timeseries)):
-        zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
+def dynamic_reconstruction_spectrum(timeseries,vecs,vals): #like power but no absolute value
+    zeromean = get_zeromean(timeseries)
     spectrum=np.zeros((len(vecs[0,:]),len(timeseries[0,:])))
     for k in range(len(spectrum)):
         #print(k)
@@ -54,19 +68,16 @@ def dynamic_reconstruction_spectrum(timeseries,vecs,vals):
     return spectrum
 
 def mean_energy_spectrum(timeseries,vecs,vals):
-    zeromean = np.zeros(np.shape(timeseries))
-    for i in range(len(timeseries)):
-        zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
+    zeromean = get_zeromean(timeseries)
     spectrum=np.zeros(len(vecs[0,:]))
     for k in range(len(spectrum)):
       v=vecs[:,k]
       for tp in range(len(zeromean[0,:])):
           spectrum[k]+=np.abs(np.dot(v,zeromean[:,tp]))**2/len(zeromean[0,:])*vals[k]**2
     return spectrum 
+
 def mean_power_spectrum(timeseries,vecs):
-    zeromean = np.zeros(np.shape(timeseries))
-    for i in range(len(timeseries)):
-        zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
+    zeromean = get_zeromean(timeseries)
     spectrum=np.zeros(len(vecs[0,:]))
     for k in range(len(spectrum)):
         #print(k)
@@ -76,9 +87,7 @@ def mean_power_spectrum(timeseries,vecs):
     return spectrum 
 
 def normalized_power_spectrum(timeseries,vecs):
-    zeromean = np.zeros(np.shape(timeseries))
-    for i in range(len(timeseries)):
-        zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
+    zeromean = get_zeromean(timeseries)
     spectrum=np.zeros(len(vecs[0,:]))
     for k in range(len(spectrum)):
         #print(k)

@@ -30,7 +30,7 @@ def construct_harmonics(args, sub, ses, u, multises):
     #find vertices with zero connections, mask em out
     zeromask = uts.get_zero_mask_from_connectivity(struc_conn_mat)
     struc_conn_mat = uts.mask_connectivity_matrix(struc_conn_mat,zeromask)
-    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat)
+    sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/struc_conn_mat', struc_conn_mat) #save out struc conn mat
     #mask out those vertices from surf mat also
     surf_mat = uts.mask_connectivity_matrix(surf_mat,zeromask)
     #sparse.save_npz(f'{args.output_dir}/chap/sub-{sub}/{ses}/surf_mat', surf_mat) #save out surface matrix

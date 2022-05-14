@@ -39,8 +39,8 @@ parser.add_argument('--derivatives_dir', type = str, help = 'Directory containin
 parser.add_argument('--hcp_dir', type = str, help = 'HCP (min) preprocessed data directory. First level should be test and retest folders OR if one session just downloads. If test-retest, downloads go in respective session folders. Required for CHAP-HCP pipeline.')
 parser.add_argument('--evecs', type = int, help = 'Number of eigenvectors (harmonics) to compute. Default is 100 (minus first trivial harmonic)')
 parser.add_argument('--tol', type = int, help = '(Tolerance) search radius of nearest neighbor search for matching endpoints to surface vertices in mm. Default = 1')
-parser.add_argument('--sigma', type = int, help = 'Sigma')
-parser.add_argument('--epsilon', type = int, help = 'epsilon')
+parser.add_argument('--sigma', type = int, help = 'Sigma (smoothing)')
+parser.add_argument('--epsilon', type = int, help = 'epsilon (smoothing)')
 parser.add_argument('--skip_func', type = bool, help = 'Just find structural harmonics, no spectra.')
 parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pipeline or dhollander pipeline based on bids/mrtrix3_connectome. Choose msmt or dholl. Check github sh files for exact commands used.')
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
@@ -52,9 +52,9 @@ parser.add_argument('--debug', type = bool, help = 'When True runs without try/e
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
-#read evecs(harmonics) number, set default to 100
 if args.mem_mb:
     uts.limit_memory(args.mem_mb)
+#read evecs(harmonics) number, set default to 100
 if not args.evecs:
     args.evecs = 100
 #read tol number, set default to 2
@@ -77,7 +77,7 @@ else:
 #binarize structural connectivity matrix by default
 if not args.binarize:
     args.binarize = True
-#msmt_5tt
+#dholl
 if not args.diff_pipeline:
     args.diff_pipeline = 'dholl'
 #calculate criticality
@@ -102,6 +102,7 @@ u['mask'] = np.load('/home/neuro/repo/hcp_mask.npy')
 
 #find subjects
 subs = []
+problematic_subs = [] #for later
 if args.participant_label: #user input subjects
     subs = [str(sub) for sub in args.participant_label]
 elif args.hcp_dir: #get list of hcp subs from data downloaded
@@ -120,7 +121,6 @@ print(f'[CHAP] Using sub(s): {subs}')
 for sub in subs:
     u[f'{sub}_info'] = {}  #create dict in u for each subjs info
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
-    problematic_subs = []
     #if HCP, run hcp_prep function
     if args.hcp_dir:
         if args.debug == False:
@@ -129,8 +129,8 @@ for sub in subs:
             except:
                 print(f'Error occurred during {sub}')
                 problematic_subs.append(sub)
-        else:
-            hcp_prep.hcp_chapper(args, sub, u)
+        else: #will stop if a subject doesn't work
+            hcp_prep.hcp_chapper(args, sub, u) 
     #else, run BIDS method
     else:
         if args.debug == False:

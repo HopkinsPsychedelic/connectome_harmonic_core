@@ -1131,10 +1131,15 @@ def hcp_bids_plots_one_sub(sub,start,stop):
         title = f'HCP Harmonic {hcp_harm} vs. BIDS Harmonic {bids_harm}'
         my_fname = f'sub-{sub}_hcp-H{hcp_harm}_bids-H{bids_harm}_plot'
         visu(title,chap_hcp[sub]['test']['unmasked_vecs'][:,hcp_harm], chap_bids[sub]['test']['unmasked_vecs'][:,bids_harm], sc['sc'], sc['si'], sc['lhc'], sc['lhi'], sc['rhc'], sc['rhi'], save=True, img_path = f'/data/HCP_Raw/derivatives/chap_figs',fname = my_fname)
+<<<<<<< Updated upstream
+       
+def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False): 
+=======
 
 '''test retest abstract'''
         
-def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False): 
+def reliability_each_harm(chap_dir, n_evecs,just_within=False): 
+>>>>>>> Stashed changes
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
