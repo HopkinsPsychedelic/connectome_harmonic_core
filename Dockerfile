@@ -168,7 +168,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda install -c conda-forge vtk \
     && conda install -c conda-forge yagmail \
     && conda install -c mrtrix3 mrtrix3 \
-    && conda install matplotlib pandas numpy nilearn powerlaw Cython \
+    && conda install libgcc matplotlib pandas numpy nilearn powerlaw Cython \
     && sync && conda clean -y --all && sync \
     && rm -rf ~/.cache/pip* \
     && sync
