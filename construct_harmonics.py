@@ -67,7 +67,7 @@ def check_func(args,sub,ses,u,vecs,vals):
 def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for each timeseries
     task_dir = f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{task}'
     #check for prev data
-    if os.path.exists(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum.npy'):
+    if os.path.exists(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum.npy'):
         print(f'[CHAP] Spectra computed previously for {bids_stuff}. If you want to run again, delete the old stuff, chap')
     else: #calculate spectra
         inout.if_not_exist_make(f'{task_dir}')
@@ -76,21 +76,22 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
             inout.if_not_exist_make(f'{task_dir}/criticality')
             inout.if_not_exist_make(f'{task_dir}/criticality/{spec}')
         #power spectra
-        print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff}...')
-        mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
-        np.save(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
-        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs) #power at each TR
-        np.save(f'{task_dir}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
-        normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
-        np.save(f'{task_dir}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
-        print(f'[CHAP] Saved power spectra')
-        #energy spectra
-        print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff}...')
-        mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals) #average energy over the whole scan (average of dynamic for each harmonic)
-        np.save(f'{task_dir}/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
-        dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals) #energy at each TR
-        np.save(f'{task_dir}/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
-        print(f'[CHAP] Saved energy spectra')
+        if not args.recon_only:    
+            print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff}...')
+            mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
+            np.save(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
+            dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs) #power at each TR
+            np.save(f'{task_dir}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
+            normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
+            np.save(f'{task_dir}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
+            print(f'[CHAP] Saved power spectra')
+            #energy spectra
+            print(f'[CHAP] Computing mean and dynamic energy spectra for {bids_stuff}...')
+            mean_energy_spectrum = cs.mean_energy_spectrum(timeseries, vecs, vals) #average energy over the whole scan (average of dynamic for each harmonic)
+            np.save(f'{task_dir}/energyspectra/{bids_stuff}_mean_energy_spectrum', mean_energy_spectrum)
+            dynamic_energy_spectrum = cs.dynamic_energy_spectrum(timeseries, vecs, vals) #energy at each TR
+            np.save(f'{task_dir}/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
+            print(f'[CHAP] Saved energy spectra')
         #reconstruction spectrum
         dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs) #takes on negative values
         np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)

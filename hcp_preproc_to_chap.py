@@ -128,7 +128,7 @@ def hcp_spectra_prep(args,sub,ses,u,vecs,vals):
                 inout.dts_to_func_gii(u[f'{sub}_info'][ses][hcp_type][dire], f'{func_dir}/{bids_stuff}')
                 u[f'{sub}_info'][ses][hcp_type][dire] = cs.read_functional_timeseries(f'{func_dir}/{bids_stuff}_hem-l.func.gii', f'{func_dir}/{bids_stuff}_hem-r.func.gii')
                 u[f'{sub}_info'][ses][hcp_type][dire] = uts.mask_timeseries(u[f'{sub}_info'][ses][hcp_type][dire],u['mask'])
-                np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{hcp_type}_{dire}.npy',u[f'{sub}_info'][ses][hcp_type][dire])
+                #np.save(f'{args.output_dir}/chap/sub-{sub}/{ses}/func/{hcp_type}_{dire}.npy',u[f'{sub}_info'][ses][hcp_type][dire])
                 os.remove(f'{func_dir}/{bids_stuff}_hem-l.func.gii')
                 os.remove(f'{func_dir}/{bids_stuff}_hem-r.func.gii')
             #concatenate PE directions

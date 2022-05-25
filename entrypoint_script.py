@@ -45,6 +45,7 @@ parser.add_argument('--diff_pipeline', type = str, help = 'Choices: msmt_5tt pip
 parser.add_argument('--streamlines', type = int, help = 'Number of streamlines in MRtrix tckgen')
 #parser.add_argument('--mask_med_wall', type = bool, help = 'Mask out medial wall vertices. Default is True.')
 parser.add_argument('--binarize', type = bool, help = 'Binarize structural connectivity matrix. Default is True')
+parser.add_argument('--recon_only', type = str, help = 'Only compute reconstruction spectrum')
 parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
 parser.add_argument('--mem_mb', type=int, help='set maximum memory usage for CHAP')
 parser.add_argument('--debug', type = bool, help = 'When True runs without try/except statement (i.e. crashes when a subject fails)')
