@@ -166,7 +166,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda install -yq scikit-learn scipy meshio nibabel \ 
     && conda install -c conda-forge tvb-gdist \
     && conda install -c conda-forge vtk \
-    && conda install -c conda-forge yagmail \
+    && conda install -c conda-forge yagmail premailer \
     && conda install -c mrtrix3 mrtrix3 \
     && pip install icc \
     && conda install libgcc matplotlib pandas numpy nilearn powerlaw Cython \
