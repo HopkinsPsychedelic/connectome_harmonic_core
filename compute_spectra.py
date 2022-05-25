@@ -24,12 +24,16 @@ def get_zeromean(timeseries):
         zeromean[i, :] = (timeseries[i, :] - np.mean(timeseries[i, :]))
     return zeromean
 
-def rms(spectrum):
+def rms(spectrum): #reconstruction spectrum (should have negative values)
     squares = np.zeros(np.shape(spectrum))
     for harmonic in range(len(spectrum)):
         for timepoint in range(len(spectrum[0])):
             squares[harmonic][timepoint] = spectrum[harmonic][timepoint]**2
-    return squares
+    rms = np.zeros(len(spectrum))
+    for harmonic in range(len(spectrum)):
+        rms[harmonic] = sum(squares[harmonic]) #mean of sum of squares
+        rms[harmonic] = rms[harmonic]**.5 #square root
+    return rms
             
 def dynamic_energy_spectrum(timeseries,vecs,vals):
     zeromean = get_zeromean(timeseries)
@@ -57,7 +61,7 @@ def dynamic_power_spectrum(timeseries,vecs):
             spectrum[v][tp]=np.abs(np.dot(vec,zeromean[:,tp]))
     return spectrum
 
-def dynamic_reconstruction_spectrum(timeseries,vecs,vals): #like power but no absolute value
+def dynamic_reconstruction_spectrum(timeseries,vecs): #like power but no absolute value
     zeromean = get_zeromean(timeseries)
     spectrum=np.zeros((len(vecs[0,:]),len(timeseries[0,:])))
     for k in range(len(spectrum)):

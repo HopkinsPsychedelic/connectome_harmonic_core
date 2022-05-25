@@ -5,9 +5,6 @@ Created on Tue Sep 15 11:56:47 2020
 
 @author: bwinston
 
-see https://github.comk/BIDS-Apps/example/blob/master/run.py 
-https://docs.python.org/3/library/argparse.html
-for reference
 """
 
 print('''
@@ -29,6 +26,8 @@ import argparse
 import hcp_preproc_to_chap as hcp_prep
 import numpy as np
 import bids_to_ch as bids
+import email_python
+
 
 #user inputs cl arguments separated by spaces. args without dashes are required
 parser = argparse.ArgumentParser(description='Connectome Harmonic Analysis Pipeline (CHAP)')
@@ -49,6 +48,7 @@ parser.add_argument('--binarize', type = bool, help = 'Binarize structural conne
 parser.add_argument('--criticality', type = bool, help='compute the criticality of the spectra across subjects')
 parser.add_argument('--mem_mb', type=int, help='set maximum memory usage for CHAP')
 parser.add_argument('--debug', type = bool, help = 'When True runs without try/except statement (i.e. crashes when a subject fails)')
+parser.add_argument('--email_notif', type = str, help = 'Email address where we should send notification that CHAP finished')
 args = parser.parse_args() 
 
 ##set default arguments if user doesn't supply
@@ -123,14 +123,16 @@ for sub in subs:
     inout.if_not_exist_make(f'{args.output_dir}/chap/sub-{sub}') #subject chap output folder
     #if HCP, run hcp_prep function
     if args.hcp_dir:
-        if args.debug == False:
+        if args.debug == False: #will continue if one subj has error
             try:
                 hcp_prep.hcp_chapper(args, sub, u)
             except:
                 print(f'Error occurred during {sub}')
+                if args.email_notif:
+                    email_python.send_email_notif(subject = f'{sub} failed, chap still running')                                                                                                                   
                 problematic_subs.append(sub)
         else: #will stop if a subject doesn't work
-            hcp_prep.hcp_chapper(args, sub, u) 
+            hcp_prep.hcp_chapper(args, sub, u)
     #else, run BIDS method
     else:
         if args.debug == False:
@@ -139,9 +141,12 @@ for sub in subs:
             except:
                 print(f'Error occurred during {sub}')
                 problematic_subs.append(sub)
+                if args.email_notif:
+                    email_python.send_email_notif(subject = f'{sub} failed, chap still running')                                                                                                                   
         else:
             bids.bids_chapper(u, args, sub)
     print(f'[CHAP] Finished {sub}')
+print(f'Problematic subs: {problematic_subs}') 
 print('''
           )        (                                                   
    (   ( /(  (     )\ )     (                    (         )     (     
@@ -154,7 +159,8 @@ print('''
                                           |_|                                                   
 Have a pleasant afternoon.                                                                                                                                                                                                 
 ''')            
-print(f'Problematic subs: {problematic_subs}')                                                                                                                        
-                                                                                                                                      
+if args.email_notif:
+    email_python.send_email_notif()                                                                                                                   
+                                                                                                                                     
                                                                                                                                       
 

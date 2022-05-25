@@ -20,7 +20,6 @@ from glob import glob
 import statistics as stats
 import pickle
 from scipy import sparse
-from pingouin import intraclass_corr
 import pandas as pd
 import test_retest_fxns as t_rt
 import datetime

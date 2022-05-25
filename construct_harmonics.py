@@ -92,7 +92,7 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         np.save(f'{task_dir}/energyspectra/{bids_stuff}_dynamic_energy_spectrum', dynamic_energy_spectrum)
         print(f'[CHAP] Saved energy spectra')
         #reconstruction spectrum
-        dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs, vals) #takes on negative values
+        dynamic_reconstruction_spectrum = cs.dynamic_reconstruction_spectrum(timeseries, vecs) #takes on negative values
         np.save(f'{task_dir}/reconspectra/{bids_stuff}_dynamic_reconstruction_spectrum', dynamic_reconstruction_spectrum)
         print(f'[CHAP] Saved dynamic reconstruction spectrum for {bids_stuff} scan')
         #criticality
