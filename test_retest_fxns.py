@@ -24,7 +24,7 @@ from scipy.stats import entropy
 from scipy.spatial import distance
 from sklearn.utils import shuffle
 import statistics as stats    
-from nilearn import plotting
+#from nilearn import plotting
 from random import shuffle
 import datetime
 import random
