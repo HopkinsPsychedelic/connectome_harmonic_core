@@ -79,7 +79,7 @@ def func_spectra(args, sub, ses, timeseries, task, bids_stuff, vecs, vals): #for
         print(f'[CHAP] Computing mean, dynamic, and normalized power spectra for {bids_stuff}...')
         mean_power_spectrum = cs.mean_power_spectrum(timeseries, vecs) #average power over the whole scan (average of dynamic for each harmonic)
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_mean_power_spectrum', mean_power_spectrum)
-        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs, vals) #power at each TR
+        dynamic_power_spectrum = cs.dynamic_power_spectrum(timeseries, vecs) #power at each TR
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_dynamic_power_spectrum', dynamic_power_spectrum)
         normalized_power_spectrum = cs.normalized_power_spectrum(timeseries, vecs)
         np.save(f'{task_dir}/powerspectra/{bids_stuff}_normalized_power_spectrum', normalized_power_spectrum)
