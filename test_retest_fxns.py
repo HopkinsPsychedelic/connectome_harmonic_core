@@ -29,7 +29,7 @@ from random import shuffle
 import datetime
 import random
 import pickle
-
+import compute_spectra as cs
 
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -1194,18 +1194,19 @@ def reliability_each_harm_mean_power(chap_dir,reh):
         rehp['within_all'][ses], rehp['across_all'][ses] = {},{}
         for harm in range(99):
             rehp['within_all'][ses][harm] = []
-            rehp['across_all'][harm] = {}
-    
+            rehp['across_all'][harm] = {}  
     subs = inout.get_subs(chap_dir,rest=True)
     #subs = ['105923','103818']
     for sub in subs:
         rehp[sub] = {}
         for ses in ['test','retest']:
             rehp[sub][ses] = {} #below won't include trivial ev
-            rehp[sub][ses]['rest1'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST1/powerspectra/sub-{sub}_ses-{ses}_task-rest1_acq-rl_mean_power_spectrum.npy')[1:]
-            rehp[sub][ses]['rest2'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST2/powerspectra/sub-{sub}_ses-{ses}_task-rest2_acq-rl_mean_power_spectrum.npy')[1:]
+            rehp[sub][ses]['recon1'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST1/reconspectra/sub-{sub}_ses-{ses}_task-rest1_acq-rl_dynamic_reconstruction_spectrum.npy')[1:]
+            rehp[sub][ses]['recon2'] = np.load(f'/data/hcp_test_retest/derivatives/chap/sub-{sub}/ses-{ses}/func/REST2/reconspectra/sub-{sub}_ses-{ses}_task-rest2_acq-rl_dynamic_reconstruction_spectrum.npy')[1:]
+            rehp[sub][ses]['rest1'] = cs.rms(rehp[sub][ses]['recon1'])
+            rehp[sub][ses]['rest2'] = cs.rms(rehp[sub][ses]['recon2'])
             for harm in range(99):
-                rehp[sub][ses][harm] = stats.mean([rehp[sub][ses]['rest1'][harm],rehp[sub][ses]['rest2'][harm]])
+                rehp[sub][ses][harm] = stats.mean([rehp[sub][ses]['rest1'][harm],rehp[sub][ses]['rest2'][harm]]) #average acros rest1 and rest2 
                 #rehp['within_all'][ses][harm].append(rehp[sub][ses][harm])
     for sub in subs:
         rehp[sub]['ret_inds'] = get_retest_inds(reh[sub][sub], 0, 99)
@@ -1234,7 +1235,7 @@ def plot_rehp(rehp,save=False):
     plt.xlabel('Harmonic Rank')
     plt.ylabel('Correlation')
     plt.legend()
-    #plt.title('Test-Retest Reliability of Activity by Wavenumber')
+    #plt.title('Test-Retest Reliability of RMS Power by Wavenumber')
     if save: 
         plt.savefig(f'/home/bwinsto2/rehp.png',dpi=2000)
     else:
