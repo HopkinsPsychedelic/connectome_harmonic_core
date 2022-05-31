@@ -30,6 +30,7 @@ import datetime
 import random
 import pickle
 import compute_spectra as cs
+import email_python
 
 def get_key(my_dict, val):
     for key, value in my_dict.items():
@@ -1134,7 +1135,7 @@ def hcp_bids_plots_one_sub(sub,start,stop):
 
 '''test retest abstract'''
         
-def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False): 
+def reliability_each_harm(chap_dir, n_evecs,icc=True,just_within=False): 
     reh, reh['within_all'],reh['across_all'] = {},{},{}
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
@@ -1164,6 +1165,7 @@ def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False):
                     reh[sub][c_sub][ses] = test_retest_rel_2v(reh[sub][ses]['vecs'], reh[c_sub][ses]['vecs'], n_evecs, n_evecs, False, icc)
                     for harm in range(99):
                         reh['across_all'][harm].append(reh[sub][c_sub][ses][harm])
+        print(f'finished {sub}')
     for harm in range(99):
         reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
         reh['across_subj_avgs'].append(stats.mean(reh['across_all'][harm]))
@@ -1172,6 +1174,12 @@ def reliability_each_harm(chap_dir, n_evecs,just_within=False, icc=False):
             reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
             reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
     return reh  
+
+def run_reh(chap_dir = '/data/hcp_test_retest/derivatives/chap',n_evecs=99,icc=True,just_within=False):
+    reh = reliability_each_harm(chap_dir,n_evecs,icc,just_within)
+    email_python.send_email_notif(subject = 'oi mate',content='reh finished')
+    inout.save_pickle(reh,f'/data/hcp_test_retest/derivatives/chap_trt/reh_{datetime.datetime.now()}.pkl')
+    return reh
 
 def plot_reh(reh,save=False):
     plt.plot(reh['within_subj_avgs'], label = 'Within Subject')
@@ -1195,7 +1203,7 @@ def reliability_each_harm_mean_power(chap_dir,reh):
         for harm in range(99):
             rehp['within_all'][ses][harm] = []
             rehp['across_all'][harm] = {}  
-    subs = inout.get_subs(chap_dir,rest=True)
+    subs = inout.get_subs(chap_dir,t_rt=True,rest=True)
     #subs = ['105923','103818']
     for sub in subs:
         rehp[sub] = {}
@@ -1219,7 +1227,7 @@ def reliability_each_harm_mean_power(chap_dir,reh):
     for harm in range(99):
         rehp['across_all'][harm]['correlations'] = []
         #within
-        for sim in range(1000):
+        for sim in range(5000):
             rehp['across_all'][harm][f'sim-{sim}'] = random.sample(rehp['within_all']['retest'][harm],len(rehp['within_all']['retest'][harm]))            
             rehp['across_all'][harm]['correlations'].append(inout.abs_pearson(rehp['within_all']['test'][harm],rehp['across_all'][harm][f'sim-{sim}'],fisher = True, abso=False))
         rehp['across_all'][harm]['avg_correlation'] = stats.mean(rehp['across_all'][harm]['correlations'])
@@ -1310,7 +1318,7 @@ def reh_hcpvsbids():
     reh['within_subj_avgs'],reh['across_subj_avgs'] = [],[]
     for harm in range(99):
         reh['within_all'][harm], reh['across_all'][harm] = [],[]
-    #subs = ['341834','111312','103818','105923','195041']
+    #subs = ['105923','103818','111312']
     subs = inout.get_subs('/data/HCP_Raw/derivatives/chap')
     reh['chap_bids'] = load_vecs('/data/HCP_Raw/derivatives/chap',False,99)
     reh['chap_hcp'] = load_vecs('/data/hcp_test_retest/derivatives/chap',False,99)
@@ -1336,6 +1344,8 @@ def reh_hcpvsbids():
     for harm in range(99):
         reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
         reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
+    np.save('/data/HCP_Raw/ignore/reh_hcpvsbids',reh)
+    email_python.send_email_notif(subject = 'reh hcp vs. bids finished')
     return reh
 
 def plot_reh_hcp_vs_bids(reh,save=False):
@@ -1346,7 +1356,7 @@ def plot_reh_hcp_vs_bids(reh,save=False):
     plt.legend()
     plt.title('Avg. HCP vs. BIDS Harmonic Correlation by Wavenumber')
     if save: 
-        plt.savefig(f'/home/bwinsto2/reh.png',dpi=2000)
+        plt.savefig(f'/home/bwinsto2/reh_hcpvsbids.png',dpi=2000)
     plt.close()
 
 

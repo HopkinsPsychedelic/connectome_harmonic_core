@@ -320,18 +320,18 @@ def get_subs(chap_dir,functional=False, rest = False, t_rt=False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
    if t_rt==False:
-       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','172332','192439']: #add bad subs here
+       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','192439','185442']: #add bad subs here
             if os.path.exists(f'{chap_dir}/sub-{sub}'):
                 subs.remove(sub)
    else:
-       for sub in ['test_avg', 'retest_avg', 'total_avg','859671','187547']: #add bad subs here
+       for sub in ['test_avg', 'retest_avg', 'total_avg','859671','187547','662551','433839']: #add bad subs here
             if os.path.exists(f'{chap_dir}/sub-{sub}'):
                 subs.remove(sub)        
    if functional == True:
         subs.remove('341834')
         subs.remove('627549')
    elif rest == True:
-       subs = [sub for sub in subs if sub not in ['187547','341834','859671','627549']]
+       subs = [sub for sub in subs if sub not in ['187547','341834','859671','627549','177746']]
        #subs = [sub for sub in subs if sub not in ['200109','146129','783462','187547','287248','158035','111312','660951','341834','859671','135528']]
    #subs = ['105923','103818','111312']
    return subs
