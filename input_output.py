@@ -320,7 +320,7 @@ def get_subs(chap_dir,functional=False, rest = False, t_rt=False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
    if t_rt==False:
-       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','192439','185442']: #add bad subs here
+       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','137128','194140','172332','192439','185542','185442','859671']: #add bad subs here 859671 just there bc other pipeline
             if os.path.exists(f'{chap_dir}/sub-{sub}'):
                 subs.remove(sub)
    else:

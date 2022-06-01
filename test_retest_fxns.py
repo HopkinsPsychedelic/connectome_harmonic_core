@@ -1335,7 +1335,7 @@ def reh_hcpvsbids():
         for c_sub in subs:
             if c_sub != sub:
                 reh[sub][c_sub] = {}
-                reh[sub][c_sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[c_sub]['bids']['vecs'], 99, 99, True)
+                reh[sub][c_sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[c_sub]['bids']['vecs'], 99, 99, True,icc=True)
                 for harm in range(99):
                     reh['across_all'][harm].append(reh[sub][c_sub][harm]['bcorr']) #value per harm for that subject combo
     for harm in range(99):
@@ -1352,9 +1352,9 @@ def plot_reh_hcp_vs_bids(reh,save=False):
     plt.plot(reh['within_subj_avgs'], label = 'Within Subject')
     plt.plot(reh['across_subj_avgs'], label = 'Across Subject')
     plt.xlabel('Harmonic Rank')
-    plt.ylabel('Spatial Correlation')
+    plt.ylabel('Intraclass Correlation')
     plt.legend()
-    plt.title('Avg. HCP vs. BIDS Harmonic Correlation by Wavenumber')
+    plt.title('Avg. HCP vs. BIDS Harmonic ICC by Wavenumber')
     if save: 
         plt.savefig(f'/home/bwinsto2/reh_hcpvsbids.png',dpi=2000)
     plt.close()
