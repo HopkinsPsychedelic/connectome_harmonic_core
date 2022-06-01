@@ -63,35 +63,6 @@ BUILDING CMAKE WITH $NPROC PROCESS(ES)\n\
     && cd .. \
     #&& rm -rf *
 
-RUN echo "Compiling ANTs version 2.2.0" \
-    && git clone git://github.com/stnava/ANTs.git ants \
-    && cd ants \
-    && git fetch origin --tags \
-    #&& git checkout 2.2.0 \
-    && mkdir build \
-    && cd build \
-    && printf "\n\n++++++++++++++++++++++++++++++++\n\
-BUILDING ANTS WITH $NPROC PROCESS(ES)\n\
-++++++++++++++++++++++++++++++++\n\n" \
-    && cmake -DCMAKE_INSTALL_PREFIX="/opt/ants" .. \
-    && make -j$NPROC \
-    && if [ -d /src/ants/build/ANTS-build ]; then \
-            \
-            cd /src/ants/build/ANTS-build \
-	    && printf "MADE IT HERE" \
-            && make install; \
-       #else \
-          #  \
-         #   mkdir -p /opt/ants \
-       #     && mv bin/* /opt/ants \
-        #    && mv ../Scripts/* /opt/ants; \
-       fi
-#COPY --from=builder /opt/ants /opt/ants
-
-#ENV ANTSPATH=/opt/ants/ \
-    #PATH=/opt/ants:/opt/ants/bin:$PATH
-ENTRYPOINT ["/neurodocker/startup.sh"]
-
 ENV FSLDIR="/opt/fsl-6.0.3" \
     PATH="/opt/fsl-6.0.3/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
