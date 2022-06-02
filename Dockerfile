@@ -136,7 +136,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && sync && conda clean -y --all && sync \
     && conda install -yq scikit-learn scipy meshio nibabel \ 
     && conda install -c conda-forge tvb-gdist \
-    && conda install -c conda-forge vtk \
+    && conda install -c conda-forge vtk dipy \
     && conda install -c conda-forge yagmail premailer \
     && conda install -c mrtrix3 mrtrix3 \
     && pip install icc \
