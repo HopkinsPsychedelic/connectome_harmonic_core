@@ -6,7 +6,7 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-import vtk
+#import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
@@ -24,6 +24,7 @@ import pandas as pd
 import test_retest_fxns as t_rt
 import datetime
 import icc as ic
+import json
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -460,3 +461,13 @@ def icc_vecs(vec1,vec2, icc_module=True):
     print(f'icc itself took {datetime.datetime.now() - icc_time} h:m:s')
     print(f'total time {datetime.datetime.now() - begin_time} h:m:s')
     return icc['ICC'][0]
+
+def rem_json_field(fname,field):                                                               
+    obj  = json.load(open(fname))
+    try:
+        del(obj[field])
+        open(fname, "w").write(
+            json.dumps(obj, sort_keys=True, indent=4, separators=(',', ': ')))
+    except:
+        print('no volume timing')
+
