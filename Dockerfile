@@ -136,11 +136,12 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && sync && conda clean -y --all && sync \
     && conda install -yq scikit-learn scipy meshio nibabel \ 
     && conda install -c conda-forge tvb-gdist \
-    && conda install -c conda-forge vtk dipy \
+    && conda install -c conda-forge dipy \
+    && conda install -c conda-forge vtk \
     && conda install -c conda-forge yagmail premailer \
     && conda install -c mrtrix3 mrtrix3 \
     && pip install icc \
-    && conda install vtk libgcc matplotlib pandas numpy nilearn powerlaw Cython \
+    && conda install libgcc matplotlib pandas numpy nilearn powerlaw Cython \
     && sync && conda clean -y --all && sync \
     && rm -rf ~/.cache/pip* \
     && sync
