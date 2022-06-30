@@ -6,7 +6,7 @@ Created on Thu May 28 18:16:15 2020
 @author: patricktaylor
 """
 import numpy as np
-import vtk
+#import vtk
 import meshio
 #from tvtk.api import tvtk, write_data
 import nibabel as nib
@@ -321,7 +321,7 @@ def get_subs(chap_dir,functional=False, rest = False, t_rt=False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
    if t_rt==False:
-       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','137128','194140','172332','192439','185542','185442','859671']: #add bad subs here 859671 just there bc other pipeline
+       for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','172332','192439','185542','185442','859671']: #add bad subs here 859671 just there bc other pipeline
             if os.path.exists(f'{chap_dir}/sub-{sub}'):
                 subs.remove(sub)
    else:
@@ -423,8 +423,12 @@ def get_rdists(rdist,how_many):
     return rdist_dic
 
 def save_pickle(a_dict,fname):
-    file_to_write = open(fname,"wb")
-    pickle.dump(a_dict,file_to_write)
+    with open(fname,'wb') as file:
+        pickle.dump(a_dict,file,protocol=pickle.HIGHEST_PROTOCOL)
+        
+def load_pickle(fname):
+    with open(fname,'rb') as file:
+        return pickle.load(file)
     
 def save_degree_vector(sub):
     mat = sparse.load_npz(f'/data/HCP_Raw/derivatives/chap/sub-{sub}/struc_conn_mat.npz')
