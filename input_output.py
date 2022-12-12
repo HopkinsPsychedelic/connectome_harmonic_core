@@ -317,9 +317,14 @@ for network in list(set(parcel_csv['Community'])):
 627549 missing resting state
 859671 retest structural harmonics?
 '''
-def get_subs(chap_dir,functional=False, rest = False, t_rt=False):
+def get_subs(chap_dir,functional=False, rest = False, t_rt=False, general=False, alphabetize = False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+   if general == True:
+       return subs
+   elif alphabetize == True:
+       subs.sort()
+       return subs
    if t_rt==False:
        for sub in ['test_avg', 'retest_avg', 'total_avg','114823','115320','139839','172332','192439','185542','185442','859671']: #add bad subs here 859671 just there bc other pipeline
             if os.path.exists(f'{chap_dir}/sub-{sub}'):

@@ -1329,7 +1329,7 @@ def reh_hcpvsbids():
         for pipe in ['hcp','bids']:
            reh[sub][pipe] = {}
            reh[sub][pipe]['vecs'] = reh[f'chap_{pipe}'][sub]['test']['vecs']
-        reh[sub][sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[sub]['bids']['vecs'], 99, 99, True)
+        reh[sub][sub] = test_retest_rel_2v(reh[sub]['hcp']['vecs'], reh[sub]['bids']['vecs'], 99, 99, True, icc=True)
         for harm in range(99):
             reh['within_all'][harm].append(reh[sub][sub][harm]['bcorr'])
     #across
@@ -1343,9 +1343,9 @@ def reh_hcpvsbids():
     for harm in range(99):
         reh['within_subj_avgs'].append(stats.mean(reh['within_all'][harm]))
         reh['across_subj_avgs'].append(stats.mean(reh['across_all'][harm]))
-    for harm in range(99):
-        reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
-        reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
+    #for harm in range(99):
+        #reh['within_subj_avgs'][harm] = np.tanh(reh['within_subj_avgs'][harm])
+        #reh['across_subj_avgs'][harm] = np.tanh(reh['across_subj_avgs'][harm])
     inout.save_pickle(reh,f'/data/HCP_Raw/ignore/reh_hcpvsbids_{datetime.datetime.now()}')
     email_python.send_email_notif(subject = 'reh hcp vs. bids finished')
     return reh
@@ -1383,7 +1383,7 @@ def rehp_hcpvsbids(chap_dir,reh):
         reh[sub]['bids']['rest1'] = cs.rms(reh[sub]['bids']['recon1'])
         reh[sub]['bids']['rest2'] = cs.rms(reh[sub]['bids']['recon2'])
     for sub in subs:
-        for pipe in ['hcp']['bids']
+        for pipe in ['hcp']['bids']:
             for harm in range(99):
                 rehp[sub][pipe][harm] = stats.mean([rehp[sub][pipe]['rest1'][harm],rehp[sub][ses]['rest2'][harm]]) #average acros rest1 and rest2 
                 #rehp['within_all'][ses][harm].append(rehp[sub][ses][harm])
