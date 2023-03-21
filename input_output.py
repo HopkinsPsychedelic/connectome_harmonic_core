@@ -223,6 +223,12 @@ def get_run(fname):
     run = x.split('_')[0]
     return str(run)
 
+def get_ses(fname):
+    sesstart = fname.find('ses') + 4
+    x = fname[sesstart:]
+    ses = x.split('_')[0]
+    return str(ses)
+
 def get_acq(fname):
     acqstart = fname.find('acq') + 4
     x = fname[acqstart:]
@@ -253,6 +259,27 @@ def if_not_exist_make(path):
     import os
     if not os.path.exists(path):
         os.mkdir(path)
+
+def if_not_exist_make_tree(path):
+    # split path into individual parts
+    parts = []
+    while True:
+        path, part = os.path.split(path)
+        if part != "":
+            parts.insert(0, part)  # insert parts at the beginning
+        else:
+            if path != "":
+                parts.insert(0, path)
+            break
+    
+    # iterate over parts and create missing directories
+    current_path = ""
+    for part in parts:
+        current_path = os.path.join(current_path, part)
+        if not os.path.exists(current_path):
+            os.makedirs(current_path)
+
+
 
 def normalize_ts(ts):
     ts=ts.T
@@ -320,6 +347,7 @@ for network in list(set(parcel_csv['Community'])):
 def get_subs(chap_dir,functional=False, rest = False, t_rt=False, general=False, alphabetize = False):
    subject_dirs = glob(os.path.join(chap_dir, "sub-*")) #get subs
    subs = [subject_dir.split("-")[-1] for subject_dir in subject_dirs] 
+   subs = list(filter(lambda sub: 'html' not in sub, subs))
    if general == True:
        return subs
    elif alphabetize == True:
@@ -480,3 +508,20 @@ def rem_json_field(fname,field):
     except:
         print('no volume timing')
 
+def search_list(strings, target_list):
+    # Create a list of boolean values indicating whether each string is present in each target list entry
+    matches = [[string in target for target in target_list] for string in strings]
+    # Use the all function to check if all of the strings are present in each target list entry
+    return [target_list[i] for i in range(len(target_list)) if all(matches[j][i] for j in range(len(strings)))]
+
+def remove_tags(target, removal_tags):
+    cleaned_target = []
+    for item in target:
+        for tag in removal_tags:
+            if tag in item:
+                break
+        else:
+            cleaned_target.append(item)
+    return cleaned_target
+
+    
