@@ -14,17 +14,20 @@ import nibabel as nib
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler,normalize
-import utility_functions as uts
+#import utility_functions as uts
 import os
 from glob import glob
 import statistics as stats
 import pickle
 from scipy import sparse
 import pandas as pd
-import test_retest_fxns as t_rt
+#import test_retest_fxns as t_rt
 import datetime
-import icc as ic
+#import icc as ic
 import json
+#import matlab
+#import matlab.engine
+import numpy as np
 
 '''
 def save_surface(filename,points,edges,feature=None):
@@ -44,6 +47,58 @@ vals,mvecs=lap_decomp(masked_connectivity,n)
 vecs=util.unmask_medial_wall_vecs(masked_connectivity,mask)
 '''
 
+def xlsx_to_csv(xlsx):
+    fname = xlsx.split('.')[0]
+    xlsx = pd.read_excel(xlsx)
+    xlsx.to_csv(f'{fname}.csv')
+
+def flatten_dict(d, parent_key='', sep='&'):
+    """
+    Flattens a nested dictionary into a flat dictionary, with keys representing the path through the original nested structure.
+
+    :param d: The nested dictionary to flatten.
+    :param parent_key: The accumulated path of keys from the root to the current depth (used internally for recursion).
+    :param sep: The separator between keys in the flattened dictionary keys.
+    :return: A flattened dictionary.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict) and v:
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+def dict_to_rows(data, column_names):
+    """
+    Converts a nested dictionary into a list of rows, where each row corresponds to a path through the nested structure,
+    including the final value.
+
+    :param data: The nested dictionary to convert.
+    :param column_names: A list of column names corresponding to each level of the nested structure plus one for the value.
+    :return: A list of dictionaries, where each dictionary represents a row with values for each column.
+    """
+    flat_data = flatten_dict(data)  # Flatten the nested dictionary first
+    rows = []
+
+    for path, value in flat_data.items():
+        keys = path.split(sep='&')  # Split the path into individual keys
+        # Ensure the row has the correct number of columns, filling missing keys with None
+        row_data = keys + [value] + [None] * (len(column_names) - len(keys) - 1)
+        row = dict(zip(column_names, row_data))  # Map the keys and the final value to the specified column names
+        rows.append(row)
+
+    return rows
+
+def nested_dic_to_pd(nested_dic, colnames):
+    d = flatten_dict(nested_dic)
+    l = dict_to_rows(d,colnames)
+    return pd.DataFrame(l)
+
+
+def addpath_recursively(eng, dir_path):
+    eng.eval("addpath(genpath('{}'))".format(dir_path), nargout=0)
 
 #ts=read_functional_timeseries()
 
@@ -278,6 +333,103 @@ def if_not_exist_make_tree(path):
         current_path = os.path.join(current_path, part)
         if not os.path.exists(current_path):
             os.makedirs(current_path)
+
+
+
+def numpy_to_matlab_matrix(np_array, save_path=None):
+    """
+    Convert a NumPy array to a MATLAB matrix and optionally save it as a .mat file.
+    
+    Parameters:
+    np_array (numpy.ndarray): The NumPy array to convert.
+    save_path (str, optional): Path to save the .mat file. If None, the file is not saved.
+
+    Returns:
+    matlab.double: The converted MATLAB matrix.
+    """
+    # Convert the NumPy array to a list of lists
+    list_of_lists = np_array.tolist()
+
+    # Start the MATLAB engine
+    eng = matlab.engine.start_matlab()
+
+    # Convert the list of lists to a MATLAB matrix
+    matlab_matrix = matlab.double(list_of_lists)
+
+    # Assign the MATLAB matrix to a variable in MATLAB's workspace
+    eng.workspace['matlab_matrix'] = matlab_matrix
+
+    # If a save path is provided, save the MATLAB matrix to a .mat file
+    if save_path:
+        eng.save(save_path, 'matlab_matrix', nargout=0)
+        eng.quit()
+    else:
+        return matlab_matrix
+        eng.quit()
+
+def matlab_cell_to_np(file_path, cell_var_name):
+    """
+    Load a MATLAB cell array from a .mat file and convert it to a NumPy array.
+    
+    Parameters:
+    file_path (str): Path to the .mat file.
+    cell_var_name (str): Name of the cell variable in the .mat file.
+
+    Returns:
+    numpy.ndarray: The converted NumPy array.
+    """
+    # Start the MATLAB engine
+    eng = matlab.engine.start_matlab()
+
+    # Load the .mat file into MATLAB's workspace
+    eng.eval(f"load('{file_path}')", nargout=0)
+
+    # Extract the cell array from MATLAB's workspace
+    matlab_cell = eng.workspace[cell_var_name]
+
+    # Extract the double array from the cell
+    double_array = matlab_cell
+
+    # Convert the MATLAB double array to a NumPy array
+    numpy_array = np.array(double_array)
+
+    # Stop the MATLAB engine
+    eng.quit()
+
+    return numpy_array   
+
+def matlab_table_to(file_path, var_name):
+    eng = matlab.engine.start_matlab()
+    
+    # Load the .mat file containing the struct
+    eng.eval(f"load('{file_path}')", nargout=0)
+    
+    # Get the struct fields
+    fields = eng.eval(f"fieldnames({var_name})", nargout=1)
+    
+    # Initialize the Python dictionary
+    table_dict = {}
+    
+    # Iterate through each field and convert to a Python list or NumPy array
+    for field in fields:
+        # Retrieve field data from MATLAB struct
+        field_data = eng.eval(f"{var_name}({field})", nargout=1)
+        
+        # Convert MATLAB data to NumPy array if it's numeric
+        try:
+            table_dict[field] = np.array(field_data)
+        except:
+            # If it's not numeric data, keep as a list
+            table_dict[field] = field_data
+    
+    # Quit the MATLAB engine
+    eng.quit()
+    
+    return table_dict
+
+
+
+
 
 
 
@@ -524,4 +676,68 @@ def remove_tags(target, removal_tags):
             cleaned_target.append(item)
     return cleaned_target
 
-    
+def filter_list(original_list, filter_strings):
+    # Using a list comprehension to filter out the elements
+    cleaned_list = [element for element in original_list if not any(filter_str in element for filter_str in filter_strings)]
+    return cleaned_list
+
+#return index that hold n highest values in dict
+def return_top_items(dic, n):
+    top_vals = sorted(dic.items(), key=lambda x: x[1], reverse=True)[:n]
+    return [x[0] for x in top_vals]
+
+def mask_average_and_threshold(mat1, mat2, threshold):
+    """
+    This function masks out cells that don't have the same sign across the two matrices,
+    averages the non-masked elements, masks out any cells where the absolute value
+    of the average is below a specified threshold, and then deletes the upper triangle
+    of the resulting matrix by setting those elements to 0.
+
+    :param mat1: numpy matrix 1
+    :param mat2: numpy matrix 2
+    :param threshold: value below which the absolute value of the average is considered for masking
+    :return: A new matrix with masked elements set to 0 based on the sign, threshold conditions, and upper triangle deletion
+    """
+    if mat1.shape != mat2.shape:
+        raise ValueError("Matrices must have the same shape.")
+
+    # Create a mask where the sign of elements in mat1 is the same as the sign of elements in mat2
+    sign_mask = np.sign(mat1) == np.sign(mat2)
+
+    # Calculate the average where the signs are the same
+    avg = np.where(sign_mask, (mat1 + mat2) / 2, 0)
+
+    # Further mask out elements where the absolute value of the average is below the threshold
+    avg_threshold = np.where(np.abs(avg) >= threshold, avg, 0)
+
+    # Delete the upper triangle by setting those elements to 0
+    result = np.tril(avg_threshold)
+
+    return result
+
+    """
+    This function masks out cells that don't have the same sign across the two matrices,
+    averages the non-masked elements, and then masks out any cells where the absolute value
+    of the average is below a specified threshold.
+
+    :param mat1: numpy matrix 1
+    :param mat2: numpy matrix 2
+    :param threshold: value below which the absolute value of the average is considered for masking
+    :return: A new matrix with masked elements set to 0 based on the sign and threshold conditions
+    """
+    if mat1.shape != mat2.shape:
+        raise ValueError("Matrices must have the same shape.")
+
+    # Create a mask where the sign of elements in mat1 is the same as the sign of elements in mat2
+    sign_mask = np.sign(mat1) == np.sign(mat2)
+
+    # Calculate the average where the signs are the same
+    avg = np.where(sign_mask, (mat1 + mat2) / 2, 0)
+
+    # Further mask out elements where the absolute value of the average is below the threshold
+    result = np.where(np.abs(avg) >= threshold, avg, 0)
+
+    return result
+
+
+
